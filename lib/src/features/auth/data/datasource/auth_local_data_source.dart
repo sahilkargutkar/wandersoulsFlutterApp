@@ -6,7 +6,6 @@ abstract class AuthLocalDataSource {
   Future<void> saveUser(UserModel? user);
   UserModel? getUser();
   Future<void> clearUser();
-
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
@@ -34,6 +33,4 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Future<void> clearUser() async {
     await prefs.remove(_userKey);
   }
-
-
 }

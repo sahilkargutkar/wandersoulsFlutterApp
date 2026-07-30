@@ -1,16 +1,16 @@
-
-
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
+import 'package:wonder_souls/src/config/core/model/place_model.dart';
 
 class GoogleMapsApiService {
   final Dio dio;
-  final String apiKey; 
+  final String apiKey;
   final String baseURL;
 
-  GoogleMapsApiService({required this.apiKey,  required this.baseURL}) : dio = Dio(
+  GoogleMapsApiService({required this.apiKey, required this.baseURL})
+    : dio = Dio(
         BaseOptions(
           baseUrl: baseURL,
           connectTimeout: const Duration(seconds: 15),
@@ -28,11 +28,8 @@ class GoogleMapsApiService {
   // INTERCEPTOR
   // ===============================
   void _addInterceptor() {
-  
     // Optional: logging
-    dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true),
-    );
+    dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
   }
 
   Future<Map<String, dynamic>> getRequest(
@@ -46,7 +43,7 @@ class GoogleMapsApiService {
   Future<Either<Failure, List<PlaceModel>>> searchPlaces(String query) async {
     try {
       final response = await dio.get(
-        "place/autocomplete/json",
+        "maps/api/place/autocomplete/json",
         queryParameters: {"input": query, "key": apiKey},
       );
 
@@ -62,9 +59,9 @@ class GoogleMapsApiService {
 
       return Right(places);
     } on DioException catch (e) {
-      return Left(Failure(message:  e.message ?? "Network error"));
+      return Left(Failure(message: e.message ?? "Network error"));
     } catch (e) {
-      return const Left(Failure( message: "Unexpected error"));
+      return const Left(Failure(message: "Unexpected error"));
     }
   }
 
@@ -84,9 +81,24 @@ class GoogleMapsApiService {
 
       return Right(response.data);
     } on DioException catch (e) {
-      return Left(Failure( message:  e.message ?? "Directions error"));
+      return Left(Failure(message: e.message ?? "Directions error"));
     } catch (e) {
       return const Left(Failure(message: "Unexpected error"));
+    }
+  }
+
+  Future<Map<String, dynamic>> getRequest(
+    String path,
+    Map<String, dynamic> queryParameters,
+  ) async {
+    try {
+      final response = await dio.get(path, queryParameters: queryParameters);
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      return {};
     }
   }
 }

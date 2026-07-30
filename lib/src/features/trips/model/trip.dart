@@ -91,3 +91,31 @@ final Trip sampleTrip = Trip(
     ),
   ],
 );
+
+class TripData {
+  final String id;
+  final String name;
+  final String flag;
+  final String dateRange;
+  final String tripType;
+  final String category;
+  final String imageUrl;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final String mainDestination;
+  final List<String> travelTastes;
+
+  TripData({
+    required this.id,
+    required this.name,
+    required this.flag,
+    required this.dateRange,
+    required this.tripType,
+    required this.category,
+    required this.imageUrl,
+    this.startDate,
+    this.endDate,
+    required this.mainDestination,
+    required this.travelTastes,
+  });
+}

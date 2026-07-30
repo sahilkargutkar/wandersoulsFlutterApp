@@ -41,30 +41,49 @@ class CommonTextFormField extends StatelessWidget {
       maxLines: maxLines,
       onTap: onTap,
       readOnly: readOnly,
-      style: context.text.bodyMedium,
+      style: context.text.bodyMedium?.copyWith(
+        color: context.onSurface,
+        fontWeight: FontWeight.w500,
+        fontSize: 15,
+      ),
+      cursorColor: context.primary,
       decoration: InputDecoration(
         hintText: hintText,
+        hintStyle: context.text.bodyMedium?.copyWith(
+          color: context.onSurfaceVariant.withAlpha(140),
+          fontWeight: FontWeight.w400,
+        ),
         labelText: labelText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: context.colors.surfaceContainerHighest,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        fillColor: context.mutedBackground,
+        contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 16.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide(color: context.colors.onSurface.withAlpha(60)),
+          borderSide: BorderSide(
+            color: context.borderColor.withAlpha(50),
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide(color: context.colors.primary, width: 1.5),
+          borderSide: BorderSide(
+            color: context.primary,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide(color: context.colors.error),
+          borderSide: BorderSide(color: context.colors.error, width: 1.2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          borderSide: BorderSide(color: context.colors.error, width: 1.5),
         ),
       ),
     );

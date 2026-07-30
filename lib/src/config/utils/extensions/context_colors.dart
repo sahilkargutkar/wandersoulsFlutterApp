@@ -15,8 +15,24 @@ extension ContextColors on BuildContext {
   Color get outline => colors.outline;
 
   /// Muted / subtle background (perfect for search bars, cards)
-  Color get mutedBackground => onSurface.withAlpha(20);
+  Color get mutedBackground => onSurface.withAlpha(12);
 
   /// Soft shadow
-  Color get softShadow => onSurface.withAlpha(25);
+  Color get softShadow => onSurface.withAlpha(20);
+
+  /// Card background with slight elevation feel
+  Color get cardBackground => colors.surface;
+
+  /// Subtle primary tint for backgrounds
+  Color get primaryTint => primary.withAlpha(15);
+
+  /// Shimmer base color for loading
+  Color get shimmerBase => onSurface.withAlpha(18);
+  Color get shimmerHighlight => onSurface.withAlpha(8);
+
+  /// Border color
+  Color get borderColor => colors.outline.withAlpha(100);
+
+  /// Check if dark mode
+  bool get isDark => Theme.of(this).brightness == Brightness.dark;
 }

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 // Screens
@@ -5,7 +6,6 @@ import 'package:wonder_souls/src/features/home/presentation/screens/home_screen.
 import 'package:wonder_souls/src/features/settings/presentation/screens/settings_screens.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/saved_trips_screen.dart';
-import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
@@ -23,12 +23,6 @@ class _HomeBottomBarState extends State<HomeBottomBar>
     with TickerProviderStateMixin {
   late final TabController _tabController;
 
-  final List<String> _titles = [
-    "Wander Souls",
-    'Saved',
-    'My Trips',
-    'Settings',
-  ];
   final List<Widget> _pages = [
     const HomeScreen(),
     const SavedTripsScreen(),
@@ -39,7 +33,7 @@ class _HomeBottomBarState extends State<HomeBottomBar>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _titles.length, vsync: this);
+    _tabController = TabController(length: _pages.length, vsync: this);
   }
 
   @override
@@ -51,78 +45,112 @@ class _HomeBottomBarState extends State<HomeBottomBar>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ✅ Fixed AppBar, title changes with tab
+      extendBody: true,
       appBar: AppBar(
-        leadingWidth: 60,
-        centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20.r),
-
-            child: Image.asset(
-              // placeholder icon for your logo
-              Assets.logo,
-              width: 50.w,
-            ),
+        centerTitle: false,
+        toolbarHeight: 46.h,
+        titleSpacing: 0,
+        title: Padding(
+          padding: EdgeInsets.only(left: 16.w),
+          child: Image.asset(
+            Assets.logo,
+            height: 36.h,
+            fit: BoxFit.contain,
+            alignment: Alignment.centerLeft,
           ),
         ),
-
-        title: AnimatedBuilder(
-          animation: _tabController,
-          builder: (context, _) {
-            return Text(
-              _titles[_tabController.index],
-              style: context.text.titleLarge,
-            );
-          },
-        ),
-
         actions: [
-          // balances leading so title is truly centered
           AnimatedBuilder(
             animation: _tabController,
             builder: (context, _) {
               return (_tabController.index == 1 || _tabController.index == 2)
                   ? Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 8.h,
-                        horizontal: 16.w,
-                      ),
-                      child: Icon(
-                        Icons.search,
-                        color: context.onSurfaceVariant,
+                      padding: EdgeInsets.only(right: 12.w),
+                      child: Container(
+                        padding: EdgeInsets.all(8.w),
+                        decoration: BoxDecoration(
+                          color: context.mutedBackground,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Icon(
+                          Icons.search_rounded,
+                          color: context.onSurfaceVariant,
+                          size: 20.sp,
+                        ),
                       ),
                     )
-                  : 48.w.width;
+                  : const SizedBox.shrink();
             },
           ),
         ],
       ),
 
-      // ✅ Body: TabBarView takes full height
       body: TabBarView(
         controller: _tabController,
         physics: const NeverScrollableScrollPhysics(),
         children: _pages,
       ),
 
-      // ✅ Bottom TabBar
-      bottomNavigationBar: Material(
-        color: context.surface,
-        child: SafeArea(
-          child: TabBar(
-            dividerColor: Colors.transparent,
-            controller: _tabController,
-            labelColor: context.primary,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: context.primary,
-            tabs: const [
-              Tab(icon: Icon(Icons.home), text: 'Home'),
-              Tab(icon: Icon(Icons.bookmark_border), text: 'Saved'),
-              Tab(icon: Icon(Icons.location_on_outlined), text: 'My Trips'),
-              Tab(icon: Icon(Icons.settings_outlined), text: 'Settings'),
-            ],
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.isDark
+                  ? context.surface.withAlpha(230)
+                  : context.surface.withAlpha(240),
+              borderRadius: BorderRadius.circular(28.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(context.isDark ? 30 : 12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+              border: Border.all(
+                color: context.borderColor.withAlpha(context.isDark ? 20 : 30),
+                width: 1,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28.r),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: TabBar(
+                  dividerColor: Colors.transparent,
+                  controller: _tabController,
+                  labelColor: context.primary,
+                  unselectedLabelColor: context.onSurfaceVariant.withAlpha(140),
+                  indicatorColor: context.primary,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  labelStyle: TextStyle(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  unselectedLabelStyle: TextStyle(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  indicatorPadding: EdgeInsets.only(bottom: 6.h),
+                  splashBorderRadius: BorderRadius.circular(28.r),
+                  tabs: const [
+                    Tab(icon: Icon(Icons.home_rounded, size: 24), text: 'Home'),
+                    Tab(
+                      icon: Icon(Icons.bookmark_border_rounded, size: 24),
+                      text: 'Saved',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.location_on_outlined, size: 24),
+                      text: 'My Trips',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.settings_outlined, size: 24),
+                      text: 'Settings',
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

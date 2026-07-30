@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
+import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
@@ -13,39 +13,60 @@ class TripCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 8.h),
       decoration: BoxDecoration(
         color: context.surface,
-
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: context.borderColor.withAlpha(20),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: context.onSurface.withAlpha(15),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: context.softShadow,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image with rounded top corners
+          // Image with gradient overlay
           Stack(
             children: [
               AspectRatio(
                 aspectRatio: 20 / 9,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.sp),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20.r),
+                  ),
                   child: CachedNetworkImage(
                     imageUrl: trip.imageUrl,
-
-                    // height: 170.h, // ✅ LIMIT decoded image size
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorWidget: (_, __, ___) => Container(
-                      height: 140.h,
-                      color: context.colors.surface.withAlpha(20),
-                      child: const Icon(Icons.image, size: 40),
+                      color: context.shimmerBase,
+                      child: Icon(Icons.image_rounded, size: 40, color: context.onSurfaceVariant.withAlpha(60)),
+                    ),
+                  ),
+                ),
+              ),
+              // Gradient overlay
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20.r),
+                  ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withAlpha(30),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -65,30 +86,39 @@ class TripCard extends StatelessWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Text(
-                            trip.name,
-                            style: context.text.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
+                          Flexible(
+                            child: Text(
+                              trip.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.text.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                           SizedBox(width: 6.w),
-                          Text(trip.flag, style: TextStyle(fontSize: 20.sp)),
+                          Text(trip.flag, style: TextStyle(fontSize: 18.sp)),
                         ],
                       ),
                     ),
-                    // Three dots menu
-                    Icon(
-                      Icons.more_vert,
-                      color: context.onSurface.withAlpha(153),
-                      size: 24.sp,
+                    Container(
+                      padding: EdgeInsets.all(4.w),
+                      decoration: BoxDecoration(
+                        color: context.mutedBackground,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(
+                        Icons.more_horiz_rounded,
+                        color: context.onSurfaceVariant,
+                        size: 20.sp,
+                      ),
                     ),
                   ],
                 ),
                 SizedBox(height: 8.h),
                 Text(
                   '${trip.dateRange} · ${trip.tripType} · ${trip.category}',
-                  style: context.text.bodyLarge?.copyWith(
-                    color: context.onSurface.withAlpha(153),
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.onSurfaceVariant,
                   ),
                 ),
               ],

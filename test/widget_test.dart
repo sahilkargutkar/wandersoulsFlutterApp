@@ -1,30 +1,48 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wonder_souls/main.dart';
-
+import 'package:wonder_souls/src/features/auth/data/model1/register_request.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('RegisterRequest serializes expected signup payload', () {
+    final request = RegisterRequest(
+      id: 'user-1',
+      userName: 'testuser',
+      email: 'test@example.com',
+      passwordHash: 'secret123',
+      name: 'Test User',
+      profilePicture: '',
+      defaultCurrency: 'USD',
+      preferences: {
+        'language': 'en',
+        'country': 'India',
+        'phone': '1234567890',
+        'travelPreferences': 'Adventure Travel,Food Tourism',
+      },
+      createdBy: 'System',
+      createdAt: '2026-05-18T00:00:00.000Z',
+      isActive: true,
+      modifiedBy: 'System',
+      modifiedOn: '2026-05-18T00:00:00.000Z',
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(request.toJson(), {
+      'id': 'user-1',
+      'userName': 'testuser',
+      'email': 'test@example.com',
+      'passwordHash': 'secret123',
+      'name': 'Test User',
+      'profilePicture': '',
+      'defaultCurrency': 'USD',
+      'preferences': {
+        'language': 'en',
+        'country': 'India',
+        'phone': '1234567890',
+        'travelPreferences': 'Adventure Travel,Food Tourism',
+      },
+      'createdBy': 'System',
+      'createdAt': '2026-05-18T00:00:00.000Z',
+      'isActive': true,
+      'modifiedBy': 'System',
+      'modifiedOn': '2026-05-18T00:00:00.000Z',
+    });
   });
 }

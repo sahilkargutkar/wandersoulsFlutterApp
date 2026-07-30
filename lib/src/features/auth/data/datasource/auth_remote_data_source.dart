@@ -1,10 +1,11 @@
-import 'package:flutter/foundation.dart';
+
 import 'package:wonder_souls/src/config/model/user_model.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 import 'package:wonder_souls/src/config/core/local_storage/token_storage.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 import 'package:wonder_souls/src/features/auth/data/model1/login_response.dart';
+import 'package:wonder_souls/src/features/auth/data/model1/register_request.dart';
 
 import '../../../../config/core/services/api_services.dart';
 import '../../../../config/model/api_result.dart';
@@ -22,11 +23,7 @@ import '../../../../config/model/success.dart';
 /// • Deletes user account
 
 abstract interface class AuthRemoteDataSource {
-  Future<ApiResult<void>> register({
-    required String name,
-    required String email,
-    required String password,
-  });
+  Future<ApiResult<void>> register(RegisterRequest request);
 
   Future<ApiResult<String>> login({
     required String email,
@@ -50,19 +47,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   });
 
   @override
-  Future<ApiResult<void>> register({
-    required String name,
-    required String email,
-    required String password,
-  }) {
+  Future<ApiResult<void>> register(RegisterRequest request) {
     return apiService.post<void>(
       ApiConstants.register,
-      data: {"name": name, "email": email, "password": password},
-      fromJson: (_) => null,
+      data: request.toJson(),
+      fromJson: (_) {},
     );
   }
 
-@override
+  @override
   Future<ApiResult<String>> login({
     required String email,
     required String password,
@@ -93,7 +86,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           }
 
           return Success(loginData.token);
-      default:   return Failure(message: "Something went wrong");
+        default:
+          return Failure(message: "Something went wrong");
       }
     } catch (e) {
       return Failure(message: e.toString());
@@ -104,7 +98,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<ApiResult<void>> deleteAccount({required String userId}) {
     return apiService.delete<void>(
       ApiConstants.userById(userId),
-      fromJson: (_) => null,
+      fromJson: (_) {},
     );
   }
 
@@ -114,14 +108,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       String token = await tokenStorage.getToken() ?? "";
 
       return token.isEmpty ? false : true;
-    } on Exception catch (e) {
+    } on Exception {
       return false;
     }
   }
 
-  Failure<T> _handleError<T>(Exception e) {
-    return Failure<T>(message: e.toString());
-  }
+
 
   @override
   Future<void> logout() async {
@@ -129,7 +121,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await tokenStorage.clearToken();
       await localDataSource.clearUser();
       return;
-    } on Exception catch (e) {
+    } on Exception {
       return;
     }
   }

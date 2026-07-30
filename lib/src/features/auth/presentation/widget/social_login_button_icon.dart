@@ -14,31 +14,26 @@ class SocialLoginButtonIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 40.w, // double.infinity,
-        alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
-        height: 30.h,
-        decoration: BoxDecoration(
-          color: context.colors.surfaceContainerHighest,
-
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: context.colors.onSurface.withAlpha(100),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(8),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(14.r),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 58.w,
+          height: 58.w,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: context.mutedBackground,
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(
+              color: context.borderColor.withAlpha(40),
+              width: 1,
             ),
-          ],
+          ),
+          child: icon,
         ),
-        child: icon,
       ),
     );
   }

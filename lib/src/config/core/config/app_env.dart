@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AppEnv {
   AppEnv._(); // prevent instantiation
 
-  static String get googleKey => dotenv.env['GOOGLE_KEY'] ?? '';
+  static String get googleMapApiKey => dotenv.env['GOOGLE_API_KEY'] ?? '';
 
   // static bool get enableLogs =>
   //     dotenv.env['ENABLE_LOGS'] == 'true';

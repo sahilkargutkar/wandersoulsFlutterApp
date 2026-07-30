@@ -1,5 +1,9 @@
+
 import 'package:dio/dio.dart';
-import 'package:wonder_souls/src/config/utils/api_constant.dart';
+import 'package:flutter/foundation.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:wonder_souls/src/config/core/model/place_model.dart';
+
 import '../../model/api_result.dart';
 import '../../model/failure.dart';
 import '../../model/success.dart';
@@ -52,10 +56,11 @@ class ApiService {
       ),
     );
 
-    // Optional: logging
-    _dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true),
-    );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(requestBody: false, responseBody: false),
+      );
+    }
   }
 
   // ===============================
@@ -122,9 +127,46 @@ class ApiService {
   }
 
   Failure<T> _handleError<T>(DioException e) {
+    final responseData = e.response?.data;
+    final message = responseData is Map<String, dynamic>
+        ? responseData["message"]?.toString()
+        : responseData?.toString();
+
     return Failure<T>(
-      message: e.response?.data["message"] ?? "Server error",
+      message: message == null || message.isEmpty ? "Server error" : message,
       statusCode: e.response?.statusCode,
     );
+  }
+
+  Future<Either<Failure, List<PlaceModel>>> getLocations(
+    int? pageNumber,
+    int? pageSize,
+    String search,
+  ) async {
+    try {
+      final response = await _dio.get(
+        "/Locations",
+        queryParameters: {
+          "pageNumber": pageNumber,
+          "pageSize": pageSize,
+          "search": search,
+        },
+      );
+
+      final data = response.data;
+      if (data == null || data["items"] == null) {
+        return const Right([]);
+      }
+
+      final places = (data["items"] as List)
+          .map((e) => PlaceModel.fromJson(e))
+          .toList();
+
+      return Right(places);
+    } on DioException catch (e) {
+      return Left(Failure(message: e.message ?? "Network error"));
+    } catch (e) {
+      return const Left(Failure(message: "Unexpected error"));
+    }
   }
 }

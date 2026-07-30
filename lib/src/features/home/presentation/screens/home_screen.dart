@@ -4,168 +4,346 @@ import 'package:wonder_souls/src/features/trips/model/static_data.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/destination_explorer_screen.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:wonder_souls/src/config/core/injector/injector.dart';
+import 'package:wonder_souls/src/config/core/model/place_model.dart';
+import 'package:wonder_souls/src/config/core/services/api_services.dart';
+
+import 'package:wonder_souls/src/config/utils/common_widgets/app_search_bar.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/article_card.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/destination_card.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
+import 'package:wonder_souls/src/config/utils/common_widgets/staggered_fade_slide.dart';
+
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
-/// HomeScreen
-///
-/// • Main landing screen of the app
-/// • Displays search bar UI (non-functional placeholder)
-/// • Shows popular destinations (horizontal list)
-/// • Navigates to destination list screen
-/// • Navigates to trip details screen on destination tap
-/// • Shows popular articles (horizontal list)
-/// • Navigates to article list screen
-/// • Uses reusable common widgets (DestinationCard, ArticleCard)
 
-class HomeScreen extends StatelessWidget {
+import 'package:wonder_souls/src/features/home/presentation/screens/search_screen.dart';
+
+import 'package:wonder_souls/src/features/trips/model/static_data.dart';
+
+import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  // ---------------- UI ----------------
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ApiService service = sl<ApiService>();
+
+  List<PlaceModel> destinations = [];
+
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    fetchPopularDestinations();
+  }
+
+  Future<void> fetchPopularDestinations() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final result = await service.getLocations(1, 5, "");
+
+    result.fold(
+      (failure) {
+        debugPrint(failure.message);
+
+        setState(() {
+          isLoading = false;
+        });
+      },
+
+      (success) {
+        setState(() {
+          destinations = success;
+          isLoading = false;
+        });
+      },
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return AppSearchBar(
+      hintText: 'Where to next?',
+      onTap: () {
+        context.push(SearchScreen.routeName);
+      },
+      trailing: Container(
+        padding: EdgeInsets.only(left: 6.w, right: 6.w),
+        decoration: BoxDecoration(
+          color: context.primaryTint,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader({
+    required String title,
+    required VoidCallback onViewAll,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          title,
+          style: context.text.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: 20.sp,
+            letterSpacing: -0.5,
+          ),
+        ),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onViewAll,
+            borderRadius: BorderRadius.circular(20.r),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: context.primaryTint,
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'See All',
+                    style: context.primaryLabel?.copyWith(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  4.w.width,
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: context.primary,
+                    size: 16.sp,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoader() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = screenWidth < 360 ? screenWidth * 0.44 : 180.w;
+
+    return SizedBox(
+      height: 270.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: 3,
+        padding: EdgeInsets.only(right: 4.w),
+        separatorBuilder: (_, __) => 14.w.width,
+        itemBuilder: (context, index) {
+          return Container(
+            width: cardWidth,
+            decoration: BoxDecoration(
+              color: context.shimmerBase,
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPopularDestinations() {
+    if (isLoading) {
+      return _buildLoader();
+    }
+
+    if (destinations.isEmpty) {
+      return SizedBox(
+        height: 220.h,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.travel_explore_rounded,
+                size: 48.sp,
+                color: context.onSurfaceVariant.withAlpha(80),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                "No destinations found",
+                style: context.text.bodyLarge?.copyWith(
+                  color: context.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    /// RESPONSIVE CARD WIDTH — show 2 cards side by side with peek
+    final cardWidth = screenWidth < 360
+        ? screenWidth * 0.44
+        : screenWidth < 400
+        ? screenWidth * 0.44
+        : screenWidth < 600
+        ? screenWidth * 0.64
+        : 180.w;
+
+    /// RESPONSIVE HEIGHT
+    final sectionHeight = screenWidth < 360
+        ? 220.h
+        : screenWidth < 400
+        ? 235.h
+        : screenWidth < 600
+        ? 250.h
+        : 270.h;
+
+    return SizedBox(
+      height: sectionHeight,
+
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+
+        itemCount: destinations.length,
+
+        padding: EdgeInsets.only(left: 0, right: 4.w),
+
+        separatorBuilder: (_, __) => 14.w.width,
+
+        itemBuilder: (context, index) {
+          final destination = destinations[index];
+
+          return StaggeredFadeSlide(
+            index: index,
+            child: SizedBox(
+              width: cardWidth,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20.r),
+                onTap: () {
+                  // Navigate to trip details
+                },
+                child: DestinationCard(
+                  imageUrl:
+                      "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=1200",
+                  city: destination.name,
+                  country: destination.address,
+                  flagEmoji: "📍",
+                  cardWidth: cardWidth,
+                  place: destination,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPopularArticles() {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    final articleHeight = screenWidth < 360
+        ? 230.h
+        : screenWidth < 400
+        ? 240.h
+        : 260.h;
+
+    return SizedBox(
+      height: articleHeight,
+
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+
+        itemCount: articles.length,
+
+        separatorBuilder: (_, __) => 16.w.width,
+
+        itemBuilder: (context, index) {
+          final article = articles[index];
+
+          return StaggeredFadeSlide(
+            index: index,
+            child: ArticleCard(
+              imageUrl: article['imageUrl']!,
+              title: article['title']!,
+              date: article['date']!,
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-            mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔍 Search Bar
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+    return RefreshIndicator(
+      color: context.primary,
 
-              color: context.surface.withAlpha(25),
-              elevation: 2,
-              shadowColor: context.softShadow,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.search,
-                      size: 24,
-                      color: context.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Search destinations...',
-                      style: context.bodyMuted?.copyWith(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      onRefresh: fetchPopularDestinations,
 
-            22.h.height,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
 
-            // 📍 Popular Destinations
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Popular Destinations', style: context.titleLarge),
-                InkWell(
-                  onTap: () =>
-                      Navigator.pushNamed(context, ListDestination.routeName),
-                  child: Row(
-                    children: [
-                      Text('View All', style: context.primaryLabel),
-                      4.w.width,
-                      Icon(
-                        Icons.arrow_forward,
-                        color: context.primary,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
 
-            16.h.height,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
 
-            AspectRatio(
-              aspectRatio: 6 / 4,
+            children: [
+              /// SEARCH BAR — now using consistent AppSearchBar
+              _buildSearchBar(),
 
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: destinations.length,
-                shrinkWrap: true,
-                separatorBuilder: (_, __) => SizedBox(width: 8.w),
-                itemBuilder: (context, index) {
-                  final d = destinations[index];
-                  return InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        DestinationExplorerScreen.routeName,
-                        arguments: d,
-                      );
-                    },
-                    child: DestinationCard(
-                      imageUrl: d['imageUrl']!,
-                      city: d['city']!,
-                      country: d['country']!,
-                      flagEmoji: d['flagEmoji']!,
-                      cardWidth: 200.w,
-                      // compact
-                    ),
-                  );
+              24.h.height,
+
+              /// DESTINATION HEADER
+              _buildSectionHeader(
+                title: 'Popular Destinations',
+
+                onViewAll: () {
+                  context.push(ListDestination.routeName);
                 },
               ),
-            ),
-            24.h.height,
 
-            // 📰 Popular Articles
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Popular Articles', style: context.titleLarge),
-                InkWell(
-                  onTap: () =>
-                      Navigator.pushNamed(context, ListArticle.routeName),
+              14.h.height,
 
-                  child: Row(
-                    children: [
-                      Text('View All', style: context.primaryLabel),
-                      4.w.width,
-                      Icon(
-                        Icons.arrow_forward,
-                        color: context.primary,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              /// DESTINATIONS
+              _buildPopularDestinations(),
 
-            16.h.height,
+              24.h.height,
 
-            AspectRatio(
-              aspectRatio: 4 / 3,
+              /// ARTICLE HEADER
+              _buildSectionHeader(
+                title: 'Popular Articles',
 
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: articles.length,
-                shrinkWrap: true,
-                separatorBuilder: (_, __) => SizedBox(width: 8.w),
-                itemBuilder: (context, index) {
-                  final article = articles[index];
-                  return ArticleCard(
-                    imageUrl: article['imageUrl']!,
-                    title: article['title']!,
-                    date: article['date']!,
-                  );
+                onViewAll: () {
+                  context.push(ListArticle.routeName);
                 },
               ),
-            ),
-          ],
+
+              14.h.height,
+
+              /// ARTICLES
+              _buildPopularArticles(),
+
+              20.h.height,
+            ],
+          ),
         ),
       ),
     );

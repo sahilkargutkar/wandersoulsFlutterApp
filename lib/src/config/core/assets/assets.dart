@@ -1,5 +1,5 @@
 class Assets {
-  static final String logo = "assets/logo.jpeg";
+  static final String logo = "assets/logo.png";
 
   static final String facebook = "assets/images/facebook.png";
   static final String twitter = "assets/images/twitter.png";

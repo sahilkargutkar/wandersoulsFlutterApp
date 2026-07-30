@@ -4,6 +4,7 @@ import 'package:wonder_souls/src/features/auth/data/datasource/auth_remote_data_
 import 'package:wonder_souls/src/features/auth/domain/repositories/auth_repositories.dart';
 
 import '../../../../config/model/success.dart';
+import 'package:wonder_souls/src/features/auth/data/model1/register_request.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -13,6 +14,19 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // this.authLocalDataSource,
   );
+
+  @override
+  Future<Either<Failure, void>> register(RegisterRequest request) async {
+    try {
+      final result = await remoteDataSource.register(request);
+      if (result is Failure<void>) {
+        return Left(result);
+      }
+      return Right(null);
+    } catch (e) {
+      return Left(Failure(message: e.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, String>> login({
@@ -25,16 +39,14 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
       // authLocalDataSource.saveUser(authLocalDataSource.getUser()?.copyWith(email: email));
-      
-      if(result is Failure<String>){
-       return  Left(result);
+
+      if (result is Failure<String>) {
+        return Left(result);
       }
 
-         final token = (result as Success<String>).data;
+      final token = (result as Success<String>).data;
 
       return Right(token);
-
-
     } catch (e) {
       return Left(Failure(message: "Login failed"));
     }

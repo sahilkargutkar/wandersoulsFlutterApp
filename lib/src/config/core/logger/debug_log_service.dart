@@ -4,7 +4,8 @@ import 'log_service.dart';
 
 class DebugLogService implements LogService {
   DebugLogService({Logger? logger}) {
-    _logger = logger ??
+    _logger =
+        logger ??
         Logger(
           printer: PrefixPrinter(
             PrettyPrinter(

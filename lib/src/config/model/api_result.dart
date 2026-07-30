@@ -1,4 +1,3 @@
- abstract class ApiResult<T> {
+abstract class ApiResult<T> {
   const ApiResult();
-
 }

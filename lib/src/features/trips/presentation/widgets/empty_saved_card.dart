@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:wonder_souls/src/config/utils/common_widgets/saved_icon.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
@@ -11,42 +10,48 @@ class EmptySavedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Card(
-        color: context.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        elevation: 4,
-        margin: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SavedIcon(),
-              24.h.height,
-              Text(
-                'Empty',
-                style: context.titleLarge?.copyWith(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 32.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 90.w,
+              height: 90.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.primary.withAlpha(20),
+                    context.primary.withAlpha(8),
+                  ],
                 ),
               ),
-              8.h.height,
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Text(
-                  'Start building your dream wishlist by slowly\nmarking destinations and experiences',
-                  textAlign: TextAlign.center,
-                  style: context.bodyMedium?.copyWith(
-                    fontSize: 14.sp,
-                    height: 1.5,
-                    color: context.onSurface,
-                  ),
-                ),
+              child: Icon(
+                Icons.bookmark_border_rounded,
+                size: 40.sp,
+                color: context.primary.withAlpha(150),
               ),
-            ],
-          ),
+            ),
+            24.h.height,
+            Text(
+              'No Saved Places',
+              style: context.text.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            12.h.height,
+            Text(
+              'Start building your dream wishlist by saving destinations and experiences you love',
+              textAlign: TextAlign.center,
+              style: context.text.bodyMedium?.copyWith(
+                height: 1.5,
+                color: context.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );

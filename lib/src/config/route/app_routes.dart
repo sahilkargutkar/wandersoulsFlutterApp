@@ -1,72 +1,76 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/features/auth/presentation/screens/boarding_screens.dart';
 import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
-import 'package:wonder_souls/src/features/home/presentation/screens/home_bottom_bar.dart';
+import 'package:wonder_souls/src/features/auth/presentation/screens/signup_screen.dart';
 import 'package:wonder_souls/src/features/auth/presentation/screens/splash_screen.dart';
+import 'package:wonder_souls/src/features/auth/presentation/cubit/signup/signup_cubit.dart';
+import 'package:wonder_souls/src/features/home/presentation/screens/home_bottom_bar.dart';
+import 'package:wonder_souls/src/features/home/presentation/screens/search_screen.dart';
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_details_screen.dart';
-import 'package:wonder_souls/src/features/trips/presentation/screens/destination_explorer_screen.dart';
-import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard_screen.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/trip_wizard_screen.dart';
+import 'package:wonder_souls/src/config/core/model/place_model.dart';
 
-Route<dynamic> generateRoute(RouteSettings routeSettings) {
-  switch (routeSettings.name) {
-    case SplashScreen.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => SplashScreen(),
-      );
-    case LoginScreen.routeName:
-      return MaterialPageRoute(builder: (_) => const LoginScreen());
-    case HomeBottomBar.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => HomeBottomBar(),
-      );
-    case TripDetailsScreen.routeName:
-      var arg = routeSettings.arguments;
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => TripDetailsScreen(trip: arg as Trip?),
-      );
-    case BoardingScreens.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => BoardingScreens(),
-      );
-    case ListDestination.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => ListDestination(),
-      );
-    case ListArticle.routeName:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => ListArticle(),
-      );
-    case DestinationExplorerScreen.routeName:
-      var arg = routeSettings.arguments;
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => DestinationExplorerScreen(
-          destination: arg as Map<String, String>,
-        ),
-      );
-    case TripWizardScreen.routeName:
-      var arg = routeSettings.arguments;
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => TripWizardScreen(
-          destination: arg as Map<String, String>,
-        ),
-      );
-    default:
-      return MaterialPageRoute(
-        settings: routeSettings,
-        builder: (_) => Scaffold(
-          body: Center(child: Text('Screen does not exist! $routeSettings')),
-        ),
-      );
-  }
-}
+final GoRouter router = GoRouter(
+  initialLocation: SplashScreen.routeName,
+  routes: [
+    GoRoute(
+      path: SplashScreen.routeName,
+      builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: LoginScreen.routeName,
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: SignupScreen.routeName,
+      builder: (context, state) => BlocProvider(
+        create: (_) => sl<SignUpCubit>(),
+        child: const SignupScreen(),
+      ),
+    ),
+    GoRoute(
+      path: HomeBottomBar.routeName,
+      builder: (context, state) => const HomeBottomBar(),
+    ),
+    GoRoute(
+      path: SearchScreen.routeName,
+      builder: (context, state) => const SearchScreen(),
+    ),
+    GoRoute(
+      path: TripDetailsScreen.routeName,
+      builder: (context, state) {
+        final trip = state.extra as TripData;
+        return TripDetailsScreen(trip: trip);
+      },
+    ),
+    GoRoute(
+      path: BoardingScreens.routeName,
+      builder: (context, state) => const BoardingScreens(),
+    ),
+    GoRoute(
+      path: ListDestination.routeName,
+      builder: (context, state) => const ListDestination(),
+    ),
+    GoRoute(
+      path: ListArticle.routeName,
+      builder: (context, state) => const ListArticle(),
+    ),
+    GoRoute(
+      path: TripWizardScreen.routeName,
+      builder: (context, state) {
+        final place = state.extra as PlaceModel;
+        return TripWizardScreen(destination: place);
+      },
+    ),
+  ],
+  errorBuilder: (context, state) => Scaffold(
+    body: Center(child: Text('Screen does not exist! ${state.error}')),
+  ),
+);

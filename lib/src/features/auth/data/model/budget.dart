@@ -1,5 +1,6 @@
 import 'package:wonder_souls/src/features/auth/data/model/budget_category_model.dart';
 import 'package:wonder_souls/src/features/auth/domain/enitiy/budget.dart';
+
 class BudgetModel extends Budget {
   const BudgetModel({
     required super.totalEstimated,

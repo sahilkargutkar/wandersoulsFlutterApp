@@ -8,9 +8,8 @@ import 'package:wonder_souls/src/config/route/app_routes.dart';
 import 'package:wonder_souls/src/config/theme/app_theme.dart';
 import 'package:wonder_souls/src/features/auth/presentation/cubit/isLoginCubit/is_login_cubit.dart';
 import 'package:wonder_souls/src/features/auth/presentation/cubit/login/auth_cubit.dart';
-import 'package:wonder_souls/src/features/auth/presentation/screens/splash_screen.dart';
-
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+import 'package:wonder_souls/src/config/theme/theme_cubit.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_places_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,16 +42,19 @@ class MyApp extends StatelessWidget {
               create: (_) => sl<IsLoginCubit>()..checkAuth(),
             ),
             BlocProvider<AuthCubit>(create: (_) => sl<AuthCubit>()),
+            BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
+            BlocProvider<SavedPlacesCubit>(create: (_) => sl<SavedPlacesCubit>()),
           ],
-          child: MaterialApp(
-            navigatorKey: navigatorKey,
-            debugShowCheckedModeBanner: false,
-            // home: LoginScreen(),
-            initialRoute: SplashScreen.routeName,
-            onGenerateRoute: generateRoute,
-            theme: AppTheme.light, // ✅ Use your custom light theme
-            darkTheme: AppTheme.dark, // ✅ Optional: support dark mode
-            themeMode: ThemeMode.system, // Use system dark/light
+          child: BlocBuilder<ThemeCubit, ThemeMode>(
+            builder: (context, themeMode) {
+              return MaterialApp.router(
+                debugShowCheckedModeBanner: false,
+                routerConfig: router,
+                theme: AppTheme.light,
+                darkTheme: AppTheme.dark,
+                themeMode: themeMode,
+              );
+            },
           ),
         );
       },

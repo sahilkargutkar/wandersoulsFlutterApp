@@ -1,6 +1,5 @@
 import '../../../../config/core/services/google_map_services.dart';
 
-
 class MapRemoteDataSource {
   final GoogleMapsApiService service;
   final String apiKey;
@@ -9,7 +8,8 @@ class MapRemoteDataSource {
 
   Future<Map<String, dynamic>> getDirections(
     String origin,
-    String destination) {
+    String destination,
+  ) {
     return service.getRequest("directions/json", {
       "origin": origin,
       "destination": destination,

@@ -13,8 +13,10 @@ import 'package:wonder_souls/src/config/utils/common_widgets/common_text_form_fi
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:go_router/go_router.dart';
 
 import '../cubit/password/password_cubit.dart';
+import 'package:wonder_souls/src/features/auth/presentation/screens/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,8 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
-          Navigator.pushReplacementNamed(context, HomeBottomBar.routeName);
-
+          context.go(HomeBottomBar.routeName);
           AppToast.success("Login Successful");
         }
         if (state is AuthError) {
@@ -61,179 +62,305 @@ class _LoginScreenState extends State<LoginScreen> {
         return Scaffold(
           resizeToAvoidBottomInset: true,
           body: SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 0.h, horizontal: 20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    50.h.height,
-                    // Logo
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20.r),
-                      child: Image.asset(
-                        // placeholder icon for your logo
-                        Assets.logo,
-                        width: 100.w,
-                      ),
+            child: Stack(
+              children: [
+                // Decorative elements
+                Positioned(
+                  top: -50.h,
+                  right: -50.w,
+                  child: Container(
+                    width: 180.w,
+                    height: 180.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: context.primary.withAlpha(8),
                     ),
-
-                    SizedBox(height: 32.h),
-
-                    Text(
-                      "Let's Get Started!",
-                      style: context.text.titleLarge?.copyWith(
-                        fontSize: 36,
-                        letterSpacing: -0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    12.h.height,
-
-                    Text(
-                      "Your Passport to Adventure Awaits",
-                      style: context.text.labelMedium?.copyWith(
-                        color: context.colors.onSurface.withAlpha(200),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    40.h.height,
-
-                    Form(
-                      key: formKey,
-                      child: Column(
-                        children: [
-                          CommonTextFormField(
-                            hintText: 'Enter Email',
-                            controller: usernameController,
-
-                            validator: (value) =>
-                                Validators.validateEmail(value),
-                          ),
-                          16.h.height,
-                          BlocProvider(
-                            create: (_) => PasswordCubit(),
-                            child: BlocBuilder<PasswordCubit, bool>(
-                              builder: (context, obscure) {
-                                return CommonTextFormField(
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      obscure
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                    onPressed: () {
-                                      context
-                                          .read<PasswordCubit>()
-                                          .togglePassword();
-                                    },
-                                  ),
-                                  obscureText: obscure,
-                                  hintText: 'Enter Password',
-                                  controller: passwordController,
-                                  validator: (value) =>
-                                      Validators.validatePassword(value),
-                                );
-                              },
-                            ),
-                          ),
-                          24.h.height,
-                          CommonButton(
-                            title: "Login",
-                            isLoading: state is AuthLoading,
-                            onPressed: () {
-                              FocusScope.of(context).unfocus();
-                              if (!(formKey.currentState?.validate() ?? true)) {
-                                return;
-                              }
-                              context.read<AuthCubit>().login(
-                                usernameController.text,
-                                passwordController.text,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    32.h.height,
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Divider(
-                            color: context.colors.onSurface.withAlpha(100),
-                          ),
-                        ),
-                        4.w.width,
-                        Text("OR", style: context.text.labelSmall),
-                        4.w.width,
-                        Flexible(
-                          child: Divider(
-                            color: context.colors.onSurface.withAlpha(100),
-                          ),
-                        ),
-                      ],
-                    ),
-                    24.h.height,
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SocialLoginButtonIcon(
-                          onPressed: () {},
-                          icon: Image.asset(Assets.google, scale: 28),
-                        ),
-                        16.w.width,
-                        SocialLoginButtonIcon(
-                          onPressed: () {},
-                          icon: Image.asset(
-                            Assets.apple,
-                            scale: 28,
-                            color: context.colors.onSurfaceVariant,
-                            colorBlendMode: BlendMode.srcIn,
-                          ),
-                        ),
-                        16.w.width,
-                        SocialLoginButtonIcon(
-                          onPressed: () {},
-                          icon: Image.asset(Assets.facebook, scale: 28),
-                        ),
-                        16.w.width,
-                        SocialLoginButtonIcon(
-                          onPressed: () {},
-                          icon: Image.asset(Assets.twitter, scale: 28),
-                        ),
-                      ],
-                    ),
-
-                    24.h.height,
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'Privacy Policy',
-                            style: context.text.bodyMedium,
-                          ),
-                        ),
-                        Text(' • ', style: context.text.bodyMedium),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'Terms of Service',
-                            style: context.text.bodyMedium,
-                          ),
-                        ),
-                      ],
-                    ),
-                    24.h.height,
-                  ],
+                  ),
                 ),
-              ),
+                Positioned(
+                  bottom: -80.h,
+                  left: -60.w,
+                  child: Container(
+                    width: 200.w,
+                    height: 200.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: context.primary.withAlpha(6),
+                    ),
+                  ),
+                ),
+
+                // Main content
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 0.h,
+                      horizontal: 24.w,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        40.h.height,
+                        // Logo
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(22.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.primary.withAlpha(20),
+                                blurRadius: 24,
+                                spreadRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(22.r),
+                            child: Image.asset(Assets.logo, width: 88.w),
+                          ),
+                        ),
+
+                        SizedBox(height: 28.h),
+
+                        Text(
+                          "Welcome Back",
+                          style: context.text.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+
+                        8.h.height,
+
+                        Text(
+                          "Your Passport to Adventure Awaits",
+                          style: context.text.bodyLarge?.copyWith(
+                            color: context.onSurfaceVariant.withAlpha(180),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+
+                        36.h.height,
+
+                        Form(
+                          key: formKey,
+                          child: Column(
+                            children: [
+                              CommonTextFormField(
+                                hintText: 'Enter Email',
+                                controller: usernameController,
+                                prefixIcon: Icon(
+                                  Icons.email_outlined,
+                                  size: 20.sp,
+                                  color: context.onSurfaceVariant,
+                                ),
+                                validator: (value) =>
+                                    Validators.validateEmail(value),
+                              ),
+                              14.h.height,
+                              BlocProvider(
+                                create: (_) => PasswordCubit(),
+                                child: BlocBuilder<PasswordCubit, bool>(
+                                  builder: (context, obscure) {
+                                    return CommonTextFormField(
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          obscure
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined,
+                                          size: 20.sp,
+                                          color: context.onSurfaceVariant,
+                                        ),
+                                        onPressed: () {
+                                          context
+                                              .read<PasswordCubit>()
+                                              .togglePassword();
+                                        },
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.lock_outline,
+                                        size: 20.sp,
+                                        color: context.onSurfaceVariant,
+                                      ),
+                                      obscureText: obscure,
+                                      hintText: 'Enter Password',
+                                      controller: passwordController,
+                                      validator: (value) =>
+                                          Validators.validatePassword(value),
+                                    );
+                                  },
+                                ),
+                              ),
+
+                              // Forgot password link
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () {},
+                                  child: Text(
+                                    'Forgot Password?',
+                                    style: context.text.bodySmall?.copyWith(
+                                      color: context.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              8.h.height,
+
+                              CommonButton(
+                                title: "Login",
+                                isLoading: state is AuthLoading,
+                                onPressed: () {
+                                  FocusScope.of(context).unfocus();
+                                  if (!(formKey.currentState?.validate() ??
+                                      true)) {
+                                    return;
+                                  }
+                                  context.read<AuthCubit>().login(
+                                    usernameController.text,
+                                    passwordController.text,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        28.h.height,
+
+                        // OR divider
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                color: context.borderColor.withAlpha(60),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              child: Text(
+                                "or continue with",
+                                style: context.text.bodySmall?.copyWith(
+                                  color: context.onSurfaceVariant.withAlpha(
+                                    150,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                color: context.borderColor.withAlpha(60),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        24.h.height,
+
+                        // Social login buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SocialLoginButtonIcon(
+                              onPressed: () {},
+                              icon: Image.asset(Assets.google, scale: 28),
+                            ),
+                            14.w.width,
+                            SocialLoginButtonIcon(
+                              onPressed: () {},
+                              icon: Image.asset(
+                                Assets.apple,
+                                scale: 28,
+                                color: context.onSurface,
+                                colorBlendMode: BlendMode.srcIn,
+                              ),
+                            ),
+                            14.w.width,
+                            SocialLoginButtonIcon(
+                              onPressed: () {},
+                              icon: Image.asset(Assets.facebook, scale: 28),
+                            ),
+                            14.w.width,
+                            SocialLoginButtonIcon(
+                              onPressed: () {},
+                              icon: Image.asset(Assets.twitter, scale: 28),
+                            ),
+                          ],
+                        ),
+
+                        24.h.height,
+
+                        // Privacy & Terms
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                'Privacy Policy',
+                                style: context.text.bodySmall?.copyWith(
+                                  color: context.onSurfaceVariant.withAlpha(
+                                    160,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '•',
+                              style: context.text.bodySmall?.copyWith(
+                                color: context.onSurfaceVariant.withAlpha(100),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                'Terms of Service',
+                                style: context.text.bodySmall?.copyWith(
+                                  color: context.onSurfaceVariant.withAlpha(
+                                    160,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        12.h.height,
+
+                        // Sign up link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account?",
+                              style: context.text.bodyMedium?.copyWith(
+                                color: context.onSurfaceVariant,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                context.push(SignupScreen.routeName);
+                              },
+                              child: Text(
+                                'Sign Up',
+                                style: context.text.titleSmall?.copyWith(
+                                  color: context.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        20.h.height,
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -258,50 +385,34 @@ class SocialLoginButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14.r),
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
-        height: 30.h,
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: context.colors.surfaceContainerHighest,
-
-          borderRadius: BorderRadius.circular(16),
+          color: context.mutedBackground,
+          borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
-            color: context.colors.onSurface.withAlpha(100),
-            width: 1.5,
+            color: context.borderColor.withAlpha(40),
+            width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(8),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                icon,
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      text,
-                      style: context.text.titleMedium?.copyWith(
-                        fontSize: 16,
-
-                        letterSpacing: 0.2,
-                      ),
-                    ),
+        child: Row(
+          children: [
+            SizedBox(width: 16.w),
+            icon,
+            Expanded(
+              child: Center(
+                child: Text(
+                  text,
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                28.w.width,
-              ],
+              ),
             ),
-          ),
+            SizedBox(width: 40.w),
+          ],
         ),
       ),
     );
