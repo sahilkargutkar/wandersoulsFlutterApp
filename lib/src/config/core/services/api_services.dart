@@ -3,6 +3,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
+import 'package:wonder_souls/src/config/route/app_routes.dart';
+import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
+import 'package:wonder_souls/src/config/utils/api_constant.dart';
 
 import '../../model/api_result.dart';
 import '../../model/failure.dart';
@@ -45,10 +48,10 @@ class ApiService {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
+          if (error.response?.statusCode == 401 && error.requestOptions.path != ApiConstants.login) {
             // Token expired or invalid
             await _tokenStorage.clearToken();
-            // Optional: trigger logout event here
+            router.go(LoginScreen.routeName);
           }
 
           return handler.next(error);
@@ -167,6 +170,68 @@ class ApiService {
       return Left(Failure(message: e.message ?? "Network error"));
     } catch (e) {
       return const Left(Failure(message: "Unexpected error"));
+    }
+  }
+
+  // ===============================
+  // QUERY PARAMS & MULTIPART FILE HELPERS
+  // ===============================
+
+  Future<ApiResult<T>> getWithParams<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    required T Function(dynamic data) fromJson,
+  }) async {
+    try {
+      final response = await _dio.get(path, queryParameters: queryParameters);
+      return Success<T>(fromJson(response.data));
+    } on DioException catch (e) {
+      return _handleError<T>(e);
+    }
+  }
+
+  Future<ApiResult<T>> putWithParams<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    dynamic data,
+    required T Function(dynamic data) fromJson,
+  }) async {
+    try {
+      final response = await _dio.put(path, queryParameters: queryParameters, data: data);
+      return Success<T>(fromJson(response.data));
+    } on DioException catch (e) {
+      return _handleError<T>(e);
+    }
+  }
+
+  Future<ApiResult<String>> uploadFile(String filePath, String blobPath) async {
+    try {
+      final formData = FormData.fromMap({
+        "File": await MultipartFile.fromFile(filePath),
+        "BlobPath": blobPath,
+      });
+
+      final response = await _dio.post(
+        "/Trips/upload",
+        data: formData,
+      );
+
+      return Success<String>(response.data?.toString() ?? "Uploaded");
+    } on DioException catch (e) {
+      return _handleError<String>(e);
+    }
+  }
+
+  Future<ApiResult<String>> downloadFile(String blobPath) async {
+    try {
+      final response = await _dio.get(
+        "/Trips/download",
+        queryParameters: {"blobPath": blobPath},
+      );
+
+      return Success<String>(response.data?.toString() ?? "");
+    } on DioException catch (e) {
+      return _handleError<String>(e);
     }
   }
 }

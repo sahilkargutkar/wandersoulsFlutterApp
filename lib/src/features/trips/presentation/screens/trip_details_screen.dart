@@ -15,7 +15,12 @@ import 'package:dio/dio.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/map_view.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wonder_souls/src/features/trips/model/trip_activity_model.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/edit_itinerary_screen.dart';
+import 'package:wonder_souls/src/features/trips/presentation/widgets/trip_bookings_sheet.dart';
 
 class TripDetailsScreen extends StatefulWidget {
   final TripData trip;
@@ -28,6 +33,8 @@ class TripDetailsScreen extends StatefulWidget {
 }
 
 class _TripDetailsScreenState extends State<TripDetailsScreen> {
+  late TripData _tripState;
+  bool _loadingTrip = false;
   int _selectedDayIndex = 0;
   List<TripActivityModel> _activities = [];
   bool _loadingActivities = false;
@@ -36,19 +43,237 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<PlaceModel> _suggestions = [];
   bool _searchingLocations = false;
-  FocusNode _searchFocusNode = FocusNode();
+  final FocusNode _searchFocusNode = FocusNode();
 
   // AI Suggestions
   List<dynamic> _aiSuggestions = [];
   bool _loadingAiSuggestions = false;
   String? _aiSuggestionsError;
 
+  List<String> _attachments = [];
+  bool _uploadingAttachment = false;
+
   @override
   void initState() {
     super.initState();
+    _tripState = widget.trip;
+    _fetchTripDetails();
     _fetchActivities();
     _fetchAiSuggestions();
+    _loadAttachments();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  Future<void> _loadAttachments() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList("attachments_${_tripState.id}");
+    if (list != null) {
+      setState(() {
+        _attachments = list;
+      });
+    }
+  }
+
+  Future<void> _saveAttachments() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList("attachments_${_tripState.id}", _attachments);
+  }
+
+  Future<void> _pickAndUploadAttachment() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+
+    setState(() => _uploadingAttachment = true);
+    AppToast.success("Uploading attachment...");
+
+    final filename = pickedFile.path.split("/").last;
+    final extension = filename.split(".").last;
+    final blobPath = "attachments/${_tripState.id}_${DateTime.now().millisecondsSinceEpoch}.$extension";
+
+    try {
+      final apiService = sl<ApiService>();
+      final result = await apiService.uploadFile(pickedFile.path, blobPath);
+
+      if (result is Success<String>) {
+        setState(() {
+          _attachments.add(blobPath);
+          _uploadingAttachment = false;
+        });
+        await _saveAttachments();
+        AppToast.success("Attachment uploaded successfully!");
+      } else {
+        setState(() => _uploadingAttachment = false);
+        AppToast.error("Failed to upload attachment");
+      }
+    } catch (e) {
+      setState(() => _uploadingAttachment = false);
+      AppToast.error("Error uploading file: $e");
+    }
+  }
+
+  Future<void> _downloadAndOpenAttachment(String blobPath) async {
+    AppToast.success("Opening document...");
+    try {
+      final apiService = sl<ApiService>();
+      final result = await apiService.downloadFile(blobPath);
+
+      if (result is Success<String> && result.data.isNotEmpty) {
+        final url = Uri.parse(result.data);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          AppToast.error("Could not launch file reader");
+        }
+      } else {
+        AppToast.error("Failed to download file");
+      }
+    } catch (e) {
+      AppToast.error("Error opening document: $e");
+    }
+  }
+
+  Future<void> _fetchTripDetails() async {
+    if (_tripState.id.isEmpty) return;
+    setState(() => _loadingTrip = true);
+    try {
+      final apiService = sl<ApiService>();
+      final res = await apiService.get<dynamic>(
+        "/Trips/${_tripState.id}",
+        fromJson: (data) => data,
+      );
+      if (res is Success && res.data != null && res.data["data"] != null) {
+        setState(() {
+          _tripState = TripData.fromJson(res.data["data"]);
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching trip details: $e");
+    } finally {
+      setState(() => _loadingTrip = false);
+    }
+  }
+
+  void _showEditTripDialog() {
+    final nameController = TextEditingController(text: _tripState.name);
+    final descController = TextEditingController(text: _tripState.description);
+    DateTime start = _tripState.startDate ?? DateTime.now();
+    DateTime end = _tripState.endDate ?? DateTime.now().add(const Duration(days: 3));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text("Edit Trip Details"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: "Trip Name"),
+                    ),
+                    TextField(
+                      controller: descController,
+                      decoration: const InputDecoration(labelText: "Description"),
+                    ),
+                    16.h.verticalSpace,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: start,
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) {
+                                setStateDialog(() => start = picked);
+                              }
+                            },
+                            child: Text("Start: ${start.day}/${start.month}"),
+                          ),
+                        ),
+                        8.w.horizontalSpace,
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: end,
+                                firstDate: start,
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) {
+                                setStateDialog(() => end = picked);
+                              }
+                            },
+                            child: Text("End: ${end.day}/${end.month}"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) return;
+                    Navigator.pop(context);
+                    
+                    AppToast.success("Updating trip...");
+                    try {
+                      final apiService = sl<ApiService>();
+                      final payload = {
+                        "name": name,
+                        "description": descController.text.trim(),
+                        "startDate": start.toUtc().toIso8601String(),
+                        "endDate": end.toUtc().toIso8601String(),
+                        "mainDestination": _tripState.mainDestination,
+                        "whoIsGoing": _tripState.tripType,
+                        "isPublic": false,
+                        "travelTastes": _tripState.travelTastes,
+                        "budget": {
+                          "budgetType": _tripState.category,
+                          "totalEstimated": 2000,
+                          "currency": "USD"
+                        }
+                      };
+
+                      final res = await apiService.put<dynamic>(
+                        "/Trips/${_tripState.id}",
+                        data: payload,
+                        fromJson: (d) => d,
+                      );
+
+                      if (res is Success) {
+                        AppToast.success("Trip updated successfully!");
+                        _fetchTripDetails();
+                      } else {
+                        AppToast.error("Failed to update trip details");
+                      }
+                    } catch (e) {
+                      AppToast.error("Error updating trip: $e");
+                    }
+                  },
+                  child: const Text("Save"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -60,14 +285,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
   // Calculate total days from trip dates
   int get _totalDays {
-    if (widget.trip.startDate == null || widget.trip.endDate == null) return 3;
-    final diff = widget.trip.endDate!.difference(widget.trip.startDate!).inDays;
+    if (_tripState.startDate == null || _tripState.endDate == null) return 3;
+    final diff = _tripState.endDate!.difference(_tripState.startDate!).inDays;
     return diff >= 0 ? diff + 1 : 3;
   }
 
   // Get current date of the selected day index
   DateTime get _currentDayDate {
-    final start = widget.trip.startDate ?? DateTime.now();
+    final start = _tripState.startDate ?? DateTime.now();
     return start.add(Duration(days: _selectedDayIndex));
   }
 
@@ -77,17 +302,17 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       _aiSuggestionsError = null;
     });
 
-    final start = widget.trip.startDate ?? DateTime.now();
-    final end = widget.trip.endDate ?? DateTime.now().add(const Duration(days: 3));
+    final start = _tripState.startDate ?? DateTime.now();
+    final end = _tripState.endDate ?? DateTime.now().add(const Duration(days: 3));
 
     final payload = {
-      "destination": widget.trip.mainDestination,
+      "destination": _tripState.mainDestination,
       "startDate": start.toUtc().toIso8601String(),
       "endDate": end.toUtc().toIso8601String(),
-      "whoIsGoing": widget.trip.tripType.toLowerCase(),
-      "travelTastes": widget.trip.travelTastes,
+      "whoIsGoing": _tripState.tripType.toLowerCase(),
+      "travelTastes": _tripState.travelTastes,
       "budget": {
-        "budgetType": widget.trip.category.toLowerCase(),
+        "budgetType": _tripState.category.toLowerCase(),
         "totalEstimated": 2000,
         "currency": "USD",
         "byCategory": {
@@ -97,7 +322,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           "activities": 0
         }
       },
-      "tripName": widget.trip.name,
+      "tripName": _tripState.name,
       "description": ""
     };
 
@@ -181,7 +406,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final tips = act["tips"] ?? "";
 
     final payload = {
-      "tripId": widget.trip.id,
+      "tripId": _tripState.id,
       "placeId": "ai_${DateTime.now().millisecondsSinceEpoch}",
       "dayId": "${_selectedDayIndex + 1}",
       "name": name,
@@ -241,8 +466,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             .toList();
 
         setState(() {
-          // Filter locally by tripId
-          _activities = all.where((act) => act.tripId == widget.trip.id).toList();
+          // Filter locally by tripId and sort by startDatetime
+          _activities = all.where((act) => act.tripId == _tripState.id).toList();
+          _activities.sort((a, b) => a.startDatetime.compareTo(b.startDatetime));
           _loadingActivities = false;
         });
       } else {
@@ -334,7 +560,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final cat = _getCategoryEnum(suggestion.types);
 
     final payload = {
-      "tripId": widget.trip.id,
+      "tripId": _tripState.id,
       "placeId": suggestion.placeId.isNotEmpty ? suggestion.placeId : "place_${DateTime.now().millisecondsSinceEpoch}",
       "dayId": "${_selectedDayIndex + 1}",
       "name": suggestion.name,
@@ -445,6 +671,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     ))
                   else
                     _buildActivitiesTimeline(context, dayActivities),
+                  _buildAttachmentsSection(context),
                 ],
               ),
             ),
@@ -496,7 +723,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               Icon(Icons.auto_awesome, color: context.primary, size: 18.sp),
               8.w.horizontalSpace,
               Text(
-                "🪄 AI Suggestions for ${widget.trip.mainDestination}",
+                "🪄 AI Suggestions for ${_tripState.mainDestination}",
                 style: context.text.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.2,
@@ -603,12 +830,43 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           onTap: () => Navigator.pop(context),
         ),
       ),
+      actions: [
+        Padding(
+          padding: EdgeInsets.only(right: 8.w),
+          child: CircularIcon(
+            icon: Icon(
+              Icons.edit_note_rounded,
+              size: 22.sp,
+              color: context.onSurface,
+            ),
+            onTap: _showEditTripDialog,
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(right: 12.w),
+          child: CircularIcon(
+            icon: Icon(
+              Icons.hotel_outlined,
+              size: 20.sp,
+              color: context.onSurface,
+            ),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => TripBookingsSheet(tripId: _tripState.id),
+              );
+            },
+          ),
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
           children: [
             CachedNetworkImage(
-              imageUrl: widget.trip.imageUrl,
+              imageUrl: _tripState.imageUrl,
               fit: BoxFit.cover,
               errorWidget: (_, __, ___) => Container(
                 color: context.shimmerBase,
@@ -644,7 +902,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.trip.name,
+                      _tripState.name,
                       style: context.text.titleLarge?.copyWith(
                         fontSize: 22.sp,
                         fontWeight: FontWeight.w800,
@@ -661,7 +919,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         ),
                         4.w.horizontalSpace,
                         Text(
-                          widget.trip.mainDestination,
+                          _tripState.mainDestination,
                           style: context.bodyMedium?.copyWith(
                             color: context.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
@@ -669,11 +927,21 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         ),
                         12.w.horizontalSpace,
                         Text(
-                          widget.trip.flag,
+                          _tripState.flag,
                           style: TextStyle(fontSize: 16.sp),
                         ),
                       ],
                     ),
+                    if (_tripState.description.isNotEmpty) ...[
+                      8.h.verticalSpace,
+                      Text(
+                        _tripState.description,
+                        style: context.text.bodyMedium?.copyWith(
+                          color: context.onSurfaceVariant,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -704,60 +972,108 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     );
   }
 
+  Future<void> _openEditItinerary() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditItineraryScreen(
+          trip: _tripState,
+          initialActivities: _activities,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      _fetchActivities();
+    }
+  }
+
   Widget _buildDaySelector(BuildContext context) {
     return Container(
       height: 48.h,
       margin: EdgeInsets.symmetric(vertical: 12.h),
-      child: ListView.separated(
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        scrollDirection: Axis.horizontal,
-        itemCount: _totalDays,
-        separatorBuilder: (context, index) => 8.w.horizontalSpace,
-        itemBuilder: (context, index) {
-          final isSelected = index == _selectedDayIndex;
-          final date = (widget.trip.startDate ?? DateTime.now()).add(Duration(days: index));
-          final formattedDate = "${date.day}/${date.month}";
+      child: Row(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              scrollDirection: Axis.horizontal,
+              itemCount: _totalDays,
+              separatorBuilder: (context, index) => 8.w.horizontalSpace,
+              itemBuilder: (context, index) {
+                final isSelected = index == _selectedDayIndex;
+                final date = (_tripState.startDate ?? DateTime.now()).add(Duration(days: index));
+                final formattedDate = "${date.day}/${date.month}";
 
-          return GestureDetector(
-            onTap: () => setState(() => _selectedDayIndex = index),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: isSelected ? context.primary : context.mutedBackground,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: context.primary.withAlpha(40),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        )
-                      ]
-                    : null,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Day ${index + 1}",
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : context.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.sp,
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedDayIndex = index),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: isSelected ? context.primary : context.mutedBackground,
+                      borderRadius: BorderRadius.circular(20.r),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: context.primary.withAlpha(40),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Day ${index + 1}",
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : context.onSurface,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                        Text(
+                          formattedDate,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white70 : context.onSurfaceVariant,
+                            fontSize: 10.sp,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    formattedDate,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white70 : context.onSurfaceVariant,
-                      fontSize: 10.sp,
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(right: 20.w),
+            child: GestureDetector(
+              onTap: _openEditItinerary,
+              child: Container(
+                width: 40.w,
+                height: 40.h,
+                decoration: BoxDecoration(
+                  color: context.primary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.primary.withAlpha(50),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Icon(
+                  Icons.edit_outlined,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -909,69 +1225,73 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
             // Activity content card
             Expanded(
-              child: Card(
-                elevation: 1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  side: BorderSide(
-                    color: context.borderColor.withAlpha(30),
+              child: InkWell(
+                onTap: () => _showActivityDetails(activity),
+                borderRadius: BorderRadius.circular(12.r),
+                child: Card(
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    side: BorderSide(
+                      color: context.borderColor.withAlpha(30),
+                    ),
                   ),
-                ),
-                margin: EdgeInsets.only(bottom: 16.h),
-                child: Padding(
-                  padding: EdgeInsets.all(12.w),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              activity.name,
-                              style: context.text.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (activity.notes != null && activity.notes!.isNotEmpty) ...[
-                              6.h.verticalSpace,
+                  margin: EdgeInsets.only(bottom: 16.h),
+                  child: Padding(
+                    padding: EdgeInsets.all(12.w),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                activity.notes!,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: context.text.bodySmall?.copyWith(
-                                  color: context.onSurfaceVariant,
+                                activity.name,
+                                style: context.text.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete_outline, color: context.colors.error, size: 20.sp),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (dialogCtx) => AlertDialog(
-                              title: const Text("Delete Activity"),
-                              content: Text("Are you sure you want to remove ${activity.name}?"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(dialogCtx),
-                                  child: const Text("Cancel"),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(dialogCtx);
-                                    _deleteActivity(activity.id);
-                                  },
-                                  child: Text("Delete", style: TextStyle(color: context.colors.error)),
+                              if (activity.notes != null && activity.notes!.isNotEmpty) ...[
+                                6.h.verticalSpace,
+                                Text(
+                                  activity.notes!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.text.bodySmall?.copyWith(
+                                    color: context.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete_outline, color: context.colors.error, size: 20.sp),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (dialogCtx) => AlertDialog(
+                                title: const Text("Delete Activity"),
+                                content: Text("Are you sure you want to remove ${activity.name}?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dialogCtx),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(dialogCtx);
+                                      _deleteActivity(activity.id);
+                                    },
+                                    child: Text("Delete", style: TextStyle(color: context.colors.error)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1000,5 +1320,141 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       default:
         return Icons.place;
     }
+  }
+
+  Future<void> _showActivityDetails(TripActivityModel baseModel) async {
+    AppToast.success("Loading activity details...");
+    TripActivityModel? latestModel;
+    try {
+      final apiService = sl<ApiService>();
+      final res = await apiService.get<dynamic>(
+        "/TripActivity/${baseModel.id}",
+        fromJson: (d) => d,
+      );
+      if (res is Success && res.data != null) {
+        latestModel = TripActivityModel.fromJson(res.data["data"] ?? res.data);
+      }
+    } catch (_) {}
+
+    final model = latestModel ?? baseModel;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(model.name),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (model.notes != null && model.notes!.isNotEmpty) ...[
+                  Text("Details / Notes:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(model.notes!),
+                  12.h.verticalSpace,
+                ],
+                Text("Start Time:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                Text("${model.startDatetime.toLocal()}"),
+                12.h.verticalSpace,
+                if (model.cost > 0) ...[
+                  Text("Estimated Cost:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text("\$${model.cost}"),
+                  12.h.verticalSpace,
+                ],
+                if (model.bookingReference != null && model.bookingReference!.isNotEmpty) ...[
+                  Text("Booking Reference:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(model.bookingReference!),
+                  12.h.verticalSpace,
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAttachmentsSection(BuildContext context) {
+    return Container(
+      color: context.surface,
+      padding: EdgeInsets.all(20.w),
+      margin: EdgeInsets.only(top: 8.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.attachment, color: context.primary, size: 20.sp),
+                  8.w.horizontalSpace,
+                  Text(
+                    "Trip Documents",
+                    style: context.text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
+              ),
+              if (_uploadingAttachment)
+                SizedBox(
+                  width: 20.w,
+                  height: 20.w,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                IconButton(
+                  icon: Icon(Icons.add_a_photo_outlined, color: context.primary, size: 22.sp),
+                  onPressed: _pickAndUploadAttachment,
+                ),
+            ],
+          ),
+          12.h.verticalSpace,
+          if (_attachments.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Text(
+                "No tickets or vouchers attached yet. Tap the camera icon to save ticket snaps.",
+                style: context.text.bodyMedium?.copyWith(
+                  color: context.onSurfaceVariant.withAlpha(120),
+                ),
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: _attachments.map((blobPath) {
+                final displayFilename = blobPath.split('/').last.replaceAll(RegExp(r'^\d+_'), '');
+                return InputChip(
+                  avatar: Icon(Icons.description_outlined, size: 16.sp, color: context.primary),
+                  label: Text(
+                    displayFilename,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.sp),
+                  ),
+                  onPressed: () => _downloadAndOpenAttachment(blobPath),
+                  onDeleted: () async {
+                    setState(() {
+                      _attachments.remove(blobPath);
+                    });
+                    await _saveAttachments();
+                    AppToast.success("Attachment removed");
+                  },
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
   }
 }

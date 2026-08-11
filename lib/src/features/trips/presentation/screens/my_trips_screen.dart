@@ -49,52 +49,15 @@ class _MyTripsScreenState extends State<MyTripsScreen>
       );
 
       if (result is Success<List<dynamic>>) {
-        final List<TripData> fetchedTrips = [];
-        for (final item in result.data) {
-          final jsonMap = item as Map<String, dynamic>;
-          final id = jsonMap["id"] ?? "";
-          final mainDest = jsonMap["mainDestination"] ?? "";
-          final name = jsonMap["name"] ?? (mainDest.isNotEmpty ? "Trip to $mainDest" : "My Trip");
-          final flag = _getCountryFlag(mainDest);
-          
-          DateTime? start;
-          DateTime? end;
-          if (jsonMap["startDate"] != null) {
-            start = DateTime.tryParse(jsonMap["startDate"]);
-          }
-          if (jsonMap["endDate"] != null) {
-            end = DateTime.tryParse(jsonMap["endDate"]);
-          }
-          
-          final dateRange = _formatDateRange(start, end);
-          final whoIsGoing = _capitalize(jsonMap["whoIsGoing"] ?? "solo");
-          final budgetLevel = _capitalize(jsonMap["budget"]?["budgetType"] ?? "flexible");
-          final imageUrl = _getTripImage(mainDest);
-
-          List<String> travelTastes = [];
-          if (jsonMap["travelTastes"] != null) {
-            travelTastes = List<String>.from(jsonMap["travelTastes"]);
-          }
-
-          fetchedTrips.add(TripData(
-            id: id,
-            name: name,
-            flag: flag,
-            dateRange: dateRange,
-            tripType: whoIsGoing,
-            category: budgetLevel,
-            imageUrl: imageUrl,
-            startDate: start,
-            endDate: end,
-            mainDestination: mainDest,
-            travelTastes: travelTastes,
-          ));
-        }
+        final List<TripData> fetchedTrips = result.data
+            .map((item) => TripData.fromJson(item as Map<String, dynamic>))
+            .toList();
 
         final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
         setState(() {
-          _activeTrips = fetchedTrips.where((t) => t.endDate == null || t.endDate!.isAfter(now.subtract(const Duration(days: 1)))).toList();
-          _passedTrips = fetchedTrips.where((t) => t.endDate != null && t.endDate!.isBefore(now.subtract(const Duration(days: 1)))).toList();
+          _activeTrips = fetchedTrips.where((t) => t.endDate == null || !t.endDate!.isBefore(today)).toList();
+          _passedTrips = fetchedTrips.where((t) => t.endDate != null && t.endDate!.isBefore(today)).toList();
           _isLoading = false;
         });
       } else if (result is Failure<List<dynamic>>) {

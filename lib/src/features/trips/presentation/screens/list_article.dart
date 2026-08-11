@@ -6,11 +6,54 @@ import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:wonder_souls/src/config/utils/rss_feed_parser.dart';
 import 'package:wonder_souls/src/features/home/presentation/screens/search_screen.dart';
 
-class ListArticle extends StatelessWidget {
+class ListArticle extends StatefulWidget {
   const ListArticle({super.key});
   static const String routeName = "/ListArticle";
+
+  @override
+  State<ListArticle> createState() => _ListArticleState();
+}
+
+class _ListArticleState extends State<ListArticle> {
+  List<Map<String, String>> _dynamicArticles = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchArticles();
+  }
+
+  Future<void> fetchArticles() async {
+    setState(() => _loading = true);
+    try {
+      final dio = Dio();
+      final response = await dio.get('https://www.wanderingsouls.in/feed/');
+      if (response.statusCode == 200 && response.data != null) {
+        final feedContent = response.data.toString();
+        final parsed = RssFeedParser.parse(feedContent);
+        if (parsed.isNotEmpty) {
+          setState(() {
+            _dynamicArticles = parsed;
+            _loading = false;
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch articles: $e");
+    }
+    setState(() {
+      _dynamicArticles = articles; // Fallback
+      _loading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,23 +113,34 @@ class ListArticle extends StatelessWidget {
         ],
       ),
 
-      body: ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-        itemCount: articles.length,
-        itemBuilder: (_, index) {
-          final article = articles[index];
-          return Padding(
-            padding: EdgeInsets.only(bottom: 24.h),
-            child: ArticleCard(
-              imageUrl: article['imageUrl']!,
-              title: article['title']!,
-              date: article['date']!,
-              ratio: 16 / 9,
-              cardWidth: MediaQuery.of(context).size.width - 40.w,
+      body: _loading
+          ? Center(child: CircularProgressIndicator(color: context.primary))
+          : ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+              itemCount: _dynamicArticles.length,
+              itemBuilder: (_, index) {
+                final article = _dynamicArticles[index];
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 24.h),
+                  child: InkWell(
+                    onTap: () {
+                      final link = article['link'] ?? '';
+                      if (link.isNotEmpty) {
+                        launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(16.r),
+                    child: ArticleCard(
+                      imageUrl: article['imageUrl']!,
+                      title: article['title']!,
+                      date: article['date']!,
+                      ratio: 16 / 9,
+                      cardWidth: MediaQuery.of(context).size.width - 40.w,
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

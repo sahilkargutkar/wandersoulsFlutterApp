@@ -4,7 +4,11 @@ import 'package:wonder_souls/src/features/trips/model/static_data.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/destination_explorer_screen.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/destination_details.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:wonder_souls/src/config/utils/rss_feed_parser.dart';
 
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
@@ -37,28 +41,57 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiService service = sl<ApiService>();
 
   List<PlaceModel> destinations = [];
-
+  List<Map<String, String>> _dynamicArticles = [];
   bool isLoading = true;
+  bool _loadingArticles = true;
+  String? _destinationsError;
 
   @override
   void initState() {
     super.initState();
-
     fetchPopularDestinations();
+    fetchArticles();
+  }
+
+  Future<void> fetchArticles() async {
+    setState(() => _loadingArticles = true);
+    try {
+      final dio = Dio();
+      final response = await dio.get('https://www.wanderingsouls.in/feed/');
+      if (response.statusCode == 200 && response.data != null) {
+        final feedContent = response.data.toString();
+        final parsed = RssFeedParser.parse(feedContent);
+        if (parsed.isNotEmpty) {
+          setState(() {
+            _dynamicArticles = parsed;
+            _loadingArticles = false;
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch articles: $e");
+    }
+    setState(() {
+      _dynamicArticles = articles; // Fallback to static articles
+      _loadingArticles = false;
+    });
   }
 
   Future<void> fetchPopularDestinations() async {
     setState(() {
       isLoading = true;
+      _destinationsError = null;
     });
 
     final result = await service.getLocations(1, 5, "");
 
     result.fold(
       (failure) {
-        debugPrint(failure.message);
+        debugPrint("fetchPopularDestinations failure: ${failure.message}");
 
         setState(() {
+          _destinationsError = failure.message;
           isLoading = false;
         });
       },
@@ -66,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
       (success) {
         setState(() {
           destinations = success;
+          _destinationsError = null;
           isLoading = false;
         });
       },
@@ -182,11 +216,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 12.h),
               Text(
-                "No destinations found",
+                _destinationsError ?? "No destinations found",
                 style: context.text.bodyLarge?.copyWith(
                   color: context.onSurfaceVariant,
                 ),
               ),
+              if (_destinationsError != null) ...[
+                SizedBox(height: 8.h),
+                TextButton(
+                  onPressed: fetchPopularDestinations,
+                  child: const Text("Retry"),
+                ),
+              ],
             ],
           ),
         ),
@@ -235,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(20.r),
                 onTap: () {
-                  // Navigate to trip details
+                  context.push(DestinationDetailsScreen.routeName, extra: destination);
                 },
                 child: DestinationCard(
                   imageUrl:
@@ -255,8 +296,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPopularArticles() {
-    final screenWidth = MediaQuery.of(context).size.width;
+    if (_loadingArticles) {
+      return SizedBox(
+        height: 120.h,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
+    if (_dynamicArticles.isEmpty) {
+      return SizedBox(
+        height: 50.h,
+        child: const Center(child: Text("No articles found")),
+      );
+    }
+
+    final screenWidth = MediaQuery.of(context).size.width;
     final articleHeight = screenWidth < 360
         ? 230.h
         : screenWidth < 400
@@ -265,23 +319,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return SizedBox(
       height: articleHeight,
-
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-
-        itemCount: articles.length,
-
+        itemCount: _dynamicArticles.length,
         separatorBuilder: (_, __) => 16.w.width,
-
         itemBuilder: (context, index) {
-          final article = articles[index];
+          final article = _dynamicArticles[index];
 
           return StaggeredFadeSlide(
             index: index,
-            child: ArticleCard(
-              imageUrl: article['imageUrl']!,
-              title: article['title']!,
-              date: article['date']!,
+            child: InkWell(
+              onTap: () {
+                final link = article['link'] ?? '';
+                if (link.isNotEmpty) {
+                  launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+                }
+              },
+              borderRadius: BorderRadius.circular(16.r),
+              child: ArticleCard(
+                imageUrl: article['imageUrl']!,
+                title: article['title']!,
+                date: article['date']!,
+              ),
             ),
           );
         },

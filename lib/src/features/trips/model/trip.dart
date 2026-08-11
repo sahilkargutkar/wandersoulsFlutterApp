@@ -95,6 +95,7 @@ final Trip sampleTrip = Trip(
 class TripData {
   final String id;
   final String name;
+  final String description;
   final String flag;
   final String dateRange;
   final String tripType;
@@ -108,6 +109,7 @@ class TripData {
   TripData({
     required this.id,
     required this.name,
+    required this.description,
     required this.flag,
     required this.dateRange,
     required this.tripType,
@@ -118,4 +120,95 @@ class TripData {
     required this.mainDestination,
     required this.travelTastes,
   });
+
+  factory TripData.fromJson(Map<String, dynamic> jsonMap) {
+    final id = jsonMap["id"] ?? "";
+    final mainDest = jsonMap["mainDestination"] ?? "";
+    final name = jsonMap["name"] ?? (mainDest.isNotEmpty ? "Trip to $mainDest" : "My Trip");
+    final description = jsonMap["description"] ?? "";
+    final flag = _getCountryFlag(mainDest);
+    
+    DateTime? start;
+    DateTime? end;
+    if (jsonMap["startDate"] != null) {
+      start = DateTime.tryParse(jsonMap["startDate"]);
+    }
+    if (jsonMap["endDate"] != null) {
+      end = DateTime.tryParse(jsonMap["endDate"]);
+    }
+    
+    final dateRange = _formatDateRange(start, end);
+    final whoIsGoing = _capitalize(jsonMap["whoIsGoing"] ?? "solo");
+    final budgetLevel = _capitalize(jsonMap["budget"]?["budgetType"] ?? "flexible");
+    final imageUrl = _getTripImage(mainDest);
+
+    List<String> travelTastes = [];
+    if (jsonMap["travelTastes"] != null) {
+      travelTastes = List<String>.from(jsonMap["travelTastes"]);
+    }
+
+    return TripData(
+      id: id,
+      name: name,
+      description: description,
+      flag: flag,
+      dateRange: dateRange,
+      tripType: whoIsGoing,
+      category: budgetLevel,
+      imageUrl: imageUrl,
+      startDate: start,
+      endDate: end,
+      mainDestination: mainDest,
+      travelTastes: travelTastes,
+    );
+  }
+
+  static String _formatDateRange(DateTime? start, DateTime? end) {
+    if (start == null || end == null) return "Dates Unknown";
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return "${months[start.month - 1]} ${start.day} - ${months[end.month - 1]} ${end.day}, ${end.year}";
+  }
+
+  static String _getCountryFlag(String destination) {
+    final lower = destination.toLowerCase();
+    if (lower.contains("tokyo") || lower.contains("japan")) return "🇯🇵";
+    if (lower.contains("paris") || lower.contains("france")) return "🇫🇷";
+    if (lower.contains("london") || lower.contains("uk") || lower.contains("united kingdom")) return "🇬🇧";
+    if (lower.contains("rome") || lower.contains("italy")) return "🇮🇹";
+    if (lower.contains("new york") || lower.contains("usa") || lower.contains("united states")) return "🇺🇸";
+    if (lower.contains("sydney") || lower.contains("australia")) return "🇦🇺";
+    if (lower.contains("delhi") || lower.contains("india") || lower.contains("mumbai")) return "🇮🇳";
+    return "🌍";
+  }
+
+  static String _getTripImage(String destination) {
+    final lower = destination.toLowerCase();
+    if (lower.contains("tokyo") || lower.contains("japan")) {
+      return "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800";
+    }
+    if (lower.contains("paris") || lower.contains("france")) {
+      return "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800";
+    }
+    if (lower.contains("london")) {
+      return "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800";
+    }
+    if (lower.contains("rome") || lower.contains("italy")) {
+      return "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800";
+    }
+    if (lower.contains("new york") || lower.contains("usa")) {
+      return "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800";
+    }
+    if (lower.contains("sydney") || lower.contains("australia")) {
+      return "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800";
+    }
+    if (lower.contains("india")) {
+      return "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800";
+    }
+    return "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
+  }
+
+  static String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
+  }
 }

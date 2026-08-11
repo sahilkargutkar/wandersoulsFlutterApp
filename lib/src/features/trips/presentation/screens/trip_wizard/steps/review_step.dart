@@ -96,9 +96,9 @@ class ReviewStep extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(bottom: 24.h, top: 16.h),
                 child: CommonButton(
-                  title: "Create Trip",
+                  title: "Generate Itinerary",
                   onPressed: () {
-                    context.read<TripWizardCubit>().saveTrip();
+                    context.read<TripWizardCubit>().generateItinerary();
                   },
                 ),
               ),

@@ -11,7 +11,9 @@ import 'package:wonder_souls/src/features/home/presentation/screens/home_bottom_
 import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_text_form_field.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
+import 'package:wonder_souls/src/config/core/assets/assets.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 import 'package:go_router/go_router.dart';
 
@@ -299,7 +301,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                launchUrl(
+                                  Uri.parse("https://www.wanderingsouls.in/privacy-policy/"),
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              },
                               child: Text(
                                 'Privacy Policy',
                                 style: context.text.bodySmall?.copyWith(
@@ -316,7 +323,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                launchUrl(
+                                  Uri.parse("https://wanderingsouls.in/terms-and-conditions"),
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              },
                               child: Text(
                                 'Terms of Service',
                                 style: context.text.bodySmall?.copyWith(

@@ -8,6 +8,15 @@ import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
 import '../widgets/logout_bottom_sheet.dart';
+import 'package:go_router/go_router.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/personal_info_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/travel_preferences_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/billing_subscriptions_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/upgrade_plan_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/payment_methods_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/account_security_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/help_support_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -27,64 +36,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Upgrade Plan Card
-            Container(
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradientVibrant,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.primary.withAlpha(50),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52.w,
-                    height: 52.w,
-                    decoration: const BoxDecoration(
+            InkWell(
+              onTap: () => context.push(UpgradePlanScreen.routeName),
+              borderRadius: BorderRadius.circular(20.r),
+              child: Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradientVibrant,
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.primary.withAlpha(50),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52.w,
+                      height: 52.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.star_rounded,
+                        color: Color(0xFFF59E0B), // Warm amber star
+                        size: 30,
+                      ),
+                    ),
+                    16.w.width,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Upgrade Plan to Unlock More!',
+                            style: context.text.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          4.h.height,
+                          Text(
+                            'Enjoy all the benefits and explore more possibilities',
+                            style: context.text.bodyMedium?.copyWith(
+                              color: Colors.white.withAlpha(210),
+                              fontSize: 13.sp,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
                       color: Colors.white,
-                      shape: BoxShape.circle,
+                      size: 26.w,
                     ),
-                    child: const Icon(
-                      Icons.star_rounded,
-                      color: Color(0xFFF59E0B), // Warm amber star
-                      size: 30,
-                    ),
-                  ),
-                  16.w.width,
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Upgrade Plan to Unlock More!',
-                          style: context.text.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        4.h.height,
-                        Text(
-                          'Enjoy all the benefits and explore more possibilities',
-                          style: context.text.bodyMedium?.copyWith(
-                            color: Colors.white.withAlpha(210),
-                            fontSize: 13.sp,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.white,
-                    size: 26.w,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             24.h.height,
@@ -95,17 +108,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SettingsMenuItem(
                 icon: Icons.grid_view_rounded,
                 title: 'Travel Preferences',
-                onTap: () {},
+                onTap: () {
+                  context.push(TravelPreferencesScreen.routeName);
+                },
               ),
               SettingsMenuItem(
                 icon: Icons.person_outline_rounded,
                 title: 'Personal Info',
-                onTap: () {},
+                onTap: () {
+                  context.push(PersonalInfoScreen.routeName);
+                },
               ),
               SettingsMenuItem(
                 icon: Icons.shield_outlined,
                 title: 'Account & Security',
-                onTap: () {},
+                onTap: () {
+                  context.push(AccountSecurityScreen.routeName);
+                },
               ),
             ]),
             20.h.height,
@@ -116,12 +135,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SettingsMenuItem(
                 icon: Icons.star_outline_rounded,
                 title: 'Billing & Subscriptions',
-                onTap: () {},
+                onTap: () {
+                  context.push(BillingSubscriptionsScreen.routeName);
+                },
               ),
               SettingsMenuItem(
                 icon: Icons.credit_card_outlined,
                 title: 'Payment Methods',
-                onTap: () {},
+                onTap: () {
+                  context.push(PaymentMethodsScreen.routeName);
+                },
               ),
               SettingsMenuItem(
                 icon: Icons.swap_vert_rounded,
@@ -163,7 +186,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SettingsMenuItem(
                 icon: Icons.help_outline_rounded,
                 title: 'Help & Support',
-                onTap: () {},
+                onTap: () {
+                  context.push(HelpSupportScreen.routeName);
+                },
+              ),
+              SettingsMenuItem(
+                icon: Icons.description_outlined,
+                title: 'Terms & Conditions',
+                onTap: () {
+                  launchUrl(
+                    Uri.parse("https://wanderingsouls.in/terms-and-conditions"),
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+              ),
+              SettingsMenuItem(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Privacy Policy',
+                onTap: () {
+                  launchUrl(
+                    Uri.parse("https://www.wanderingsouls.in/privacy-policy/"),
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
               ),
             ]),
             24.h.height,

@@ -17,12 +17,44 @@ class ApiConstants {
   }
   static const String generateItinerary = "/generate-itinerary";
 
-  //Auth
+  // Auth & User
   static const String login = "/User/login";
+  static const String register = "/User/register";
+  static const String getUsers = "/User";
+  static const String verifyEmail = "/User/verify-email";
+  static const String updatePassword = "/User/update-password";
+  static String userById(String userId) => "/User/$userId";
+
+  // Trips
   static const String createTrip = "/Trips/create-trip";
   static const String getTrips = "/Trips";
-  static const String register = "/User/register";
+  static String tripById(String tripId) => "/Trips/$tripId";
+  static const String uploadTripFile = "/Trips/upload";
+  static const String downloadTripFile = "/Trips/download";
 
-  // static String deleteUser(String userId) => "/api/User/$userId";
-  static String userById(String userId) => "/User/$userId";
+  // Accomodation
+  static const String accomodations = "/Accomodation";
+  static String accomodationById(String id) => "/Accomodation/$id";
+
+  // TripTransports
+  static const String tripTransports = "/TripTransports";
+  static String tripTransportById(String id) => "/TripTransports/$id";
+
+  // Destinations
+  static const String destinations = "/Destinations";
+  static String destinationById(String id) => "/Destinations/$id";
+  static const String createDestination = "/Destinations/create-destination";
+
+  // Locations
+  static const String locations = "/Locations";
+  static String locationById(String id) => "/Locations/$id";
+
+  // TripActivity
+  static const String tripActivities = "/TripActivity";
+  static String tripActivityById(String id) => "/TripActivity/$id";
+
+  // Preference
+  static const String getPreference = "/Preference";
+  static const String savePreference = "/Preference/save";
+  static const String updatePreference = "/Preference/update";
 }

@@ -15,6 +15,14 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/list_destin
 import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_details_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/trip_wizard_screen.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/destination_details.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/personal_info_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/travel_preferences_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/billing_subscriptions_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/upgrade_plan_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/payment_methods_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/account_security_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/help_support_screen.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 
 final GoRouter router = GoRouter(
@@ -68,6 +76,41 @@ final GoRouter router = GoRouter(
         final place = state.extra as PlaceModel;
         return TripWizardScreen(destination: place);
       },
+    ),
+    GoRoute(
+      path: DestinationDetailsScreen.routeName,
+      builder: (context, state) {
+        final place = state.extra as PlaceModel;
+        return DestinationDetailsScreen(place: place);
+      },
+    ),
+    GoRoute(
+      path: PersonalInfoScreen.routeName,
+      builder: (context, state) => const PersonalInfoScreen(),
+    ),
+    GoRoute(
+      path: TravelPreferencesScreen.routeName,
+      builder: (context, state) => const TravelPreferencesScreen(),
+    ),
+    GoRoute(
+      path: BillingSubscriptionsScreen.routeName,
+      builder: (context, state) => const BillingSubscriptionsScreen(),
+    ),
+    GoRoute(
+      path: UpgradePlanScreen.routeName,
+      builder: (context, state) => const UpgradePlanScreen(),
+    ),
+    GoRoute(
+      path: PaymentMethodsScreen.routeName,
+      builder: (context, state) => const PaymentMethodsScreen(),
+    ),
+    GoRoute(
+      path: AccountSecurityScreen.routeName,
+      builder: (context, state) => const AccountSecurityScreen(),
+    ),
+    GoRoute(
+      path: HelpSupportScreen.routeName,
+      builder: (context, state) => const HelpSupportScreen(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

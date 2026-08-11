@@ -32,14 +32,6 @@ class GoogleMapsApiService {
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
   }
 
-  Future<Map<String, dynamic>> getRequest(
-    String endpoint,
-    Map<String, dynamic> queryParameters,
-  ) async {
-    final response = await dio.get(endpoint, queryParameters: queryParameters);
-    return response.data;
-  }
-
   Future<Either<Failure, List<PlaceModel>>> searchPlaces(String query) async {
     try {
       final response = await dio.get(

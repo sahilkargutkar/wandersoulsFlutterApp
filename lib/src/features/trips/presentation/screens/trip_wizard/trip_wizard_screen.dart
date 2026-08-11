@@ -13,6 +13,8 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/steps/budget_step.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/steps/collaborators_step.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/steps/review_step.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/steps/generating_step.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/steps/itinerary_result_step.dart';
 
 class TripWizardScreen extends StatelessWidget {
   const TripWizardScreen({super.key, required this.destination});
@@ -113,6 +115,8 @@ class _TripWizardViewState extends State<_TripWizardView> {
               BudgetStep(),             // 4
               CollaboratorsStep(),      // 5
               ReviewStep(),             // 6
+              GeneratingStep(),         // 7
+              ItineraryResultStep(),    // 8
             ],
           ),
         );

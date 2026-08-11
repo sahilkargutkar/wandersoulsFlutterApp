@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
@@ -181,13 +182,17 @@ class DestinationDetailsScreen extends StatelessWidget {
                   ],
                 ),
                 child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.share_outlined,
-                    color: context.colors.onSurface,
-                    size: 20.sp,
-                  ),
+                onPressed: () {
+                  final mapUrl = place.googleMapsUrl ?? "https://maps.google.com/?q=${Uri.encodeComponent(place.name)}";
+                  final shareText = "Explore ${place.name} in ${place.address} on WanderSouls! 🌍✈️\nLocation Link: $mapUrl";
+                  Share.share(shareText);
+                },
+                icon: Icon(
+                  Icons.share_outlined,
+                  color: context.colors.onSurface,
+                  size: 20.sp,
                 ),
+              ),
               ),
             ],
 
@@ -242,10 +247,10 @@ class DestinationDetailsScreen extends StatelessWidget {
                   /// COUNTRY
                   Row(
                     children: [
-                      Text("🇯🇵", style: TextStyle(fontSize: 16.sp)),
+                      Text("📍", style: TextStyle(fontSize: 16.sp)),
                       8.w.horizontalSpace,
                       Text(
-                        "Japan",
+                        place.address.isNotEmpty ? place.address : "Destination",
                         style: context.text.bodyMedium?.copyWith(
                           color: context.colors.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
@@ -258,7 +263,9 @@ class DestinationDetailsScreen extends StatelessWidget {
 
                   /// DESCRIPTION
                   Text(
-                    "Discover the vibrant metropolis of Tokyo, where modernity meets tradition in perfect harmony. From futuristic skyscrapers to serene temples and lush parks, Tokyo offers an eclectic blend of experiences.",
+                    place.description.isNotEmpty
+                        ? place.description
+                        : "Discover the vibrant highlights of ${place.name}, where modernity meets tradition in perfect harmony. From stunning views to historical landmarks, ${place.name} offers a memorable blend of experiences.",
                     style: context.text.bodyLarge?.copyWith(
                       color: context.colors.onSurfaceVariant,
                       height: 1.6,
