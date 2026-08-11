@@ -44,11 +44,7 @@ class _ExpandablePlaceCardState extends State<ExpandablePlaceCard> {
                 color: context.primaryTint,
                 borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Icon(
-                widget.icon,
-                size: 18.sp,
-                color: context.primary,
-              ),
+              child: Icon(widget.icon, size: 18.sp, color: context.primary),
             ),
           ),
 
@@ -143,7 +139,11 @@ class _ExpandedContent extends StatelessWidget {
           errorWidget: (_, __, ___) => Container(
             height: 160.h,
             color: context.shimmerBase,
-            child: Icon(Icons.image_rounded, size: 48.sp, color: context.onSurfaceVariant.withAlpha(60)),
+            child: Icon(
+              Icons.image_rounded,
+              size: 48.sp,
+              color: context.onSurfaceVariant.withAlpha(60),
+            ),
           ),
         ),
 
@@ -155,13 +155,24 @@ class _ExpandedContent extends StatelessWidget {
               /// RATING
               Row(
                 children: [
-                  Icon(Icons.star_rounded, size: 16.sp, color: const Color(0xFFF59E0B)),
+                  Icon(
+                    Icons.star_rounded,
+                    size: 16.sp,
+                    color: const Color(0xFFF59E0B),
+                  ),
                   4.w.width,
-                  Text('${place?.rating}', style: context.text.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  Text(
+                    '${place?.rating}',
+                    style: context.text.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   4.w.width,
                   Text(
                     '(${place?.reviews} reviews)',
-                    style: context.text.bodySmall?.copyWith(color: context.onSurfaceVariant),
+                    style: context.text.bodySmall?.copyWith(
+                      color: context.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -171,7 +182,11 @@ class _ExpandedContent extends StatelessWidget {
               /// TIME
               Row(
                 children: [
-                  Icon(Icons.access_time_rounded, size: 16.sp, color: context.onSurfaceVariant),
+                  Icon(
+                    Icons.access_time_rounded,
+                    size: 16.sp,
+                    color: context.onSurfaceVariant,
+                  ),
                   8.w.width,
                   Text(
                     '${place?.openTime} - ${place?.closeTime}',
@@ -185,7 +200,11 @@ class _ExpandedContent extends StatelessWidget {
               /// PRICE
               Row(
                 children: [
-                  Icon(Icons.attach_money_rounded, size: 16.sp, color: context.onSurfaceVariant),
+                  Icon(
+                    Icons.attach_money_rounded,
+                    size: 16.sp,
+                    color: context.onSurfaceVariant,
+                  ),
                   8.w.width,
                   Text(
                     '\$${place?.price.toStringAsFixed(2)}',
@@ -204,7 +223,10 @@ class _ExpandedContent extends StatelessWidget {
                 onTap: () {},
                 scaleFactor: 0.94,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
                   decoration: BoxDecoration(
                     color: context.primaryTint,
                     borderRadius: BorderRadius.circular(8.r),
@@ -212,7 +234,11 @@ class _ExpandedContent extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.map_rounded, size: 16.sp, color: context.primary),
+                      Icon(
+                        Icons.map_rounded,
+                        size: 16.sp,
+                        color: context.primary,
+                      ),
                       8.w.width,
                       Text(
                         'View on Google Maps',

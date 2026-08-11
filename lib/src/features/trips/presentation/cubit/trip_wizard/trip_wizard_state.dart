@@ -1,7 +1,14 @@
 import 'package:equatable/equatable.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 
-enum TripWizardStatus { initial, loading, generatingItinerary, itineraryReady, success, failure }
+enum TripWizardStatus {
+  initial,
+  loading,
+  generatingItinerary,
+  itineraryReady,
+  success,
+  failure,
+}
 
 class TripWizardState extends Equatable {
   final PlaceModel? destination;
@@ -23,7 +30,7 @@ class TripWizardState extends Equatable {
   final double accommodationBudget;
   final double foodBudget;
   final double activitiesBudget;
-  
+
   // Status fields
   final TripWizardStatus status;
   final String? errorMessage;
@@ -102,25 +109,25 @@ class TripWizardState extends Equatable {
 
   @override
   List<Object?> get props => [
-        destination,
-        partyType,
-        startDate,
-        endDate,
-        interests,
-        budgetLevel,
-        collaborators,
-        currentStep,
-        name,
-        description,
-        isPublic,
-        currency,
-        totalEstimated,
-        transportationBudget,
-        accommodationBudget,
-        foodBudget,
-        activitiesBudget,
-        status,
-        errorMessage,
-        generatedItinerary,
-      ];
+    destination,
+    partyType,
+    startDate,
+    endDate,
+    interests,
+    budgetLevel,
+    collaborators,
+    currentStep,
+    name,
+    description,
+    isPublic,
+    currency,
+    totalEstimated,
+    transportationBudget,
+    accommodationBudget,
+    foodBudget,
+    activitiesBudget,
+    status,
+    errorMessage,
+    generatedItinerary,
+  ];
 }

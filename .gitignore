@@ -34,7 +34,7 @@ migrate_working_dir/
 /coverage/
 .env
 .agents
-
+.commandcode
 # Symbolication related
 app.*.symbols
 

@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/features/trips/model/static_data.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
-import 'package:wonder_souls/src/features/trips/presentation/screens/destination_explorer_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/destination_details.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
@@ -24,11 +23,6 @@ import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
 import 'package:wonder_souls/src/features/home/presentation/screens/search_screen.dart';
-
-import 'package:wonder_souls/src/features/trips/model/static_data.dart';
-
-import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
-import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (response.statusCode == 200 && response.data != null) {
         final feedContent = response.data.toString();
         final parsed = RssFeedParser.parse(feedContent);
-        if (parsed.isNotEmpty) {
+        if (parsed.isNotEmpty && mounted) {
           setState(() {
             _dynamicArticles = parsed;
             _loadingArticles = false;
@@ -72,10 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       debugPrint("Failed to fetch articles: $e");
     }
-    setState(() {
-      _dynamicArticles = articles; // Fallback to static articles
-      _loadingArticles = false;
-    });
+    if (mounted) {
+      setState(() {
+        _dynamicArticles = articles; // Fallback to static articles
+        _loadingArticles = false;
+      });
+    }
   }
 
   Future<void> fetchPopularDestinations() async {
@@ -85,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     final result = await service.getLocations(1, 5, "");
+    if (!mounted) return;
 
     result.fold(
       (failure) {
@@ -276,7 +273,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(20.r),
                 onTap: () {
-                  context.push(DestinationDetailsScreen.routeName, extra: destination);
+                  context.push(
+                    DestinationDetailsScreen.routeName,
+                    extra: destination,
+                  );
                 },
                 child: DestinationCard(
                   imageUrl:
@@ -332,7 +332,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 final link = article['link'] ?? '';
                 if (link.isNotEmpty) {
-                  launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+                  launchUrl(
+                    Uri.parse(link),
+                    mode: LaunchMode.externalApplication,
+                  );
                 }
               },
               borderRadius: BorderRadius.circular(16.r),

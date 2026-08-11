@@ -7,7 +7,6 @@ import 'package:wonder_souls/src/features/settings/presentation/screens/settings
 import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/saved_trips_screen.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
-import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
 import '../../../../config/core/assets/assets.dart';
 

@@ -17,7 +17,12 @@ class PaymentMethodsScreen extends StatefulWidget {
 class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   final List<Map<String, dynamic>> _cards = [
     {"type": "Visa", "last4": "4242", "expiry": "12/28", "isDefault": true},
-    {"type": "Mastercard", "last4": "8888", "expiry": "06/27", "isDefault": false},
+    {
+      "type": "Mastercard",
+      "last4": "8888",
+      "expiry": "06/27",
+      "isDefault": false,
+    },
   ];
 
   void _showAddCardBottomSheet() {
@@ -32,7 +37,12 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, MediaQuery.of(context).viewInsets.bottom + 20.h),
+          padding: EdgeInsets.fromLTRB(
+            20.w,
+            20.h,
+            20.w,
+            MediaQuery.of(context).viewInsets.bottom + 20.h,
+          ),
           decoration: BoxDecoration(
             color: context.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
@@ -43,7 +53,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
             children: [
               Text(
                 "Add Payment Method",
-                style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: context.text.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               16.h.verticalSpace,
               TextField(
@@ -62,7 +74,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                   Expanded(
                     child: TextField(
                       controller: expiryController,
-                      decoration: const InputDecoration(labelText: "Expiry Date (MM/YY)"),
+                      decoration: const InputDecoration(
+                        labelText: "Expiry Date (MM/YY)",
+                      ),
                     ),
                   ),
                   16.w.horizontalSpace,
@@ -124,7 +138,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           children: [
             Text(
               "Saved Cards",
-              style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: context.text.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             16.h.verticalSpace,
             Expanded(
@@ -142,7 +158,9 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          card["type"] == "Visa" ? Icons.credit_card : Icons.credit_card_outlined,
+                          card["type"] == "Visa"
+                              ? Icons.credit_card
+                              : Icons.credit_card_outlined,
                           color: context.primary,
                           size: 32.sp,
                         ),
@@ -153,19 +171,26 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                             children: [
                               Text(
                                 "${card["type"]} •••• ${card["last4"]}",
-                                style: context.text.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                                style: context.text.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               4.h.verticalSpace,
                               Text(
                                 "Expires ${card["expiry"]}",
-                                style: context.text.bodySmall?.copyWith(color: context.onSurfaceVariant),
+                                style: context.text.bodySmall?.copyWith(
+                                  color: context.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
                         ),
                         if (card["isDefault"])
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
                             decoration: BoxDecoration(
                               color: context.primaryTint,
                               borderRadius: BorderRadius.circular(8.r),
@@ -200,12 +225,22 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                                             }
                                             card["isDefault"] = true;
                                           });
-                                          AppToast.success("Default payment card updated");
+                                          AppToast.success(
+                                            "Default payment card updated",
+                                          );
                                         },
                                       ),
                                       ListTile(
-                                        leading: Icon(Icons.delete, color: context.colors.error),
-                                        title: Text("Remove Card", style: TextStyle(color: context.colors.error)),
+                                        leading: Icon(
+                                          Icons.delete,
+                                          color: context.colors.error,
+                                        ),
+                                        title: Text(
+                                          "Remove Card",
+                                          style: TextStyle(
+                                            color: context.colors.error,
+                                          ),
+                                        ),
                                         onTap: () {
                                           Navigator.pop(context);
                                           setState(() {

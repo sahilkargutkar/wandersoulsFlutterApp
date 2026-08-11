@@ -56,8 +56,12 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
         setState(() {
-          _activeTrips = fetchedTrips.where((t) => t.endDate == null || !t.endDate!.isBefore(today)).toList();
-          _passedTrips = fetchedTrips.where((t) => t.endDate != null && t.endDate!.isBefore(today)).toList();
+          _activeTrips = fetchedTrips
+              .where((t) => t.endDate == null || !t.endDate!.isBefore(today))
+              .toList();
+          _passedTrips = fetchedTrips
+              .where((t) => t.endDate != null && t.endDate!.isBefore(today))
+              .toList();
           _isLoading = false;
         });
       } else if (result is Failure<List<dynamic>>) {
@@ -72,55 +76,6 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         _isLoading = false;
       });
     }
-  }
-
-  String _formatDateRange(DateTime? start, DateTime? end) {
-    if (start == null || end == null) return "Dates Unknown";
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return "${months[start.month - 1]} ${start.day} - ${months[end.month - 1]} ${end.day}, ${end.year}";
-  }
-
-  String _getCountryFlag(String destination) {
-    final lower = destination.toLowerCase();
-    if (lower.contains("tokyo") || lower.contains("japan")) return "🇯🇵";
-    if (lower.contains("paris") || lower.contains("france")) return "🇫🇷";
-    if (lower.contains("london") || lower.contains("uk") || lower.contains("united kingdom")) return "🇬🇧";
-    if (lower.contains("rome") || lower.contains("italy")) return "🇮🇹";
-    if (lower.contains("new york") || lower.contains("usa") || lower.contains("united states")) return "🇺🇸";
-    if (lower.contains("sydney") || lower.contains("australia")) return "🇦🇺";
-    if (lower.contains("delhi") || lower.contains("india") || lower.contains("mumbai")) return "🇮🇳";
-    return "🌍";
-  }
-
-  String _getTripImage(String destination) {
-    final lower = destination.toLowerCase();
-    if (lower.contains("tokyo") || lower.contains("japan")) {
-      return "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800";
-    }
-    if (lower.contains("paris") || lower.contains("france")) {
-      return "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800";
-    }
-    if (lower.contains("london")) {
-      return "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800";
-    }
-    if (lower.contains("rome") || lower.contains("italy")) {
-      return "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800";
-    }
-    if (lower.contains("new york") || lower.contains("usa")) {
-      return "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800";
-    }
-    if (lower.contains("sydney") || lower.contains("australia")) {
-      return "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800";
-    }
-    if (lower.contains("india")) {
-      return "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800";
-    }
-    return "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
-  }
-
-  String _capitalize(String s) {
-    if (s.isEmpty) return s;
-    return s[0].toUpperCase() + s.substring(1);
   }
 
   @override
@@ -180,42 +135,48 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                     child: CircularProgressIndicator(color: context.primary),
                   )
                 : _errorMessage != null
-                    ? Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 32.w),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.error_outline, size: 48.sp, color: context.colors.error),
-                              16.h.verticalSpace,
-                              Text(
-                                _errorMessage!,
-                                textAlign: TextAlign.center,
-                                style: context.text.bodyMedium?.copyWith(
-                                  color: context.colors.onSurfaceVariant,
-                                ),
-                              ),
-                              16.h.verticalSpace,
-                              ElevatedButton(
-                                onPressed: _fetchTrips,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: context.primary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                                ),
-                                child: const Text("Retry"),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : TabBarView(
-                        controller: _tabController,
+                ? Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 32.w),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildTripsList(_activeTrips),
-                          _buildTripsList(_passedTrips),
+                          Icon(
+                            Icons.error_outline,
+                            size: 48.sp,
+                            color: context.colors.error,
+                          ),
+                          16.h.verticalSpace,
+                          Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: context.text.bodyMedium?.copyWith(
+                              color: context.colors.onSurfaceVariant,
+                            ),
+                          ),
+                          16.h.verticalSpace,
+                          ElevatedButton(
+                            onPressed: _fetchTrips,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: context.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                            ),
+                            child: const Text("Retry"),
+                          ),
                         ],
                       ),
+                    ),
+                  )
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildTripsList(_activeTrips),
+                      _buildTripsList(_passedTrips),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -235,10 +196,8 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         itemCount: trips.length,
         itemBuilder: (context, index) {
           return GestureDetector(
-            onTap: () => context.push(
-              TripDetailsScreen.routeName,
-              extra: trips[index],
-            ),
+            onTap: () =>
+                context.push(TripDetailsScreen.routeName, extra: trips[index]),
             child: TripCard(trip: trips[index]),
           );
         },

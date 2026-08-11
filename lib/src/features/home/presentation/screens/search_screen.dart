@@ -40,18 +40,23 @@ class _SearchScreenState extends State<SearchScreen> {
 
     debounce = Timer(const Duration(milliseconds: 500), () async {
       if (value.trim().isEmpty) {
-        setState(() {
-          places.clear();
-          isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            places.clear();
+            isLoading = false;
+          });
+        }
         return;
       }
 
-      setState(() {
-        isLoading = true;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = true;
+        });
+      }
 
       final result = await service.getLocations(1, 10, value);
+      if (!mounted) return;
 
       result.fold(
         (failure) {
@@ -140,108 +145,109 @@ class _SearchScreenState extends State<SearchScreen> {
           );
         },
         child: Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          color: context.mutedBackground,
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(
-            color: context.borderColor.withAlpha(20),
-            width: 1,
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: context.mutedBackground,
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(
+              color: context.borderColor.withAlpha(20),
+              width: 1,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Hero(
-              tag: place.placeId,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16.r),
-                child: Image.network(
-                  "https://picsum.photos/200?random=$index",
-                  width: 72.w,
-                  height: 72.w,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
-                    return Container(
-                      width: 72.w,
-                      height: 72.w,
-                      decoration: BoxDecoration(
-                        color: context.shimmerBase,
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        color: context.colors.onSurfaceVariant.withAlpha(100),
-                        size: 24.sp,
-                      ),
-                    );
-                  },
+          child: Row(
+            children: [
+              Hero(
+                tag: place.placeId,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: Image.network(
+                    "https://picsum.photos/200?random=$index",
+                    width: 72.w,
+                    height: 72.w,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) {
+                      return Container(
+                        width: 72.w,
+                        height: 72.w,
+                        decoration: BoxDecoration(
+                          color: context.shimmerBase,
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: context.colors.onSurfaceVariant.withAlpha(100),
+                          size: 24.sp,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
 
-            14.w.horizontalSpace,
+              14.w.horizontalSpace,
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    place.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.onSurface,
-                    ),
-                  ),
-
-                  6.h.verticalSpace,
-
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        size: 14.sp,
-                        color: context.colors.primary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      place.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: context.colors.onSurface,
                       ),
+                    ),
 
-                      4.w.horizontalSpace,
+                    6.h.verticalSpace,
 
-                      Expanded(
-                        child: Text(
-                          place.description,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.text.bodySmall?.copyWith(
-                            color: context.colors.onSurfaceVariant,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_rounded,
+                          size: 14.sp,
+                          color: context.colors.primary,
+                        ),
+
+                        4.w.horizontalSpace,
+
+                        Expanded(
+                          child: Text(
+                            place.description,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.text.bodySmall?.copyWith(
+                              color: context.colors.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            10.w.horizontalSpace,
+              10.w.horizontalSpace,
 
-            Container(
-              width: 32.w,
-              height: 32.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: context.primaryTint,
+              Container(
+                width: 32.w,
+                height: 32.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.primaryTint,
+                ),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14.sp,
+                  color: context.colors.primary,
+                ),
               ),
-              child: Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14.sp,
-                color: context.colors.primary,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),);
+    );
   }
 
   Widget _buildEmptyState() {

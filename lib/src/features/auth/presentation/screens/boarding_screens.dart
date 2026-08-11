@@ -68,10 +68,7 @@ class _BoardingScreensState extends State<BoardingScreens> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              context.primary,
-              context.primary.withAlpha(220),
-            ],
+            colors: [context.primary, context.primary.withAlpha(220)],
           ),
         ),
         child: Stack(
@@ -167,15 +164,16 @@ class _BoardingScreensState extends State<BoardingScreens> {
                                 return FadeTransition(
                                   opacity: animation,
                                   child: SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(0.0, 0.12),
-                                      end: Offset.zero,
-                                    ).animate(
-                                      CurvedAnimation(
-                                        parent: animation,
-                                        curve: Curves.easeOutCubic,
-                                      ),
-                                    ),
+                                    position:
+                                        Tween<Offset>(
+                                          begin: const Offset(0.0, 0.12),
+                                          end: Offset.zero,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                        ),
                                     child: child,
                                   ),
                                 );
@@ -187,11 +185,12 @@ class _BoardingScreensState extends State<BoardingScreens> {
                                   Text(
                                     walkthroughList[currentPage].title,
                                     textAlign: TextAlign.center,
-                                    style: context.text.headlineMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.2,
-                                      letterSpacing: -0.3,
-                                    ),
+                                    style: context.text.headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          height: 1.2,
+                                          letterSpacing: -0.3,
+                                        ),
                                   ),
                                   14.h.height,
                                   Text(
@@ -253,10 +252,11 @@ class _BoardingScreensState extends State<BoardingScreens> {
                                       ),
                                       child: Text(
                                         'Skip',
-                                        style: context.text.titleSmall?.copyWith(
-                                          color: context.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        style: context.text.titleSmall
+                                            ?.copyWith(
+                                              color: context.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -265,7 +265,8 @@ class _BoardingScreensState extends State<BoardingScreens> {
                                 12.w.width,
                               Expanded(
                                 child: CommonButton(
-                                  title: currentPage == walkthroughList.length - 1
+                                  title:
+                                      currentPage == walkthroughList.length - 1
                                       ? 'Get Started'
                                       : 'Continue',
                                   onPressed: _nextPage,

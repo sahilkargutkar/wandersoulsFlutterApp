@@ -100,14 +100,25 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                       onChanged: _searchUsers,
                       decoration: InputDecoration(
                         hintText: "Search name or email...",
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 12.h,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(color: context.colors.onSurface.withOpacity(0.1)),
+                          borderSide: BorderSide(
+                            color: context.colors.onSurface.withValues(
+                              alpha: 0.1,
+                            ),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(color: context.colors.onSurface.withOpacity(0.1)),
+                          borderSide: BorderSide(
+                            color: context.colors.onSurface.withValues(
+                              alpha: 0.1,
+                            ),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.r),
@@ -116,7 +127,9 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                       ),
                       onSubmitted: (value) {
                         if (value.trim().isNotEmpty) {
-                          context.read<TripWizardCubit>().addCollaborator(value.trim());
+                          context.read<TripWizardCubit>().addCollaborator(
+                            value.trim(),
+                          );
                           _emailController.clear();
                           setState(() {
                             _searchResults = [];
@@ -129,7 +142,9 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                   InkWell(
                     onTap: () {
                       if (_emailController.text.trim().isNotEmpty) {
-                        context.read<TripWizardCubit>().addCollaborator(_emailController.text.trim());
+                        context.read<TripWizardCubit>().addCollaborator(
+                          _emailController.text.trim(),
+                        );
                         _emailController.clear();
                         setState(() {
                           _searchResults = [];
@@ -145,7 +160,7 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                       ),
                       child: Icon(Icons.add, color: context.colors.onPrimary),
                     ),
-                  )
+                  ),
                 ],
               ),
               if (_isLoadingUsers)
@@ -160,10 +175,12 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                   decoration: BoxDecoration(
                     color: context.colors.surface,
                     borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: context.colors.onSurface.withOpacity(0.1)),
+                    border: Border.all(
+                      color: context.colors.onSurface.withValues(alpha: 0.1),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -181,13 +198,26 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                         dense: true,
                         leading: CircleAvatar(
                           radius: 14.r,
-                          backgroundColor: context.colors.primary.withOpacity(0.1),
-                          child: Icon(Icons.person, color: context.colors.primary, size: 16.sp),
+                          backgroundColor: context.colors.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          child: Icon(
+                            Icons.person,
+                            color: context.colors.primary,
+                            size: 16.sp,
+                          ),
                         ),
-                        title: Text(name, style: context.text.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        title: Text(
+                          name,
+                          style: context.text.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         subtitle: Text(email, style: context.text.bodySmall),
                         onTap: () {
-                          context.read<TripWizardCubit>().addCollaborator(email);
+                          context.read<TripWizardCubit>().addCollaborator(
+                            email,
+                          );
                           _emailController.clear();
                           setState(() {
                             _searchResults = [];
@@ -206,9 +236,16 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                   itemBuilder: (context, index) {
                     final collab = state.collaborators[index];
                     return Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 12.h,
+                      ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: context.colors.onSurface.withOpacity(0.1)),
+                        border: Border.all(
+                          color: context.colors.onSurface.withValues(
+                            alpha: 0.1,
+                          ),
+                        ),
                         borderRadius: BorderRadius.circular(12.r),
                         color: context.colors.surface,
                       ),
@@ -216,8 +253,14 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                         children: [
                           CircleAvatar(
                             radius: 18.r,
-                            backgroundColor: context.colors.primary.withOpacity(0.1),
-                            child: Icon(Icons.person, color: context.colors.primary, size: 20.sp),
+                            backgroundColor: context.colors.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: context.colors.primary,
+                              size: 20.sp,
+                            ),
                           ),
                           12.w.horizontalSpace,
                           Expanded(
@@ -230,11 +273,18 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.close, color: context.colors.onSurfaceVariant),
+                            icon: Icon(
+                              Icons.close,
+                              color: context.colors.onSurfaceVariant,
+                            ),
                             onPressed: () {
-                              context.read<TripWizardCubit>().removeCollaborator(collab["userEmail"] ?? "");
+                              context
+                                  .read<TripWizardCubit>()
+                                  .removeCollaborator(
+                                    collab["userEmail"] ?? "",
+                                  );
                             },
-                          )
+                          ),
                         ],
                       ),
                     );
@@ -244,7 +294,9 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
               Padding(
                 padding: EdgeInsets.only(bottom: 24.h, top: 16.h),
                 child: CommonButton(
-                  title: state.collaborators.isEmpty ? "Skip & Continue" : "Continue",
+                  title: state.collaborators.isEmpty
+                      ? "Skip & Continue"
+                      : "Continue",
                   onPressed: () {
                     context.read<TripWizardCubit>().nextStep();
                   },

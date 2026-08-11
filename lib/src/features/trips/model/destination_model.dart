@@ -22,7 +22,9 @@ class DestinationModel {
       locationId: json['locationId'],
       name: json['name'] ?? '',
       imageUrl: json['imageUrl'],
-      visited: json['visited'] != null ? DateTime.tryParse(json['visited']) : null,
+      visited: json['visited'] != null
+          ? DateTime.tryParse(json['visited'])
+          : null,
     );
   }
 

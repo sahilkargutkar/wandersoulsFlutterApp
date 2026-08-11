@@ -8,7 +8,7 @@ void main() {
       userName: 'testuser',
       email: 'test@example.com',
       phoneNumber: '1234567890',
-      passwordHash: 'secret123',
+      password: 'secret123',
       name: 'Test User',
       profilePicture: '',
       defaultCurrency: 'USD',

@@ -35,10 +35,16 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1400),
     );
     _fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.7, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+      ),
     );
     _slideUp = Tween<double>(begin: 40.0, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
     );
 
     // Pulse animations for background circles & logo
@@ -82,11 +88,7 @@ class _SplashScreenState extends State<SplashScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0D9F6E),
-                Color(0xFF059669),
-                Color(0xFF0D9488),
-              ],
+              colors: [Color(0xFF0D9F6E), Color(0xFF059669), Color(0xFF0D9488)],
             ),
           ),
           child: SafeArea(
@@ -157,10 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(24.r),
-                              child: Image.asset(
-                                Assets.logo,
-                                width: 90.w,
-                              ),
+                              child: Image.asset(Assets.logo, width: 90.w),
                             ),
                           ),
                         ),

@@ -10,7 +10,7 @@ class RssFeedParser {
     final matches = itemRegex.allMatches(xmlString);
     for (final match in matches) {
       final itemContent = match.group(1) ?? '';
-      
+
       final titleMatch = titleRegex.firstMatch(itemContent);
       final linkMatch = linkRegex.firstMatch(itemContent);
       final pubDateMatch = pubDateRegex.firstMatch(itemContent);
@@ -19,9 +19,9 @@ class RssFeedParser {
       var title = titleMatch?.group(1) ?? '';
       title = title.replaceAll(RegExp(r'<!\[CDATA\[|\]\]>'), '').trim();
       if (title.isEmpty) continue;
-      
+
       final link = linkMatch?.group(1) ?? '';
-      
+
       var pubDate = pubDateMatch?.group(1) ?? '';
       String formattedDate = pubDate;
       try {
@@ -31,9 +31,13 @@ class RssFeedParser {
             formattedDate = "${parts[2]} ${parts[1]}, ${parts[3]}";
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        // Date parsing is best-effort; keep the raw pubDate
+      }
 
-      var imageUrl = imgMatch?.group(1) ?? 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400';
+      var imageUrl =
+          imgMatch?.group(1) ??
+          'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400';
       imageUrl = imageUrl.replaceAll('&#038;', '&');
 
       parsedArticles.add({

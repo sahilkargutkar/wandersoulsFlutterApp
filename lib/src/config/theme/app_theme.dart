@@ -73,9 +73,7 @@ class AppTheme {
             ? AppColors.darkCardShadow
             : AppColors.lightCardShadow,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: EdgeInsets.zero,
       ),
 
@@ -96,10 +94,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: scheme.primary,
-            width: 1.8,
-          ),
+          borderSide: BorderSide(color: scheme.primary, width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -171,9 +166,7 @@ class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: scheme.surface,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(24),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         showDragHandle: true,
         dragHandleColor: scheme.onSurfaceVariant.withAlpha(60),
@@ -190,9 +183,7 @@ class AppTheme {
           color: scheme.onSurface,
         ),
         side: BorderSide(color: scheme.outline.withAlpha(80)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         showCheckmark: true,
         checkmarkColor: scheme.primary,
@@ -238,17 +229,13 @@ class AppTheme {
         backgroundColor: scheme.primary,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
 
       // ─── Dialog ────────────────────────────────────────
       dialogTheme: DialogThemeData(
         backgroundColor: scheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 8,
       ),
 

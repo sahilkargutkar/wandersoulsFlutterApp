@@ -197,7 +197,9 @@ class ReviewStep extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20.r),
                             color: context.colors.surface,
                             border: Border.all(
-                              color: context.colors.onSurface.withOpacity(0.1),
+                              color: context.colors.onSurface.withValues(
+                                alpha: 0.1,
+                              ),
                             ),
                           ),
                           child: Text(
@@ -310,7 +312,7 @@ class ReviewStep extends StatelessWidget {
       }
 
       if (categoryDetails.isNotEmpty) {
-        value += "\n" + categoryDetails.join(" · ");
+        value += "\n${categoryDetails.join(" · ")}";
       }
     }
     return value;

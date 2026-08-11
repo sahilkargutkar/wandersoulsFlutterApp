@@ -11,7 +11,6 @@ import 'package:wonder_souls/src/features/home/presentation/screens/home_bottom_
 import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_text_form_field.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
-import 'package:wonder_souls/src/config/core/assets/assets.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
@@ -303,7 +302,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextButton(
                               onPressed: () {
                                 launchUrl(
-                                  Uri.parse("https://www.wanderingsouls.in/privacy-policy/"),
+                                  Uri.parse(
+                                    "https://www.wanderingsouls.in/privacy-policy/",
+                                  ),
                                   mode: LaunchMode.externalApplication,
                                 );
                               },
@@ -325,7 +326,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextButton(
                               onPressed: () {
                                 launchUrl(
-                                  Uri.parse("https://wanderingsouls.in/terms-and-conditions"),
+                                  Uri.parse(
+                                    "https://wanderingsouls.in/terms-and-conditions",
+                                  ),
                                   mode: LaunchMode.externalApplication,
                                 );
                               },

@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
-import 'package:wonder_souls/src/config/core/model/place_model.dart';
 
 class GoogleMapsApiService {
   final Dio dio;
@@ -28,8 +28,11 @@ class GoogleMapsApiService {
   // INTERCEPTOR
   // ===============================
   void _addInterceptor() {
-    // Optional: logging
-    dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+    if (kDebugMode) {
+      dio.interceptors.add(
+        LogInterceptor(requestBody: true, responseBody: true),
+      );
+    }
   }
 
   Future<Either<Failure, List<PlaceModel>>> searchPlaces(String query) async {

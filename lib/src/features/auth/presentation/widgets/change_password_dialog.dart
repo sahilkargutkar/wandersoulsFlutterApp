@@ -59,7 +59,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         AppToast.success("Password updated successfully!");
         if (mounted) Navigator.pop(context);
       } else {
-        AppToast.error("Failed to update password. Please check current password.");
+        AppToast.error(
+          "Failed to update password. Please check current password.",
+        );
       }
     } catch (e) {
       AppToast.error("Error updating password: $e");
@@ -92,7 +94,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             TextField(
               controller: _confirmPasswordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: "Confirm New Password"),
+              decoration: const InputDecoration(
+                labelText: "Confirm New Password",
+              ),
             ),
           ],
         ),
@@ -105,14 +109,19 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: context.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
           ),
           onPressed: _isLoading ? null : _submitChangePassword,
           child: _isLoading
               ? SizedBox(
                   width: 20.w,
                   height: 20.h,
-                  child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: const CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : const Text("Update", style: TextStyle(color: Colors.white)),
         ),

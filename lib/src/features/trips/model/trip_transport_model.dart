@@ -46,7 +46,8 @@ class TripTransportModel {
           : null,
       cost: (json['cost'] as num?)?.toDouble() ?? 0.0,
       currency: json['currency'],
-      seatOrCabin: json['seatOrCabin'] ?? json['flightDetails']?['seatAssignment'],
+      seatOrCabin:
+          json['seatOrCabin'] ?? json['flightDetails']?['seatAssignment'],
       notes: json['notes'],
     );
   }
@@ -60,8 +61,13 @@ class TripTransportModel {
       "bookingReference": bookingReference ?? "",
       "departureLocation": departureLocation ?? "",
       "arrivalLocation": arrivalLocation ?? "",
-      "departureDatetime": (departureDatetime ?? DateTime.now()).toUtc().toIso8601String(),
-      "arrivalDatetime": (arrivalDatetime ?? DateTime.now().add(const Duration(hours: 2))).toUtc().toIso8601String(),
+      "departureDatetime": (departureDatetime ?? DateTime.now())
+          .toUtc()
+          .toIso8601String(),
+      "arrivalDatetime":
+          (arrivalDatetime ?? DateTime.now().add(const Duration(hours: 2)))
+              .toUtc()
+              .toIso8601String(),
       "cost": cost,
       "currency": currency ?? "USD",
       "seatOrCabin": seatOrCabin ?? "",

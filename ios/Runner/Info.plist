@@ -51,5 +51,11 @@
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app needs location access</string>
 
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to upload profile pictures and trip attachments</string>
+
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take photos for your profile and trip attachments</string>
+
 </dict>
 </plist>

@@ -36,7 +36,9 @@ class TripActivityModel {
   });
 
   factory TripActivityModel.fromJson(Map<String, dynamic> json) {
-    final details = (json['activityDetails'] ?? json['activityDetailsDto']) as Map<String, dynamic>?;
+    final details =
+        (json['activityDetails'] ?? json['activityDetailsDto'])
+            as Map<String, dynamic>?;
     return TripActivityModel(
       id: json['id'] ?? '',
       tripId: json['tripId'] ?? '',
@@ -44,8 +46,10 @@ class TripActivityModel {
       dayId: json['dayId'] ?? '',
       name: json['name'] ?? '',
       bookingReference: json['bookingReference'],
-      startDatetime: DateTime.tryParse(json['startDatetime'] ?? '') ?? DateTime.now(),
-      endDatetime: DateTime.tryParse(json['endDatetime'] ?? '') ?? DateTime.now(),
+      startDatetime:
+          DateTime.tryParse(json['startDatetime'] ?? '') ?? DateTime.now(),
+      endDatetime:
+          DateTime.tryParse(json['endDatetime'] ?? '') ?? DateTime.now(),
       currency: json['currency'],
       bookingUrl: json['bookingUrl'],
       confirmationDocumentUrl: json['confirmationDocumentUrl'],
@@ -80,8 +84,8 @@ class TripActivityModel {
         "ageRestriction": "",
         "cost": cost,
         "tips": tips,
-        "imageUrl": imageUrl
-      }
+        "imageUrl": imageUrl,
+      },
     };
   }
 }

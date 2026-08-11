@@ -114,8 +114,8 @@ class _DestinationCardState extends State<DestinationCard>
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.1),
-                          Colors.black.withOpacity(0.8),
+                          Colors.black.withValues(alpha: 0.1),
+                          Colors.black.withValues(alpha: 0.8),
                         ],
                         stops: const [0.5, 0.7, 1.0],
                       ),
@@ -175,7 +175,7 @@ class _DestinationCardState extends State<DestinationCard>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

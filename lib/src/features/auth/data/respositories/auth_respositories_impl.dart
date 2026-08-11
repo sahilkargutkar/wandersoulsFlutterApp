@@ -8,12 +8,8 @@ import 'package:wonder_souls/src/features/auth/data/model1/register_request.dart
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
-  // final  AuthLocalDataSource authLocalDataSource;
-  AuthRepositoryImpl(
-    this.remoteDataSource,
 
-    // this.authLocalDataSource,
-  );
+  AuthRepositoryImpl(this.remoteDataSource);
 
   @override
   Future<Either<Failure, void>> register(RegisterRequest request) async {
@@ -38,7 +34,6 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email,
         password: password,
       );
-      // authLocalDataSource.saveUser(authLocalDataSource.getUser()?.copyWith(email: email));
 
       if (result is Failure<String>) {
         return Left(result);
@@ -61,10 +56,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> logout() async {
     try {
       await remoteDataSource.logout();
-      // authLocalDataSource.saveUser(authLocalDataSource.getUser()?.copyWith(email: email));
       return Right(null);
     } catch (e) {
-      return Left(Failure(message: "Login failed"));
+      return Left(Failure(message: "Logout failed"));
     }
   }
 }

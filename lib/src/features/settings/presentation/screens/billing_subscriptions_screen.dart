@@ -12,10 +12,12 @@ class BillingSubscriptionsScreen extends StatefulWidget {
   static const String routeName = "/BillingSubscriptionsScreen";
 
   @override
-  State<BillingSubscriptionsScreen> createState() => _BillingSubscriptionsScreenState();
+  State<BillingSubscriptionsScreen> createState() =>
+      _BillingSubscriptionsScreenState();
 }
 
-class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen> {
+class _BillingSubscriptionsScreenState
+    extends State<BillingSubscriptionsScreen> {
   String _currentPlan = "Explorer Free";
   bool _isLoading = true;
 
@@ -63,7 +65,10 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
                     decoration: BoxDecoration(
                       gradient: isPro
                           ? LinearGradient(
-                              colors: [context.primary, context.primary.withAlpha(180)],
+                              colors: [
+                                context.primary,
+                                context.primary.withAlpha(180),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             )
@@ -88,7 +93,9 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
                           style: TextStyle(
                             fontSize: 11.sp,
                             fontWeight: FontWeight.bold,
-                            color: isPro ? Colors.white.withAlpha(200) : context.onSurfaceVariant,
+                            color: isPro
+                                ? Colors.white.withAlpha(200)
+                                : context.onSurfaceVariant,
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -108,7 +115,9 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
                           style: TextStyle(
                             fontSize: 13.sp,
                             height: 1.4,
-                            color: isPro ? Colors.white.withAlpha(220) : context.onSurfaceVariant,
+                            color: isPro
+                                ? Colors.white.withAlpha(220)
+                                : context.onSurfaceVariant,
                           ),
                         ),
                         if (!isPro) ...[
@@ -117,7 +126,10 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
                             title: "Upgrade to Premium",
                             useGradient: true,
                             onPressed: () async {
-                              final result = await Navigator.pushNamed(context, UpgradePlanScreen.routeName);
+                              final result = await Navigator.pushNamed(
+                                context,
+                                UpgradePlanScreen.routeName,
+                              );
                               if (result == true) {
                                 _loadCurrentPlan();
                               }
@@ -137,13 +149,29 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
                     ),
                   ),
                   16.h.verticalSpace,
-                  _buildBenefitRow(context, "Unlimited AI Itinerary Generations", true),
+                  _buildBenefitRow(
+                    context,
+                    "Unlimited AI Itinerary Generations",
+                    true,
+                  ),
                   12.h.verticalSpace,
-                  _buildBenefitRow(context, "Full Booking & Document Uploads", true),
+                  _buildBenefitRow(
+                    context,
+                    "Full Booking & Document Uploads",
+                    true,
+                  ),
                   12.h.verticalSpace,
-                  _buildBenefitRow(context, "Collaborators & Multi-User Planning", true),
+                  _buildBenefitRow(
+                    context,
+                    "Collaborators & Multi-User Planning",
+                    true,
+                  ),
                   12.h.verticalSpace,
-                  _buildBenefitRow(context, "Ad-Free Interactive Map View", isPro),
+                  _buildBenefitRow(
+                    context,
+                    "Ad-Free Interactive Map View",
+                    isPro,
+                  ),
 
                   32.h.verticalSpace,
 
@@ -168,9 +196,21 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
                       ),
                     )
                   else ...[
-                    _buildInvoiceRow(context, "Aug 11, 2026", "Explorer Pro Monthly", "\$19.99", "Visa 4242"),
+                    _buildInvoiceRow(
+                      context,
+                      "Aug 11, 2026",
+                      "Explorer Pro Monthly",
+                      "\$19.99",
+                      "Visa 4242",
+                    ),
                     const Divider(height: 24),
-                    _buildInvoiceRow(context, "Jul 11, 2026", "Explorer Pro Trial", "\$0.00", "Visa 4242"),
+                    _buildInvoiceRow(
+                      context,
+                      "Jul 11, 2026",
+                      "Explorer Pro Trial",
+                      "\$0.00",
+                      "Visa 4242",
+                    ),
                   ],
                 ],
               ),
@@ -183,14 +223,18 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
       children: [
         Icon(
           included ? Icons.check_circle_rounded : Icons.cancel_rounded,
-          color: included ? Colors.green : context.onSurfaceVariant.withAlpha(80),
+          color: included
+              ? Colors.green
+              : context.onSurfaceVariant.withAlpha(80),
           size: 20.sp,
         ),
         12.w.horizontalSpace,
         Text(
           text,
           style: context.text.bodyMedium?.copyWith(
-            color: included ? context.onSurface : context.onSurfaceVariant.withAlpha(120),
+            color: included
+                ? context.onSurface
+                : context.onSurfaceVariant.withAlpha(120),
             decoration: included ? null : TextDecoration.lineThrough,
           ),
         ),
@@ -198,7 +242,13 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
     );
   }
 
-  Widget _buildInvoiceRow(BuildContext context, String date, String plan, String amount, String method) {
+  Widget _buildInvoiceRow(
+    BuildContext context,
+    String date,
+    String plan,
+    String amount,
+    String method,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -207,12 +257,16 @@ class _BillingSubscriptionsScreenState extends State<BillingSubscriptionsScreen>
           children: [
             Text(
               plan,
-              style: context.text.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: context.text.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             4.h.verticalSpace,
             Text(
               "Paid via $method on $date",
-              style: context.text.bodySmall?.copyWith(color: context.onSurfaceVariant),
+              style: context.text.bodySmall?.copyWith(
+                color: context.onSurfaceVariant,
+              ),
             ),
           ],
         ),

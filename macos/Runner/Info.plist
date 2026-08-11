@@ -26,6 +26,12 @@
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs location to show nearby places</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to upload profile pictures</string>
+
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

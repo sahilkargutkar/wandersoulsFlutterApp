@@ -124,10 +124,12 @@ class TripData {
   factory TripData.fromJson(Map<String, dynamic> jsonMap) {
     final id = jsonMap["id"] ?? "";
     final mainDest = jsonMap["mainDestination"] ?? "";
-    final name = jsonMap["name"] ?? (mainDest.isNotEmpty ? "Trip to $mainDest" : "My Trip");
+    final name =
+        jsonMap["name"] ??
+        (mainDest.isNotEmpty ? "Trip to $mainDest" : "My Trip");
     final description = jsonMap["description"] ?? "";
     final flag = _getCountryFlag(mainDest);
-    
+
     DateTime? start;
     DateTime? end;
     if (jsonMap["startDate"] != null) {
@@ -136,10 +138,12 @@ class TripData {
     if (jsonMap["endDate"] != null) {
       end = DateTime.tryParse(jsonMap["endDate"]);
     }
-    
+
     final dateRange = _formatDateRange(start, end);
     final whoIsGoing = _capitalize(jsonMap["whoIsGoing"] ?? "solo");
-    final budgetLevel = _capitalize(jsonMap["budget"]?["budgetType"] ?? "flexible");
+    final budgetLevel = _capitalize(
+      jsonMap["budget"]?["budgetType"] ?? "flexible",
+    );
     final imageUrl = _getTripImage(mainDest);
 
     List<String> travelTastes = [];
@@ -165,7 +169,20 @@ class TripData {
 
   static String _formatDateRange(DateTime? start, DateTime? end) {
     if (start == null || end == null) return "Dates Unknown";
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     return "${months[start.month - 1]} ${start.day} - ${months[end.month - 1]} ${end.day}, ${end.year}";
   }
 
@@ -173,11 +190,20 @@ class TripData {
     final lower = destination.toLowerCase();
     if (lower.contains("tokyo") || lower.contains("japan")) return "🇯🇵";
     if (lower.contains("paris") || lower.contains("france")) return "🇫🇷";
-    if (lower.contains("london") || lower.contains("uk") || lower.contains("united kingdom")) return "🇬🇧";
+    if (lower.contains("london") ||
+        lower.contains("uk") ||
+        lower.contains("united kingdom"))
+      return "🇬🇧";
     if (lower.contains("rome") || lower.contains("italy")) return "🇮🇹";
-    if (lower.contains("new york") || lower.contains("usa") || lower.contains("united states")) return "🇺🇸";
+    if (lower.contains("new york") ||
+        lower.contains("usa") ||
+        lower.contains("united states"))
+      return "🇺🇸";
     if (lower.contains("sydney") || lower.contains("australia")) return "🇦🇺";
-    if (lower.contains("delhi") || lower.contains("india") || lower.contains("mumbai")) return "🇮🇳";
+    if (lower.contains("delhi") ||
+        lower.contains("india") ||
+        lower.contains("mumbai"))
+      return "🇮🇳";
     return "🌍";
   }
 

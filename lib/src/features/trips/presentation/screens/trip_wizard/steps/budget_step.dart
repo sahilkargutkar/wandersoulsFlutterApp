@@ -48,7 +48,11 @@ class _BudgetStepState extends State<BudgetStep> {
     final cubit = context.read<TripWizardCubit>();
     final state = cubit.state;
 
-    _totalController = TextEditingController(text: state.totalEstimated > 0 ? state.totalEstimated.toStringAsFixed(0) : '');
+    _totalController = TextEditingController(
+      text: state.totalEstimated > 0
+          ? state.totalEstimated.toStringAsFixed(0)
+          : '',
+    );
     _selectedCurrency = state.currency.isNotEmpty ? state.currency : "USD";
 
     _totalController.addListener(_onTotalChanged);
@@ -111,15 +115,24 @@ class _BudgetStepState extends State<BudgetStep> {
   Widget build(BuildContext context) {
     return BlocBuilder<TripWizardCubit, TripWizardState>(
       builder: (context, state) {
-        final totalAllocated = state.transportationBudget + state.accommodationBudget + state.foodBudget + state.activitiesBudget;
-        final exceeds = totalAllocated > state.totalEstimated && state.totalEstimated > 0;
-        final double scale = exceeds ? totalAllocated : (state.totalEstimated > 0 ? state.totalEstimated : 1.0);
+        final totalAllocated =
+            state.transportationBudget +
+            state.accommodationBudget +
+            state.foodBudget +
+            state.activitiesBudget;
+        final exceeds =
+            totalAllocated > state.totalEstimated && state.totalEstimated > 0;
+        final double scale = exceeds
+            ? totalAllocated
+            : (state.totalEstimated > 0 ? state.totalEstimated : 1.0);
 
         final double transRatio = state.transportationBudget / scale;
         final double accRatio = state.accommodationBudget / scale;
         final double foodRatio = state.foodBudget / scale;
         final double actRatio = state.activitiesBudget / scale;
-        final double unallocatedRatio = exceeds ? 0.0 : ((state.totalEstimated - totalAllocated) / scale);
+        final double unallocatedRatio = exceeds
+            ? 0.0
+            : ((state.totalEstimated - totalAllocated) / scale);
 
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -147,7 +160,7 @@ class _BudgetStepState extends State<BudgetStep> {
                       ),
                     ),
                     32.h.verticalSpace,
-                    
+
                     // Options List
                     ..._options.map((option) {
                       final isSelected = state.budgetLevel == option["value"];
@@ -155,18 +168,31 @@ class _BudgetStepState extends State<BudgetStep> {
                         padding: EdgeInsets.only(bottom: 12.h),
                         child: InkWell(
                           onTap: () {
-                            context.read<TripWizardCubit>().setBudgetLevel(option["value"]!);
+                            context.read<TripWizardCubit>().setBudgetLevel(
+                              option["value"]!,
+                            );
                           },
                           borderRadius: BorderRadius.circular(12.r),
                           child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 16.h,
+                            ),
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: isSelected ? context.colors.primary : context.colors.onSurface.withOpacity(0.1),
+                                color: isSelected
+                                    ? context.colors.primary
+                                    : context.colors.onSurface.withValues(
+                                        alpha: 0.1,
+                                      ),
                                 width: isSelected ? 2 : 1,
                               ),
                               borderRadius: BorderRadius.circular(12.r),
-                              color: isSelected ? context.colors.primary.withOpacity(0.05) : Colors.transparent,
+                              color: isSelected
+                                  ? context.colors.primary.withValues(
+                                      alpha: 0.05,
+                                    )
+                                  : Colors.transparent,
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,11 +216,13 @@ class _BudgetStepState extends State<BudgetStep> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
 
                     if (state.budgetLevel != null) ...[
                       24.h.verticalSpace,
-                      Divider(color: context.colors.onSurface.withOpacity(0.1)),
+                      Divider(
+                        color: context.colors.onSurface.withValues(alpha: 0.1),
+                      ),
                       16.h.verticalSpace,
                       Text(
                         "Estimated Budget Details 💳",
@@ -210,7 +238,7 @@ class _BudgetStepState extends State<BudgetStep> {
                           Expanded(
                             flex: 2,
                             child: DropdownButtonFormField<String>(
-                              value: _selectedCurrency,
+                              initialValue: _selectedCurrency,
                               dropdownColor: context.colors.surface,
                               style: context.text.bodyMedium?.copyWith(
                                 color: context.colors.onSurface,
@@ -220,7 +248,10 @@ class _BudgetStepState extends State<BudgetStep> {
                                 labelText: "Currency",
                                 filled: true,
                                 fillColor: context.mutedBackground,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 16.h,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(14.r),
                                   borderSide: BorderSide.none,
@@ -240,12 +271,23 @@ class _BudgetStepState extends State<BudgetStep> {
                                   ),
                                 ),
                               ),
-                              items: ["USD", "EUR", "INR", "GBP", "JPY", "AUD", "CAD"]
-                                  .map((c) => DropdownMenuItem(
-                                        value: c,
-                                        child: Text(c),
-                                      ))
-                                  .toList(),
+                              items:
+                                  [
+                                        "USD",
+                                        "EUR",
+                                        "INR",
+                                        "GBP",
+                                        "JPY",
+                                        "AUD",
+                                        "CAD",
+                                      ]
+                                      .map(
+                                        (c) => DropdownMenuItem(
+                                          value: c,
+                                          child: Text(c),
+                                        ),
+                                      )
+                                      .toList(),
                               onChanged: (val) {
                                 if (val != null) {
                                   setState(() {
@@ -272,13 +314,16 @@ class _BudgetStepState extends State<BudgetStep> {
                               hintText: "e.g., 2000",
                               labelText: "Total Budget",
                               keyboardType: TextInputType.number,
-                              prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: context.colors.onSurfaceVariant),
+                              prefixIcon: Icon(
+                                Icons.account_balance_wallet_outlined,
+                                color: context.colors.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       24.h.verticalSpace,
-                      
+
                       // visual stacked allocator
                       Text(
                         "Budget Allocation Breakdown",
@@ -288,40 +333,82 @@ class _BudgetStepState extends State<BudgetStep> {
                         ),
                       ),
                       8.h.verticalSpace,
-                      
+
                       // Segment Progress Bar
                       Container(
                         height: 14.h,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(7.r),
-                          color: context.colors.onSurface.withOpacity(0.05),
+                          color: context.colors.onSurface.withValues(
+                            alpha: 0.05,
+                          ),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(7.r),
                           child: Row(
                             children: [
-                              if (transRatio > 0) Expanded(flex: (transRatio * 1000).round(), child: Container(color: Colors.orange)),
-                              if (accRatio > 0) Expanded(flex: (accRatio * 1000).round(), child: Container(color: Colors.blue)),
-                              if (foodRatio > 0) Expanded(flex: (foodRatio * 1000).round(), child: Container(color: Colors.green)),
-                              if (actRatio > 0) Expanded(flex: (actRatio * 1000).round(), child: Container(color: Colors.purple)),
-                              if (unallocatedRatio > 0 && state.totalEstimated > 0) Expanded(flex: (unallocatedRatio * 1000).round(), child: Container(color: context.colors.onSurface.withOpacity(0.08))),
+                              if (transRatio > 0)
+                                Expanded(
+                                  flex: (transRatio * 1000).round(),
+                                  child: Container(color: Colors.orange),
+                                ),
+                              if (accRatio > 0)
+                                Expanded(
+                                  flex: (accRatio * 1000).round(),
+                                  child: Container(color: Colors.blue),
+                                ),
+                              if (foodRatio > 0)
+                                Expanded(
+                                  flex: (foodRatio * 1000).round(),
+                                  child: Container(color: Colors.green),
+                                ),
+                              if (actRatio > 0)
+                                Expanded(
+                                  flex: (actRatio * 1000).round(),
+                                  child: Container(color: Colors.purple),
+                                ),
+                              if (unallocatedRatio > 0 &&
+                                  state.totalEstimated > 0)
+                                Expanded(
+                                  flex: (unallocatedRatio * 1000).round(),
+                                  child: Container(
+                                    color: context.colors.onSurface.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                       ),
                       12.h.verticalSpace,
-                      
+
                       // Legends and allocation totals
                       Wrap(
                         spacing: 12.w,
                         runSpacing: 8.h,
                         children: [
-                          _buildLegendDot(Colors.orange, "Trans: ${state.currency} ${state.transportationBudget.toStringAsFixed(0)}"),
-                          _buildLegendDot(Colors.blue, "Acc: ${state.currency} ${state.accommodationBudget.toStringAsFixed(0)}"),
-                          _buildLegendDot(Colors.green, "Food: ${state.currency} ${state.foodBudget.toStringAsFixed(0)}"),
-                          _buildLegendDot(Colors.purple, "Act: ${state.currency} ${state.activitiesBudget.toStringAsFixed(0)}"),
+                          _buildLegendDot(
+                            Colors.orange,
+                            "Trans: ${state.currency} ${state.transportationBudget.toStringAsFixed(0)}",
+                          ),
+                          _buildLegendDot(
+                            Colors.blue,
+                            "Acc: ${state.currency} ${state.accommodationBudget.toStringAsFixed(0)}",
+                          ),
+                          _buildLegendDot(
+                            Colors.green,
+                            "Food: ${state.currency} ${state.foodBudget.toStringAsFixed(0)}",
+                          ),
+                          _buildLegendDot(
+                            Colors.purple,
+                            "Act: ${state.currency} ${state.activitiesBudget.toStringAsFixed(0)}",
+                          ),
                           if (state.totalEstimated > totalAllocated)
-                            _buildLegendDot(context.colors.onSurface.withOpacity(0.3), "Unallocated: ${state.currency} ${(state.totalEstimated - totalAllocated).toStringAsFixed(0)}"),
+                            _buildLegendDot(
+                              context.colors.onSurface.withValues(alpha: 0.3),
+                              "Unallocated: ${state.currency} ${(state.totalEstimated - totalAllocated).toStringAsFixed(0)}",
+                            ),
                         ],
                       ),
                       if (exceeds) ...[
@@ -335,13 +422,15 @@ class _BudgetStepState extends State<BudgetStep> {
                         ),
                       ],
                       24.h.verticalSpace,
-                      
+
                       // Slider inputs
                       _buildCategorySliderCard(
                         context,
                         label: "Transportation 🚗",
                         value: state.transportationBudget,
-                        maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                        maxVal: state.totalEstimated > 0
+                            ? state.totalEstimated
+                            : 1000.0,
                         icon: Icons.directions_car_outlined,
                         color: Colors.orange,
                         onChanged: (val) => _onSliderChanged(trans: val),
@@ -351,7 +440,9 @@ class _BudgetStepState extends State<BudgetStep> {
                         context,
                         label: "Accommodation 🏨",
                         value: state.accommodationBudget,
-                        maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                        maxVal: state.totalEstimated > 0
+                            ? state.totalEstimated
+                            : 1000.0,
                         icon: Icons.hotel_outlined,
                         color: Colors.blue,
                         onChanged: (val) => _onSliderChanged(acc: val),
@@ -361,7 +452,9 @@ class _BudgetStepState extends State<BudgetStep> {
                         context,
                         label: "Food & Dining 🍕",
                         value: state.foodBudget,
-                        maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                        maxVal: state.totalEstimated > 0
+                            ? state.totalEstimated
+                            : 1000.0,
                         icon: Icons.restaurant_outlined,
                         color: Colors.green,
                         onChanged: (val) => _onSliderChanged(food: val),
@@ -371,13 +464,15 @@ class _BudgetStepState extends State<BudgetStep> {
                         context,
                         label: "Activities 🎢",
                         value: state.activitiesBudget,
-                        maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                        maxVal: state.totalEstimated > 0
+                            ? state.totalEstimated
+                            : 1000.0,
                         icon: Icons.explore_outlined,
                         color: Colors.purple,
                         onChanged: (val) => _onSliderChanged(act: val),
                       ),
                       16.h.verticalSpace,
-                    ]
+                    ],
                   ],
                 ),
               ),
@@ -406,10 +501,7 @@ class _BudgetStepState extends State<BudgetStep> {
         Container(
           width: 8.w,
           height: 8.w,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         6.w.horizontalSpace,
         Text(
@@ -436,7 +528,9 @@ class _BudgetStepState extends State<BudgetStep> {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: context.colors.onSurface.withOpacity(0.08)),
+        border: Border.all(
+          color: context.colors.onSurface.withValues(alpha: 0.08),
+        ),
         color: context.colors.surface,
       ),
       child: Column(
@@ -447,7 +541,7 @@ class _BudgetStepState extends State<BudgetStep> {
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 20.sp),
@@ -463,7 +557,7 @@ class _BudgetStepState extends State<BudgetStep> {
                 ),
               ),
               Text(
-                "${_selectedCurrency} ${value.toStringAsFixed(0)}",
+                "$_selectedCurrency ${value.toStringAsFixed(0)}",
                 style: context.text.bodyLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
@@ -475,9 +569,9 @@ class _BudgetStepState extends State<BudgetStep> {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: color,
-              inactiveTrackColor: color.withOpacity(0.1),
+              inactiveTrackColor: color.withValues(alpha: 0.1),
               thumbColor: color,
-              overlayColor: color.withOpacity(0.2),
+              overlayColor: color.withValues(alpha: 0.2),
               trackHeight: 4.h,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             ),

@@ -163,7 +163,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 showArrow: false,
                 trailingWidget: BlocBuilder<ThemeCubit, ThemeMode>(
                   builder: (context, themeMode) {
-                    final isDark = themeMode == ThemeMode.dark ||
+                    final isDark =
+                        themeMode == ThemeMode.dark ||
                         (themeMode == ThemeMode.system &&
                             MediaQuery.of(context).platformBrightness ==
                                 Brightness.dark);
@@ -260,10 +261,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(
-          color: context.borderColor.withAlpha(30),
-          width: 1,
-        ),
+        border: Border.all(color: context.borderColor.withAlpha(30), width: 1),
       ),
       child: Column(
         children: List.generate(children.length, (index) {
@@ -321,7 +319,8 @@ class SettingsMenuItem extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: (iconColor ?? context.colors.onSurfaceVariant).withAlpha(12),
+                  color: (iconColor ?? context.colors.onSurfaceVariant)
+                      .withAlpha(12),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Icon(

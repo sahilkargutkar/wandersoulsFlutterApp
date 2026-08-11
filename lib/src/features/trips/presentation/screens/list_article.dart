@@ -126,7 +126,10 @@ class _ListArticleState extends State<ListArticle> {
                     onTap: () {
                       final link = article['link'] ?? '';
                       if (link.isNotEmpty) {
-                        launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+                        launchUrl(
+                          Uri.parse(link),
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                     borderRadius: BorderRadius.circular(16.r),

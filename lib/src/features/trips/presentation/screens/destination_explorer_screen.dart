@@ -11,10 +11,7 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard
 class DestinationExplorerScreen extends StatelessWidget {
   final Map<String, String> destination;
 
-  const DestinationExplorerScreen({
-    super.key,
-    required this.destination,
-  });
+  const DestinationExplorerScreen({super.key, required this.destination});
 
   static const String routeName = "/DestinationExplorerScreen";
 
@@ -77,10 +74,7 @@ class DestinationExplorerScreen extends StatelessWidget {
                   // Location (Flag & Country)
                   Row(
                     children: [
-                      Text(
-                        guide.flagEmoji,
-                        style: TextStyle(fontSize: 20.sp),
-                      ),
+                      Text(guide.flagEmoji, style: TextStyle(fontSize: 20.sp)),
                       8.w.width,
                       Text(
                         guide.country,
@@ -129,7 +123,10 @@ class DestinationExplorerScreen extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorWidget: (_, __, ___) => Container(
                                   color: Colors.grey[300],
-                                  child: const Icon(Icons.image, color: Colors.grey),
+                                  child: const Icon(
+                                    Icons.image,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ),
                             ),
@@ -182,9 +179,7 @@ class DestinationExplorerScreen extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: context.surface,
-          border: Border(
-            top: BorderSide(color: Colors.grey[200]!, width: 1),
-          ),
+          border: Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
         ),
         child: SafeArea(
           child: ElevatedButton(

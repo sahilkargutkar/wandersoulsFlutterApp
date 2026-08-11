@@ -59,10 +59,13 @@ class _TripWizardViewState extends State<_TripWizardView> {
           Navigator.pop(context);
           return;
         } else if (state.status == TripWizardStatus.failure) {
-          AppToast.error(state.errorMessage ?? "Failed to create trip. Please try again.");
+          AppToast.error(
+            state.errorMessage ?? "Failed to create trip. Please try again.",
+          );
         }
 
-        if (_pageController.hasClients && _pageController.page?.round() != state.currentStep) {
+        if (_pageController.hasClients &&
+            _pageController.page?.round() != state.currentStep) {
           _pageController.animateToPage(
             state.currentStep,
             duration: const Duration(milliseconds: 300),
@@ -97,8 +100,12 @@ class _TripWizardViewState extends State<_TripWizardView> {
                       padding: EdgeInsets.symmetric(horizontal: 24.w),
                       child: LinearProgressIndicator(
                         value: (state.currentStep + 1) / 7,
-                        backgroundColor: context.onSurface.withOpacity(0.1),
-                        valueColor: AlwaysStoppedAnimation<Color>(context.primary),
+                        backgroundColor: context.onSurface.withValues(
+                          alpha: 0.1,
+                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          context.primary,
+                        ),
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
@@ -108,15 +115,15 @@ class _TripWizardViewState extends State<_TripWizardView> {
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             children: const [
-              TripDetailsStep(),        // 0
-              PartyStep(),              // 1
-              DatesStep(),              // 2
-              InterestsStep(),          // 3
-              BudgetStep(),             // 4
-              CollaboratorsStep(),      // 5
-              ReviewStep(),             // 6
-              GeneratingStep(),         // 7
-              ItineraryResultStep(),    // 8
+              TripDetailsStep(), // 0
+              PartyStep(), // 1
+              DatesStep(), // 2
+              InterestsStep(), // 3
+              BudgetStep(), // 4
+              CollaboratorsStep(), // 5
+              ReviewStep(), // 6
+              GeneratingStep(), // 7
+              ItineraryResultStep(), // 8
             ],
           ),
         );

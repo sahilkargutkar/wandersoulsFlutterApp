@@ -62,8 +62,18 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
     final start = widget.trip.startDate ?? DateTime.now();
     final date = start.add(Duration(days: dayIndex));
     final monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     final daySuffix = _getDaySuffix(date.day);
     return "Day ${dayIndex + 1}: ${monthNames[date.month - 1]} ${date.day}$daySuffix";
@@ -72,22 +82,33 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
   String _getDaySuffix(int day) {
     if (day >= 11 && day <= 13) return "th";
     switch (day % 10) {
-      case 1: return "st";
-      case 2: return "nd";
-      case 3: return "rd";
-      default: return "th";
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
     }
   }
 
   String _getCategoryName(int categoryCode) {
     switch (categoryCode) {
-      case 1: return "Food & Dining";
-      case 2: return "Transport";
-      case 3: return "Accommodation";
-      case 4: return "Relaxation";
-      case 5: return "Shopping";
-      case 0: return "Tourist Attraction";
-      default: return "Activity";
+      case 1:
+        return "Food & Dining";
+      case 2:
+        return "Transport";
+      case 3:
+        return "Accommodation";
+      case 4:
+        return "Relaxation";
+      case 5:
+        return "Shopping";
+      case 0:
+        return "Tourist Attraction";
+      default:
+        return "Activity";
     }
   }
 
@@ -98,7 +119,11 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
     return "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400";
   }
 
-  void _confirmDeleteEvent(BuildContext context, int dayIndex, int activityIndex) {
+  void _confirmDeleteEvent(
+    BuildContext context,
+    int dayIndex,
+    int activityIndex,
+  ) {
     final activity = _dayActivities[dayIndex]![activityIndex];
 
     showModalBottomSheet(
@@ -142,7 +167,11 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                           width: 50.w,
                           height: 50.h,
                           color: context.shimmerBase,
-                          child: Icon(Icons.image, size: 24.sp, color: context.primary),
+                          child: Icon(
+                            Icons.image,
+                            size: 24.sp,
+                            color: context.primary,
+                          ),
                         ),
                       ),
                     ),
@@ -206,7 +235,9 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                       onPressed: () {
                         Navigator.pop(context);
                         setState(() {
-                          final removed = _dayActivities[dayIndex]!.removeAt(activityIndex);
+                          final removed = _dayActivities[dayIndex]!.removeAt(
+                            activityIndex,
+                          );
                           if (removed.id.isNotEmpty) {
                             _deletedActivityIds.add(removed.id);
                           }
@@ -279,10 +310,15 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
   }
 
   int _getCategoryEnum(List<String> types) {
-    if (types.contains("restaurant") || types.contains("food") || types.contains("cafe") || types.contains("bar")) {
+    if (types.contains("restaurant") ||
+        types.contains("food") ||
+        types.contains("cafe") ||
+        types.contains("bar")) {
       return 1; // Food
     }
-    if (types.contains("transit_station") || types.contains("airport") || types.contains("bus_station")) {
+    if (types.contains("transit_station") ||
+        types.contains("airport") ||
+        types.contains("bus_station")) {
       return 2; // Transport
     }
     if (types.contains("lodging") || types.contains("hotel")) {
@@ -322,7 +358,9 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
         for (int i = 0; i < activities.length; i++) {
           final act = activities[i];
           final startHour = 9 + i;
-          final startDatetime = DateTime.parse("${dateStr}T${startHour.toString().padLeft(2, '0')}:00:00Z");
+          final startDatetime = DateTime.parse(
+            "${dateStr}T${startHour.toString().padLeft(2, '0')}:00:00Z",
+          );
           final endDatetime = startDatetime.add(const Duration(hours: 1));
 
           final newDayId = "${dayIndex + 1}";
@@ -349,9 +387,11 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                 "ageRestriction": "None",
                 "cost": act.cost,
                 "tips": act.tips ?? "",
-                "imageUrl": act.imageUrl ?? "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400"
+                "imageUrl":
+                    act.imageUrl ??
+                    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400",
               },
-              "notes": act.tips ?? ""
+              "notes": act.tips ?? "",
             };
 
             await apiService.post<dynamic>(
@@ -366,9 +406,10 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
             final originalEnd = act.endDatetime;
 
             if (originalDayId != newDayId ||
-                originalStart.toUtc().toIso8601String() != startDatetime.toUtc().toIso8601String() ||
-                originalEnd.toUtc().toIso8601String() != endDatetime.toUtc().toIso8601String()) {
-              
+                originalStart.toUtc().toIso8601String() !=
+                    startDatetime.toUtc().toIso8601String() ||
+                originalEnd.toUtc().toIso8601String() !=
+                    endDatetime.toUtc().toIso8601String()) {
               final payload = {
                 "id": act.id,
                 "tripId": act.tripId,
@@ -390,9 +431,11 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                   "ageRestriction": "None",
                   "cost": act.cost,
                   "tips": act.tips ?? "",
-                  "imageUrl": act.imageUrl ?? "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400"
+                  "imageUrl":
+                      act.imageUrl ??
+                      "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400",
                 },
-                "notes": act.notes ?? act.tips ?? ""
+                "notes": act.notes ?? act.tips ?? "",
               };
 
               await apiService.put<dynamic>(
@@ -487,7 +530,9 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                         itemBuilder: (context, activityIndex) {
                           final act = activities[activityIndex];
                           return Container(
-                            key: ValueKey("${act.name}_${activityIndex}_$dayIndex"),
+                            key: ValueKey(
+                              "${act.name}_${activityIndex}_$dayIndex",
+                            ),
                             margin: EdgeInsets.only(bottom: 10.h),
                             padding: EdgeInsets.all(10.w),
                             decoration: BoxDecoration(
@@ -523,22 +568,28 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                                       width: 48.w,
                                       height: 48.h,
                                       color: context.shimmerBase,
-                                      child: Icon(Icons.place, size: 20.sp, color: context.primary),
+                                      child: Icon(
+                                        Icons.place,
+                                        size: 20.sp,
+                                        color: context.primary,
+                                      ),
                                     ),
                                   ),
                                 ),
                                 12.w.horizontalSpace,
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         act.name,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: context.text.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: context.text.bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                       4.h.verticalSpace,
                                       Text(
@@ -575,14 +626,23 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                       child: OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           backgroundColor: context.primary.withAlpha(15),
-                          side: BorderSide(color: context.primary.withAlpha(40)),
-                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                          side: BorderSide(
+                            color: context.primary.withAlpha(40),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 10.h,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20.r),
                           ),
                         ),
                         onPressed: () => _addEventForDay(dayIndex),
-                        icon: Icon(Icons.add_rounded, color: context.primary, size: 18.sp),
+                        icon: Icon(
+                          Icons.add_rounded,
+                          color: context.primary,
+                          size: 18.sp,
+                        ),
                         label: Text(
                           "Add More Events",
                           style: TextStyle(

@@ -98,10 +98,10 @@ class _ArticleCardState extends State<ArticleCard>
                             vertical: 4.h,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.4),
+                            color: Colors.black.withValues(alpha: 0.4),
                             borderRadius: BorderRadius.circular(10.r),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               width: 0.5,
                             ),
                           ),

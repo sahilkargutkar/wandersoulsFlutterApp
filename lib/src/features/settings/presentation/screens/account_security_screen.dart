@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
-import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
 import 'package:wonder_souls/src/config/utils/app_toast.dart';
 
 class AccountSecurityScreen extends StatefulWidget {
@@ -34,7 +33,9 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
               TextField(
                 controller: oldPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: "Current Password"),
+                decoration: const InputDecoration(
+                  labelText: "Current Password",
+                ),
               ),
               TextField(
                 controller: newPasswordController,
@@ -44,7 +45,9 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
               TextField(
                 controller: confirmPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: "Confirm New Password"),
+                decoration: const InputDecoration(
+                  labelText: "Confirm New Password",
+                ),
               ),
             ],
           ),
@@ -81,7 +84,10 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Delete Account", style: TextStyle(color: context.colors.error)),
+          title: Text(
+            "Delete Account",
+            style: TextStyle(color: context.colors.error),
+          ),
           content: const Text(
             "Are you sure you want to delete your WanderSouls account? This will permanently delete all your trips, collaborators, documents, and subscription plans. This action cannot be undone.",
           ),
@@ -91,12 +97,17 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
               child: const Text("Cancel"),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: context.colors.error),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.colors.error,
+              ),
               onPressed: () {
                 Navigator.pop(context);
                 AppToast.success("Account deleted. Hope to see you again!");
               },
-              child: const Text("Delete permanently", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "Delete permanently",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -123,12 +134,16 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
         children: [
           Text(
             "Login Security",
-            style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: context.text.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           12.h.verticalSpace,
           Card(
             color: context.mutedBackground,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
             elevation: 0,
             child: ListTile(
               leading: Icon(Icons.lock_outline_rounded, color: context.primary),
@@ -142,7 +157,9 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
 
           Text(
             "Advanced Authentication",
-            style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: context.text.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           12.h.verticalSpace,
           Container(
@@ -154,7 +171,7 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
               children: [
                 SwitchListTile(
                   value: _biometricEnabled,
-                  activeColor: context.primary,
+                  activeThumbColor: context.primary,
                   title: const Text("Biometric Authentication"),
                   subtitle: const Text("Use Face ID or Fingerprint to unlock"),
                   onChanged: (val) => setState(() => _biometricEnabled = val),
@@ -162,9 +179,11 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
                 const Divider(height: 1),
                 SwitchListTile(
                   value: _twoFactorEnabled,
-                  activeColor: context.primary,
+                  activeThumbColor: context.primary,
                   title: const Text("Two-Factor Authentication"),
-                  subtitle: const Text("Add verification code step for login security"),
+                  subtitle: const Text(
+                    "Add verification code step for login security",
+                  ),
                   onChanged: (val) => setState(() => _twoFactorEnabled = val),
                 ),
               ],
@@ -188,9 +207,21 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
             ),
             elevation: 0,
             child: ListTile(
-              leading: Icon(Icons.delete_forever_rounded, color: context.colors.error),
-              title: Text("Delete Account", style: TextStyle(color: context.colors.error, fontWeight: FontWeight.bold)),
-              subtitle: Text("Permanently delete account & planning history", style: TextStyle(color: context.colors.error.withAlpha(200))),
+              leading: Icon(
+                Icons.delete_forever_rounded,
+                color: context.colors.error,
+              ),
+              title: Text(
+                "Delete Account",
+                style: TextStyle(
+                  color: context.colors.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                "Permanently delete account & planning history",
+                style: TextStyle(color: context.colors.error.withAlpha(200)),
+              ),
               onTap: _showDeleteAccountDialog,
             ),
           ),

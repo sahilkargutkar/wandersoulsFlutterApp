@@ -14,7 +14,8 @@ class SavedIcon extends StatefulWidget {
   State<SavedIcon> createState() => _SavedIconState();
 }
 
-class _SavedIconState extends State<SavedIcon> with SingleTickerProviderStateMixin {
+class _SavedIconState extends State<SavedIcon>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   bool _wasSaved = false;
@@ -28,13 +29,17 @@ class _SavedIconState extends State<SavedIcon> with SingleTickerProviderStateMix
     );
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.35)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.35,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
         weight: 60,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.35, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeInCubic)),
+        tween: Tween<double>(
+          begin: 1.35,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeInCubic)),
         weight: 40,
       ),
     ]).animate(_controller);

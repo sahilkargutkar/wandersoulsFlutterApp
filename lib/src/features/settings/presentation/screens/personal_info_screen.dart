@@ -85,7 +85,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       } else {
         if (mounted) setState(() => _loading = false);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint("Failed to load user profile: $e");
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -151,7 +152,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         backgroundColor: context.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: context.onSurface, size: 20.sp),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: context.onSurface,
+            size: 20.sp,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -182,7 +187,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     ),
                   ),
                   32.h.verticalSpace,
-                  
+
                   Text(
                     "Full Name",
                     style: context.text.bodyMedium?.copyWith(
@@ -201,7 +206,10 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                         borderRadius: BorderRadius.circular(16.r),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 14.h,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -230,7 +238,10 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                         borderRadius: BorderRadius.circular(16.r),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 14.h,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -254,12 +265,15 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     readOnly: true,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: context.mutedBackground.withOpacity(0.5),
+                      fillColor: context.mutedBackground.withValues(alpha: 0.5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16.r),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 14.h,
+                      ),
                     ),
                   ),
                   20.h.verticalSpace,
@@ -273,7 +287,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                   ),
                   8.h.verticalSpace,
                   DropdownButtonFormField<String>(
-                    value: _selectedCurrency,
+                    initialValue: _selectedCurrency,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: context.mutedBackground,
@@ -281,7 +295,10 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                         borderRadius: BorderRadius.circular(16.r),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 14.h,
+                      ),
                     ),
                     items: ["USD", "EUR", "GBP", "JPY", "INR", "AUD", "CAD"]
                         .map((c) => DropdownMenuItem(value: c, child: Text(c)))

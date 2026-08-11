@@ -69,14 +69,14 @@ class _GeneratingStepState extends State<GeneratingStep>
                       gradient: LinearGradient(
                         colors: [
                           context.colors.primary,
-                          context.colors.primary.withOpacity(0.6),
+                          context.colors.primary.withValues(alpha: 0.6),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: context.colors.primary.withOpacity(0.3),
+                          color: context.colors.primary.withValues(alpha: 0.3),
                           blurRadius: 20,
                           spreadRadius: 2,
                         ),
@@ -112,8 +112,12 @@ class _GeneratingStepState extends State<GeneratingStep>
             SizedBox(
               width: 200.w,
               child: LinearProgressIndicator(
-                backgroundColor: context.colors.onSurface.withOpacity(0.08),
-                valueColor: AlwaysStoppedAnimation<Color>(context.colors.primary),
+                backgroundColor: context.colors.onSurface.withValues(
+                  alpha: 0.08,
+                ),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  context.colors.primary,
+                ),
                 borderRadius: BorderRadius.circular(4.r),
               ),
             ),

@@ -76,7 +76,10 @@ class AccommodationModel {
         "instructions": checkInInstructions ?? "",
       },
       "checkOut": {
-        "datetime": (checkOutDate ?? DateTime.now().add(const Duration(days: 1))).toUtc().toIso8601String(),
+        "datetime":
+            (checkOutDate ?? DateTime.now().add(const Duration(days: 1)))
+                .toUtc()
+                .toIso8601String(),
         "instructions": checkOutInstructions ?? "",
       },
       "cost": cost,

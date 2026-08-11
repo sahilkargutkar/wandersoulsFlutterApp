@@ -1,10 +1,9 @@
+import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
-import 'package:wonder_souls/src/config/route/app_routes.dart';
-import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 
 import '../../model/api_result.dart';
@@ -17,7 +16,12 @@ class ApiService {
   final TokenStorage _tokenStorage;
   final String baseURL;
 
-  ApiService(this._tokenStorage, {required this.baseURL})
+  /// Called when the session expires (401 response).
+  /// The router should listen to this and redirect to login.
+  /// Set after construction once the router is built.
+  void Function()? onSessionExpired;
+
+  ApiService(this._tokenStorage, {required this.baseURL, this.onSessionExpired})
     : _dio = Dio(
         BaseOptions(
           baseUrl: baseURL,
@@ -48,10 +52,10 @@ class ApiService {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401 && error.requestOptions.path != ApiConstants.login) {
-            // Token expired or invalid
+          if (error.response?.statusCode == 401 &&
+              error.requestOptions.path != ApiConstants.login) {
             await _tokenStorage.clearToken();
-            router.go(LoginScreen.routeName);
+            onSessionExpired?.call();
           }
 
           return handler.next(error);
@@ -197,7 +201,11 @@ class ApiService {
     required T Function(dynamic data) fromJson,
   }) async {
     try {
-      final response = await _dio.put(path, queryParameters: queryParameters, data: data);
+      final response = await _dio.put(
+        path,
+        queryParameters: queryParameters,
+        data: data,
+      );
       return Success<T>(fromJson(response.data));
     } on DioException catch (e) {
       return _handleError<T>(e);
@@ -211,10 +219,7 @@ class ApiService {
         "BlobPath": blobPath,
       });
 
-      final response = await _dio.post(
-        "/Trips/upload",
-        data: formData,
-      );
+      final response = await _dio.post("/Trips/upload", data: formData);
 
       return Success<String>(response.data?.toString() ?? "Uploaded");
     } on DioException catch (e) {
@@ -232,6 +237,52 @@ class ApiService {
       return Success<String>(response.data?.toString() ?? "");
     } on DioException catch (e) {
       return _handleError<String>(e);
+    }
+  }
+
+  // ===============================
+  // AI SERVICE (separate base URL)
+  // ===============================
+
+  /// POST to the AI microservice (different base URL than the main API).
+  Future<ApiResult<Map<String, dynamic>>> aiPost(
+    String path, {
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      final aiDio = Dio(
+        BaseOptions(
+          baseUrl: ApiConstants.aiBaseUrl,
+          connectTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+        ),
+      );
+
+      if (kDebugMode) {
+        aiDio.interceptors.add(
+          LogInterceptor(requestBody: true, responseBody: true),
+        );
+      }
+
+      final response = await aiDio.post(path, data: data);
+      if (response.statusCode == 200) {
+        return Success<Map<String, dynamic>>(
+          response.data as Map<String, dynamic>,
+        );
+      }
+      return Failure<Map<String, dynamic>>(
+        message: "AI service returned ${response.statusCode}",
+      );
+    } on DioException catch (e) {
+      return Failure<Map<String, dynamic>>(
+        message: e.message ?? "AI service unavailable",
+      );
+    } catch (e) {
+      return Failure<Map<String, dynamic>>(message: "AI service error: $e");
     }
   }
 }

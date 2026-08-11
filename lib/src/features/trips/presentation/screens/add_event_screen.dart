@@ -136,7 +136,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
             }
           },
         );
-      } catch (_) {
+      } catch (e) {
+        debugPrint("Failed to search locations: $e");
         setState(() => _isLoading = false);
       }
     });
@@ -156,7 +157,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
           _isLoading = false;
         }),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint("Failed to search via Google Maps: $e");
       setState(() {
         _searchResults = [];
         _isLoading = false;
@@ -165,17 +167,27 @@ class _AddEventScreenState extends State<AddEventScreen> {
   }
 
   String _getImageUrlForPlace(PlaceModel place) {
-    if (place.googleMapsUrl != null && place.googleMapsUrl!.startsWith('http')) {
+    if (place.googleMapsUrl != null &&
+        place.googleMapsUrl!.startsWith('http')) {
       return place.googleMapsUrl!;
     }
     final nameLower = place.name.toLowerCase();
-    if (nameLower.contains("ramen") || nameLower.contains("food") || nameLower.contains("restaurant") || nameLower.contains("afuri") || nameLower.contains("sushi")) {
+    if (nameLower.contains("ramen") ||
+        nameLower.contains("food") ||
+        nameLower.contains("restaurant") ||
+        nameLower.contains("afuri") ||
+        nameLower.contains("sushi")) {
       return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400";
     }
-    if (nameLower.contains("shrine") || nameLower.contains("temple") || nameLower.contains("jingu") || nameLower.contains("asakusa")) {
+    if (nameLower.contains("shrine") ||
+        nameLower.contains("temple") ||
+        nameLower.contains("jingu") ||
+        nameLower.contains("asakusa")) {
       return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400";
     }
-    if (nameLower.contains("park") || nameLower.contains("tower") || nameLower.contains("electric")) {
+    if (nameLower.contains("park") ||
+        nameLower.contains("tower") ||
+        nameLower.contains("electric")) {
       return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=400";
     }
     return "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400";
@@ -221,7 +233,10 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 prefixIcon: Icon(Icons.search, color: context.onSurfaceVariant),
                 filled: true,
                 fillColor: context.mutedBackground,
-                contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: 12.h,
+                  horizontal: 16.w,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.r),
                   borderSide: BorderSide.none,
@@ -235,118 +250,131 @@ class _AddEventScreenState extends State<AddEventScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _searchResults.isEmpty
-                    ? Center(
-                        child: Text(
-                          "No results found",
-                          style: context.text.bodyMedium?.copyWith(
-                            color: context.onSurfaceVariant,
-                          ),
-                        ),
-                      )
-                    : ListView.separated(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                        itemCount: _searchResults.length,
-                        separatorBuilder: (context, index) => 12.h.verticalSpace,
-                        itemBuilder: (context, index) {
-                          final place = _searchResults[index];
-                          final isSelected = _selectedPlaces.contains(place);
-                          final imgUrl = _getImageUrlForPlace(place);
-
-                          return Container(
-                            padding: EdgeInsets.all(10.w),
-                            decoration: BoxDecoration(
-                              color: context.surface,
-                              borderRadius: BorderRadius.circular(16.r),
-                              border: Border.all(
-                                color: isSelected
-                                    ? context.primary
-                                    : context.borderColor.withAlpha(20),
-                                width: isSelected ? 1.5 : 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: context.softShadow,
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  child: CachedNetworkImage(
-                                    imageUrl: imgUrl,
-                                    width: 56.w,
-                                    height: 56.h,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) => Container(
-                                      width: 56.w,
-                                      height: 56.h,
-                                      color: context.shimmerBase,
-                                      child: Icon(Icons.place, size: 24.sp, color: context.primary),
-                                    ),
-                                  ),
-                                ),
-                                12.w.horizontalSpace,
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        place.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: context.text.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      4.h.verticalSpace,
-                                      Text(
-                                        place.description.isNotEmpty
-                                            ? place.description
-                                            : (place.types.isNotEmpty ? place.types.first : "Attraction"),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: context.text.bodySmall?.copyWith(
-                                          color: context.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                8.w.horizontalSpace,
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      if (isSelected) {
-                                        _selectedPlaces.remove(place);
-                                      } else {
-                                        _selectedPlaces.add(place);
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 32.w,
-                                    height: 32.h,
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? context.primary
-                                          : context.primary.withAlpha(25),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      isSelected ? Icons.check_rounded : Icons.add_rounded,
-                                      color: isSelected ? Colors.white : context.primary,
-                                      size: 20.sp,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                ? Center(
+                    child: Text(
+                      "No results found",
+                      style: context.text.bodyMedium?.copyWith(
+                        color: context.onSurfaceVariant,
                       ),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 8.h,
+                    ),
+                    itemCount: _searchResults.length,
+                    separatorBuilder: (context, index) => 12.h.verticalSpace,
+                    itemBuilder: (context, index) {
+                      final place = _searchResults[index];
+                      final isSelected = _selectedPlaces.contains(place);
+                      final imgUrl = _getImageUrlForPlace(place);
+
+                      return Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: context.surface,
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(
+                            color: isSelected
+                                ? context.primary
+                                : context.borderColor.withAlpha(20),
+                            width: isSelected ? 1.5 : 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.softShadow,
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12.r),
+                              child: CachedNetworkImage(
+                                imageUrl: imgUrl,
+                                width: 56.w,
+                                height: 56.h,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, __, ___) => Container(
+                                  width: 56.w,
+                                  height: 56.h,
+                                  color: context.shimmerBase,
+                                  child: Icon(
+                                    Icons.place,
+                                    size: 24.sp,
+                                    color: context.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            12.w.horizontalSpace,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    place.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.text.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  4.h.verticalSpace,
+                                  Text(
+                                    place.description.isNotEmpty
+                                        ? place.description
+                                        : (place.types.isNotEmpty
+                                              ? place.types.first
+                                              : "Attraction"),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.text.bodySmall?.copyWith(
+                                      color: context.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            8.w.horizontalSpace,
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedPlaces.remove(place);
+                                  } else {
+                                    _selectedPlaces.add(place);
+                                  }
+                                });
+                              },
+                              child: Container(
+                                width: 32.w,
+                                height: 32.h,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? context.primary
+                                      : context.primary.withAlpha(25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  isSelected
+                                      ? Icons.check_rounded
+                                      : Icons.add_rounded,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : context.primary,
+                                  size: 20.sp,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
 
           // Save button

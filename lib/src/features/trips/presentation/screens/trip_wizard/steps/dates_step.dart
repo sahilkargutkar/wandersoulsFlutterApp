@@ -53,10 +53,16 @@ class _DatesStepState extends State<DatesStep> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+                              _currentMonth = DateTime(
+                                _currentMonth.year,
+                                _currentMonth.month - 1,
+                              );
                             });
                           },
-                          icon: Icon(Icons.chevron_left, color: context.colors.onSurface),
+                          icon: Icon(
+                            Icons.chevron_left,
+                            color: context.colors.onSurface,
+                          ),
                         ),
                         Text(
                           _monthYearString(_currentMonth),
@@ -68,10 +74,16 @@ class _DatesStepState extends State<DatesStep> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+                              _currentMonth = DateTime(
+                                _currentMonth.year,
+                                _currentMonth.month + 1,
+                              );
                             });
                           },
-                          icon: Icon(Icons.chevron_right, color: context.colors.onSurface),
+                          icon: Icon(
+                            Icons.chevron_right,
+                            color: context.colors.onSurface,
+                          ),
                         ),
                       ],
                     ),
@@ -101,7 +113,20 @@ class _DatesStepState extends State<DatesStep> {
   }
 
   String _monthYearString(DateTime date) {
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
     return "${months[date.month - 1]} ${date.year}";
   }
 
@@ -110,20 +135,29 @@ class _DatesStepState extends State<DatesStep> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: days
-          .map((d) => Text(
-                d,
-                style: context.text.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: context.colors.onSurfaceVariant,
-                ),
-              ))
+          .map(
+            (d) => Text(
+              d,
+              style: context.text.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: context.colors.onSurfaceVariant,
+              ),
+            ),
+          )
           .toList(),
     );
   }
 
   Widget _buildCalendarGrid(BuildContext context, TripWizardState state) {
-    final firstDayOfMonth = DateTime(_currentMonth.year, _currentMonth.month, 1);
-    final daysInMonth = DateUtils.getDaysInMonth(_currentMonth.year, _currentMonth.month);
+    final firstDayOfMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month,
+      1,
+    );
+    final daysInMonth = DateUtils.getDaysInMonth(
+      _currentMonth.year,
+      _currentMonth.month,
+    );
     final startingWeekday = firstDayOfMonth.weekday; // 1=Monday, 7=Sunday
 
     int totalCells = daysInMonth + startingWeekday - 1;
@@ -143,14 +177,20 @@ class _DatesStepState extends State<DatesStep> {
 
         int day = index - startingWeekday + 2;
         DateTime date = DateTime(_currentMonth.year, _currentMonth.month, day);
-        bool isSelectedStart = state.startDate != null && DateUtils.isSameDay(state.startDate, date);
-        bool isSelectedEnd = state.endDate != null && DateUtils.isSameDay(state.endDate, date);
-        bool isInRange = state.startDate != null &&
+        bool isSelectedStart =
+            state.startDate != null &&
+            DateUtils.isSameDay(state.startDate, date);
+        bool isSelectedEnd =
+            state.endDate != null && DateUtils.isSameDay(state.endDate, date);
+        bool isInRange =
+            state.startDate != null &&
             state.endDate != null &&
             date.isAfter(state.startDate!) &&
             date.isBefore(state.endDate!);
-        
-        bool isPast = date.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+
+        bool isPast = date.isBefore(
+          DateTime.now().subtract(const Duration(days: 1)),
+        );
 
         Color bgColor = Colors.transparent;
         Color textColor = context.colors.onSurface;
@@ -159,9 +199,9 @@ class _DatesStepState extends State<DatesStep> {
           bgColor = context.colors.primary;
           textColor = context.colors.onPrimary;
         } else if (isInRange) {
-          bgColor = context.colors.primary.withOpacity(0.15);
+          bgColor = context.colors.primary.withValues(alpha: 0.15);
         } else if (isPast) {
-          textColor = context.colors.onSurface.withOpacity(0.3);
+          textColor = context.colors.onSurface.withValues(alpha: 0.3);
         }
 
         return GestureDetector(
@@ -169,7 +209,8 @@ class _DatesStepState extends State<DatesStep> {
               ? null
               : () {
                   final cubit = context.read<TripWizardCubit>();
-                  if (state.startDate == null || (state.startDate != null && state.endDate != null)) {
+                  if (state.startDate == null ||
+                      (state.startDate != null && state.endDate != null)) {
                     cubit.setDates(date, null);
                   } else if (state.startDate != null && state.endDate == null) {
                     if (date.isBefore(state.startDate!)) {
@@ -183,14 +224,18 @@ class _DatesStepState extends State<DatesStep> {
             margin: EdgeInsets.symmetric(vertical: 4.h),
             decoration: BoxDecoration(
               color: bgColor,
-              shape: (isSelectedStart || isSelectedEnd) ? BoxShape.circle : BoxShape.rectangle,
+              shape: (isSelectedStart || isSelectedEnd)
+                  ? BoxShape.circle
+                  : BoxShape.rectangle,
             ),
             alignment: Alignment.center,
             child: Text(
               day.toString(),
               style: context.text.bodyMedium?.copyWith(
                 color: textColor,
-                fontWeight: (isSelectedStart || isSelectedEnd) ? FontWeight.bold : FontWeight.normal,
+                fontWeight: (isSelectedStart || isSelectedEnd)
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
           ),

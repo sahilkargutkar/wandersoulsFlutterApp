@@ -11,7 +11,6 @@ import 'package:wonder_souls/src/config/utils/common_widgets/circular_icon.dart'
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 import 'package:wonder_souls/src/config/utils/app_toast.dart';
-import 'package:dio/dio.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/map_view.dart';
@@ -34,7 +33,6 @@ class TripDetailsScreen extends StatefulWidget {
 
 class _TripDetailsScreenState extends State<TripDetailsScreen> {
   late TripData _tripState;
-  bool _loadingTrip = false;
   int _selectedDayIndex = 0;
   List<TripActivityModel> _activities = [];
   bool _loadingActivities = false;
@@ -89,7 +87,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
     final filename = pickedFile.path.split("/").last;
     final extension = filename.split(".").last;
-    final blobPath = "attachments/${_tripState.id}_${DateTime.now().millisecondsSinceEpoch}.$extension";
+    final blobPath =
+        "attachments/${_tripState.id}_${DateTime.now().millisecondsSinceEpoch}.$extension";
 
     try {
       final apiService = sl<ApiService>();
@@ -135,7 +134,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
   Future<void> _fetchTripDetails() async {
     if (_tripState.id.isEmpty) return;
-    setState(() => _loadingTrip = true);
     try {
       final apiService = sl<ApiService>();
       final res = await apiService.get<dynamic>(
@@ -149,8 +147,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       }
     } catch (e) {
       debugPrint("Error fetching trip details: $e");
-    } finally {
-      setState(() => _loadingTrip = false);
     }
   }
 
@@ -158,7 +154,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final nameController = TextEditingController(text: _tripState.name);
     final descController = TextEditingController(text: _tripState.description);
     DateTime start = _tripState.startDate ?? DateTime.now();
-    DateTime end = _tripState.endDate ?? DateTime.now().add(const Duration(days: 3));
+    DateTime end =
+        _tripState.endDate ?? DateTime.now().add(const Duration(days: 3));
 
     showDialog(
       context: context,
@@ -177,7 +174,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     ),
                     TextField(
                       controller: descController,
-                      decoration: const InputDecoration(labelText: "Description"),
+                      decoration: const InputDecoration(
+                        labelText: "Description",
+                      ),
                     ),
                     16.h.verticalSpace,
                     Row(
@@ -230,7 +229,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     final name = nameController.text.trim();
                     if (name.isEmpty) return;
                     Navigator.pop(context);
-                    
+
                     AppToast.success("Updating trip...");
                     try {
                       final apiService = sl<ApiService>();
@@ -246,8 +245,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         "budget": {
                           "budgetType": _tripState.category,
                           "totalEstimated": 2000,
-                          "currency": "USD"
-                        }
+                          "currency": "USD",
+                        },
                       };
 
                       final res = await apiService.put<dynamic>(
@@ -303,7 +302,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     });
 
     final start = _tripState.startDate ?? DateTime.now();
-    final end = _tripState.endDate ?? DateTime.now().add(const Duration(days: 3));
+    final end =
+        _tripState.endDate ?? DateTime.now().add(const Duration(days: 3));
 
     final payload = {
       "destination": _tripState.mainDestination,
@@ -319,33 +319,24 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           "transportation": 0,
           "accommodation": 0,
           "food": 0,
-          "activities": 0
-        }
+          "activities": 0,
+        },
       },
       "tripName": _tripState.name,
-      "description": ""
+      "description": "",
     };
 
     try {
-      final dio = Dio(BaseOptions(
-        baseUrl: ApiConstants.aiBaseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-      ));
-
-      final response = await dio.post(
+      final apiService = sl<ApiService>();
+      final aiResult = await apiService.aiPost(
         ApiConstants.generateItinerary,
         data: payload,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
+      if (aiResult is Success<Map<String, dynamic>>) {
+        final data = aiResult.data;
         final List<dynamic> days = data["itinerary"] ?? [];
-        
+
         // Extract all activities across all days as suggestions
         final List<dynamic> suggestions = [];
         for (var day in days) {
@@ -357,7 +348,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           _aiSuggestions = suggestions;
           _loadingAiSuggestions = false;
         });
-      } else {
+      } else if (aiResult is Failure<Map<String, dynamic>>) {
         setState(() {
           _aiSuggestionsError = "Failed to load AI suggestions";
           _loadingAiSuggestions = false;
@@ -425,9 +416,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         "ageRestriction": "None",
         "cost": cost,
         "tips": tips,
-        "imageUrl": _getPlaceImageUrl(_getAiCategoryEnum(categoryStr), name)
+        "imageUrl": _getPlaceImageUrl(_getAiCategoryEnum(categoryStr), name),
       },
-      "notes": desc
+      "notes": desc,
     };
 
     AppToast.success("Adding $name...");
@@ -462,13 +453,20 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
       if (result is Success<List<dynamic>>) {
         final List<TripActivityModel> all = result.data
-            .map((item) => TripActivityModel.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) =>
+                  TripActivityModel.fromJson(item as Map<String, dynamic>),
+            )
             .toList();
 
         setState(() {
           // Filter locally by tripId and sort by startDatetime
-          _activities = all.where((act) => act.tripId == _tripState.id).toList();
-          _activities.sort((a, b) => a.startDatetime.compareTo(b.startDatetime));
+          _activities = all
+              .where((act) => act.tripId == _tripState.id)
+              .toList();
+          _activities.sort(
+            (a, b) => a.startDatetime.compareTo(b.startDatetime),
+          );
           _loadingActivities = false;
         });
       } else {
@@ -493,17 +491,16 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final mapApiService = sl<GoogleMapsApiService>();
     final result = await mapApiService.searchPlaces(query);
 
-    result.fold(
-      (failure) => setState(() => _searchingLocations = false),
-      (places) {
-        if (_searchController.text.trim().isNotEmpty) {
-          setState(() {
-            _suggestions = places;
-            _searchingLocations = false;
-          });
-        }
-      },
-    );
+    result.fold((failure) => setState(() => _searchingLocations = false), (
+      places,
+    ) {
+      if (_searchController.text.trim().isNotEmpty) {
+        setState(() {
+          _suggestions = places;
+          _searchingLocations = false;
+        });
+      }
+    });
   }
 
   String _getPlaceImageUrl(int category, String name) {
@@ -526,22 +523,41 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   }
 
   int _getCategoryEnum(List<String> types) {
-    if (types.contains("restaurant") || types.contains("food") || types.contains("cafe") || types.contains("bar")) {
+    if (types.contains("restaurant") ||
+        types.contains("food") ||
+        types.contains("cafe") ||
+        types.contains("bar")) {
       return 1; // Food
     }
-    if (types.contains("transit_station") || types.contains("airport") || types.contains("subway_station") || types.contains("train_station") || types.contains("bus_station")) {
+    if (types.contains("transit_station") ||
+        types.contains("airport") ||
+        types.contains("subway_station") ||
+        types.contains("train_station") ||
+        types.contains("bus_station")) {
       return 2; // Transport
     }
-    if (types.contains("lodging") || types.contains("hotel") || types.contains("accommodation")) {
+    if (types.contains("lodging") ||
+        types.contains("hotel") ||
+        types.contains("accommodation")) {
       return 3; // Accommodation
     }
-    if (types.contains("spa") || types.contains("beauty_salon") || types.contains("gym") || types.contains("physiotherapist")) {
+    if (types.contains("spa") ||
+        types.contains("beauty_salon") ||
+        types.contains("gym") ||
+        types.contains("physiotherapist")) {
       return 4; // Relaxation
     }
-    if (types.contains("shopping_mall") || types.contains("store") || types.contains("clothing_store") || types.contains("supermarket")) {
+    if (types.contains("shopping_mall") ||
+        types.contains("store") ||
+        types.contains("clothing_store") ||
+        types.contains("supermarket")) {
       return 5; // Shopping
     }
-    if (types.contains("attraction") || types.contains("museum") || types.contains("landmark") || types.contains("park") || types.contains("natural_feature")) {
+    if (types.contains("attraction") ||
+        types.contains("museum") ||
+        types.contains("landmark") ||
+        types.contains("park") ||
+        types.contains("natural_feature")) {
       return 0; // Sightseeing
     }
     return 6; // Other
@@ -561,7 +577,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
     final payload = {
       "tripId": _tripState.id,
-      "placeId": suggestion.placeId.isNotEmpty ? suggestion.placeId : "place_${DateTime.now().millisecondsSinceEpoch}",
+      "placeId": suggestion.placeId.isNotEmpty
+          ? suggestion.placeId
+          : "place_${DateTime.now().millisecondsSinceEpoch}",
       "dayId": "${_selectedDayIndex + 1}",
       "name": suggestion.name,
       "bookingReference": "",
@@ -579,9 +597,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         "ageRestriction": "None",
         "cost": 0.0,
         "tips": "Added to itinerary",
-        "imageUrl": _getPlaceImageUrl(cat, suggestion.name)
+        "imageUrl": _getPlaceImageUrl(cat, suggestion.name),
       },
-      "notes": suggestion.description
+      "notes": suggestion.description,
     };
 
     AppToast.success("Adding ${suggestion.name}...");
@@ -628,7 +646,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     // Filter activities for the selected day
-    final dayActivities = _activities.where((act) => act.dayId == "${_selectedDayIndex + 1}").toList();
+    final dayActivities = _activities
+        .where((act) => act.dayId == "${_selectedDayIndex + 1}")
+        .toList();
 
     // Map activities to MarkerData for the Google Map
     final List<MarkerData> markers = [];
@@ -637,12 +657,17 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     // For locations suggestion API, the rating/lat/lng is populated. Let's map coordinates:
     for (var act in dayActivities) {
       // Typically activities from suggest locations have coordinates. Let's assume a default center if null.
-      markers.add(MarkerData(
-        id: act.id,
-        title: act.name,
-        lat: 22.5726 + (markers.length * 0.01), // dummy offset so they don't overlap if not provided
-        lng: 88.3639 + (markers.length * 0.01),
-      ));
+      markers.add(
+        MarkerData(
+          id: act.id,
+          title: act.name,
+          lat:
+              22.5726 +
+              (markers.length *
+                  0.01), // dummy offset so they don't overlap if not provided
+          lng: 88.3639 + (markers.length * 0.01),
+        ),
+      );
     }
 
     return Scaffold(
@@ -665,10 +690,12 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   _buildAiSuggestionsList(context),
                   _buildSearchAndSuggestions(context),
                   if (_loadingActivities)
-                    const Center(child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: CircularProgressIndicator(),
-                    ))
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
                   else
                     _buildActivitiesTimeline(context, dayActivities),
                   _buildAttachmentsSection(context),
@@ -694,7 +721,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 8.w.horizontalSpace,
                 Text(
                   "AI Suggestions Loading...",
-                  style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -743,7 +772,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               final act = _aiSuggestions[index];
               final name = act["name"] ?? "Activity";
               final category = act["category"] ?? "Landmark";
-              final cost = act["estimatedCost"] != null ? "\$${act["estimatedCost"]}" : "Free";
+              final cost = act["estimatedCost"] != null
+                  ? "\$${act["estimatedCost"]}"
+                  : "Free";
 
               return Container(
                 width: 200.w,
@@ -751,9 +782,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 decoration: BoxDecoration(
                   color: context.mutedBackground,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: context.borderColor.withAlpha(20),
-                  ),
+                  border: Border.all(color: context.borderColor.withAlpha(20)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -771,8 +800,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => _addAiSuggestionToItinerary(act as Map<String, dynamic>),
-                          child: Icon(Icons.add_circle, color: context.primary, size: 22.sp),
+                          onTap: () => _addAiSuggestionToItinerary(
+                            act as Map<String, dynamic>,
+                          ),
+                          child: Icon(
+                            Icons.add_circle,
+                            color: context.primary,
+                            size: 22.sp,
+                          ),
                         ),
                       ],
                     ),
@@ -870,7 +905,11 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               fit: BoxFit.cover,
               errorWidget: (_, __, ___) => Container(
                 color: context.shimmerBase,
-                child: Icon(Icons.image_rounded, size: 64.sp, color: context.onSurfaceVariant.withAlpha(60)),
+                child: Icon(
+                  Icons.image_rounded,
+                  size: 64.sp,
+                  color: context.onSurfaceVariant.withAlpha(60),
+                ),
               ),
             ),
             DecoratedBox(
@@ -1002,15 +1041,22 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               separatorBuilder: (context, index) => 8.w.horizontalSpace,
               itemBuilder: (context, index) {
                 final isSelected = index == _selectedDayIndex;
-                final date = (_tripState.startDate ?? DateTime.now()).add(Duration(days: index));
+                final date = (_tripState.startDate ?? DateTime.now()).add(
+                  Duration(days: index),
+                );
                 final formattedDate = "${date.day}/${date.month}";
 
                 return GestureDetector(
                   onTap: () => setState(() => _selectedDayIndex = index),
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? context.primary : context.mutedBackground,
+                      color: isSelected
+                          ? context.primary
+                          : context.mutedBackground,
                       borderRadius: BorderRadius.circular(20.r),
                       boxShadow: isSelected
                           ? [
@@ -1018,7 +1064,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                 color: context.primary.withAlpha(40),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
-                              )
+                              ),
                             ]
                           : null,
                     ),
@@ -1028,7 +1074,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         Text(
                           "Day ${index + 1}",
                           style: TextStyle(
-                            color: isSelected ? Colors.white : context.onSurface,
+                            color: isSelected
+                                ? Colors.white
+                                : context.onSurface,
                             fontWeight: FontWeight.bold,
                             fontSize: 12.sp,
                           ),
@@ -1036,7 +1084,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         Text(
                           formattedDate,
                           style: TextStyle(
-                            color: isSelected ? Colors.white70 : context.onSurfaceVariant,
+                            color: isSelected
+                                ? Colors.white70
+                                : context.onSurfaceVariant,
                             fontSize: 10.sp,
                           ),
                         ),
@@ -1088,7 +1138,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             controller: _searchController,
             focusNode: _searchFocusNode,
             decoration: InputDecoration(
-              hintText: "Search places to add to Day ${_selectedDayIndex + 1}...",
+              hintText:
+                  "Search places to add to Day ${_selectedDayIndex + 1}...",
               hintStyle: context.text.bodyMedium?.copyWith(
                 color: context.onSurfaceVariant.withAlpha(120),
               ),
@@ -1104,7 +1155,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   : null,
               filled: true,
               fillColor: context.mutedBackground,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 12.h,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.r),
                 borderSide: BorderSide.none,
@@ -1133,17 +1187,25 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: context.primaryTint,
-                      child: Icon(Icons.place, color: context.primary, size: 18.sp),
+                      child: Icon(
+                        Icons.place,
+                        color: context.primary,
+                        size: 18.sp,
+                      ),
                     ),
                     title: Text(
                       suggestion.name,
-                      style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     subtitle: Text(
                       suggestion.address,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: context.text.bodySmall?.copyWith(color: context.onSurfaceVariant),
+                      style: context.text.bodySmall?.copyWith(
+                        color: context.onSurfaceVariant,
+                      ),
                     ),
                     trailing: const Icon(Icons.add_circle_outline),
                     onTap: () => _addActivity(suggestion),
@@ -1156,14 +1218,21 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     );
   }
 
-  Widget _buildActivitiesTimeline(BuildContext context, List<TripActivityModel> activities) {
+  Widget _buildActivitiesTimeline(
+    BuildContext context,
+    List<TripActivityModel> activities,
+  ) {
     if (activities.isEmpty) {
       return Container(
         padding: EdgeInsets.all(40.w),
         alignment: Alignment.center,
         child: Column(
           children: [
-            Icon(Icons.map_outlined, size: 48.sp, color: context.onSurfaceVariant.withAlpha(80)),
+            Icon(
+              Icons.map_outlined,
+              size: 48.sp,
+              color: context.onSurfaceVariant.withAlpha(80),
+            ),
             12.h.verticalSpace,
             Text(
               "No activities planned for this day.",
@@ -1232,9 +1301,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   elevation: 1,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
-                    side: BorderSide(
-                      color: context.borderColor.withAlpha(30),
-                    ),
+                    side: BorderSide(color: context.borderColor.withAlpha(30)),
                   ),
                   margin: EdgeInsets.only(bottom: 16.h),
                   child: Padding(
@@ -1251,7 +1318,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              if (activity.notes != null && activity.notes!.isNotEmpty) ...[
+                              if (activity.notes != null &&
+                                  activity.notes!.isNotEmpty) ...[
                                 6.h.verticalSpace,
                                 Text(
                                   activity.notes!,
@@ -1266,13 +1334,19 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete_outline, color: context.colors.error, size: 20.sp),
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: context.colors.error,
+                            size: 20.sp,
+                          ),
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (dialogCtx) => AlertDialog(
                                 title: const Text("Delete Activity"),
-                                content: Text("Are you sure you want to remove ${activity.name}?"),
+                                content: Text(
+                                  "Are you sure you want to remove ${activity.name}?",
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(dialogCtx),
@@ -1283,7 +1357,12 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                       Navigator.pop(dialogCtx);
                                       _deleteActivity(activity.id);
                                     },
-                                    child: Text("Delete", style: TextStyle(color: context.colors.error)),
+                                    child: Text(
+                                      "Delete",
+                                      style: TextStyle(
+                                        color: context.colors.error,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1334,9 +1413,13 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       if (res is Success && res.data != null) {
         latestModel = TripActivityModel.fromJson(res.data["data"] ?? res.data);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint("Failed to load activity details: $e");
+    }
 
     final model = latestModel ?? baseModel;
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -1349,20 +1432,45 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (model.notes != null && model.notes!.isNotEmpty) ...[
-                  Text("Details / Notes:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(
+                    "Details / Notes:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text(model.notes!),
                   12.h.verticalSpace,
                 ],
-                Text("Start Time:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                Text(
+                  "Start Time:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
                 Text("${model.startDatetime.toLocal()}"),
                 12.h.verticalSpace,
                 if (model.cost > 0) ...[
-                  Text("Estimated Cost:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(
+                    "Estimated Cost:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text("\$${model.cost}"),
                   12.h.verticalSpace,
                 ],
-                if (model.bookingReference != null && model.bookingReference!.isNotEmpty) ...[
-                  Text("Booking Reference:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                if (model.bookingReference != null &&
+                    model.bookingReference!.isNotEmpty) ...[
+                  Text(
+                    "Booking Reference:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text(model.bookingReference!),
                   12.h.verticalSpace,
                 ],
@@ -1412,7 +1520,11 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 )
               else
                 IconButton(
-                  icon: Icon(Icons.add_a_photo_outlined, color: context.primary, size: 22.sp),
+                  icon: Icon(
+                    Icons.add_a_photo_outlined,
+                    color: context.primary,
+                    size: 22.sp,
+                  ),
                   onPressed: _pickAndUploadAttachment,
                 ),
             ],
@@ -1433,9 +1545,16 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               spacing: 8.w,
               runSpacing: 8.h,
               children: _attachments.map((blobPath) {
-                final displayFilename = blobPath.split('/').last.replaceAll(RegExp(r'^\d+_'), '');
+                final displayFilename = blobPath
+                    .split('/')
+                    .last
+                    .replaceAll(RegExp(r'^\d+_'), '');
                 return InputChip(
-                  avatar: Icon(Icons.description_outlined, size: 16.sp, color: context.primary),
+                  avatar: Icon(
+                    Icons.description_outlined,
+                    size: 16.sp,
+                    color: context.primary,
+                  ),
                   label: Text(
                     displayFilename,
                     maxLines: 1,

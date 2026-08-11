@@ -36,7 +36,8 @@ class DestinationGuide {
     city: 'Tokyo, Tokyo',
     country: 'Japan',
     flagEmoji: '🇯🇵',
-    imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
     description:
         'Discover the vibrant metropolis of Tokyo, where modernity meets tradition in perfect harmony. From futuristic skyscrapers to serene temples and lush parks, Tokyo offers an eclectic blend of experiences.',
     gallery: [
@@ -96,7 +97,8 @@ class DestinationGuide {
     city: 'Paris, Paris',
     country: 'France',
     flagEmoji: '🇫🇷',
-    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
     description:
         'Experience the romance and elegance of Paris, the City of Light. Renowned for its world-class art, fashion, gastronomy, and culture, Paris offers an unforgettable journey into history and beauty.',
     gallery: [
@@ -156,7 +158,8 @@ class DestinationGuide {
     city: 'London, London',
     country: 'United Kingdom',
     flagEmoji: '🇬🇧',
-    imageUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800',
     description:
         'Explore the historic and cosmopolitan capital of London. From royal palaces and ancient towers to modern skyscrapers and world-renowned theaters, London is a city of endless discovery.',
     gallery: [
@@ -216,7 +219,8 @@ class DestinationGuide {
     city: 'New York, New York',
     country: 'United States',
     flagEmoji: '🇺🇸',
-    imageUrl: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800',
+    imageUrl:
+        'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800',
     description:
         'Feel the unparalleled energy of New York City, the Big Apple. A global hub of culture, entertainment, art, and finance, NYC boasts iconic landmarks and vibrant neighborhoods that never sleep.',
     gallery: [

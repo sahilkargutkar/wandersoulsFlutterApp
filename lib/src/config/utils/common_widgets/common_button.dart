@@ -42,8 +42,8 @@ class CommonButton extends StatelessWidget {
             color: useGradient
                 ? null
                 : (isLoading || onPressed == null)
-                    ? bgColor.withAlpha(140)
-                    : bgColor,
+                ? bgColor.withAlpha(140)
+                : bgColor,
             borderRadius: BorderRadius.circular(28),
             boxShadow: (isLoading || onPressed == null)
                 ? null

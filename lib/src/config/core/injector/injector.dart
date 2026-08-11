@@ -1,7 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wonder_souls/src/config/core/config/app_env.dart';
 import 'package:wonder_souls/src/config/core/local_storage/token_storage.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/core/services/google_map_services.dart';

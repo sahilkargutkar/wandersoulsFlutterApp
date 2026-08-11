@@ -49,11 +49,9 @@ class _AnimatedPressState extends State<AnimatedPress>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          final double scale = 1.0 - (_controller.value * (1.0 - widget.scaleFactor));
-          return Transform.scale(
-            scale: scale,
-            child: child,
-          );
+          final double scale =
+              1.0 - (_controller.value * (1.0 - widget.scaleFactor));
+          return Transform.scale(scale: scale, child: child);
         },
         child: widget.child,
       ),

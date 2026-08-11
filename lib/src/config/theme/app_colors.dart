@@ -28,7 +28,7 @@ class AppColors {
   static const darkCardShadow = Color(0x1A000000);
 
   // ─── Accent / Semantic ─────────────────────────────────────
-  static const accent = Color(0xFFF59E0B);       // Warm amber
+  static const accent = Color(0xFFF59E0B); // Warm amber
   static const accentSoft = Color(0xFFFEF3C7);
   static const success = Color(0xFF10B981);
   static const warning = Color(0xFFF59E0B);

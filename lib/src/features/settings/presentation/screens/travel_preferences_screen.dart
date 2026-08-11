@@ -16,7 +16,8 @@ class TravelPreferencesScreen extends StatefulWidget {
   static const String routeName = "/TravelPreferencesScreen";
 
   @override
-  State<TravelPreferencesScreen> createState() => _TravelPreferencesScreenState();
+  State<TravelPreferencesScreen> createState() =>
+      _TravelPreferencesScreenState();
 }
 
 class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
@@ -28,12 +29,45 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
   bool _isNew = true;
 
   // Options lists
-  final List<String> _travelStyles = ["Explorer", "Relaxation", "Adventure", "Culture", "Business", "Shopping"];
-  final List<String> _budgetPreferences = ["Cheap", "Moderate", "Luxury", "Flexible"];
-  final List<String> _accommodationPreferences = ["Hotel", "Hostel", "Resort", "Villa", "Apartment"];
-  
-  final List<String> _allCategories = ["Landmark", "Food", "Adventure", "Culture", "Shopping", "Nature", "Entertainment"];
-  final List<String> _allDietaries = ["Vegetarian", "Vegan", "Gluten-Free", "Halal", "Kosher", "Dairy-Free"];
+  final List<String> _travelStyles = [
+    "Explorer",
+    "Relaxation",
+    "Adventure",
+    "Culture",
+    "Business",
+    "Shopping",
+  ];
+  final List<String> _budgetPreferences = [
+    "Cheap",
+    "Moderate",
+    "Luxury",
+    "Flexible",
+  ];
+  final List<String> _accommodationPreferences = [
+    "Hotel",
+    "Hostel",
+    "Resort",
+    "Villa",
+    "Apartment",
+  ];
+
+  final List<String> _allCategories = [
+    "Landmark",
+    "Food",
+    "Adventure",
+    "Culture",
+    "Shopping",
+    "Nature",
+    "Entertainment",
+  ];
+  final List<String> _allDietaries = [
+    "Vegetarian",
+    "Vegan",
+    "Gluten-Free",
+    "Halal",
+    "Kosher",
+    "Dairy-Free",
+  ];
 
   // Selected values
   String _selectedStyle = "Explorer";
@@ -73,7 +107,8 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
           _loading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint("Failed to load preferences: $e");
       setState(() {
         _isNew = true;
         _loading = false;
@@ -83,7 +118,7 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
 
   Future<void> _savePreferences() async {
     setState(() => _saving = true);
-    
+
     final prefModel = TravelPreferenceModel(
       id: _preference?.id,
       userId: _preference?.userId,
@@ -105,7 +140,10 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
         }
       } else {
         final prefId = _preference?.id ?? "";
-        final res = await _authRemoteDataSource.updatePreferences(prefId, prefModel);
+        final res = await _authRemoteDataSource.updatePreferences(
+          prefId,
+          prefModel,
+        );
         if (res is Success) {
           AppToast.success("Preferences updated successfully!");
           if (mounted) Navigator.pop(context);
@@ -148,7 +186,11 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
         backgroundColor: context.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: context.onSurface, size: 20.sp),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: context.onSurface,
+            size: 20.sp,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -186,10 +228,14 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
                 _buildLabel("Travel Style"),
                 8.h.verticalSpace,
                 DropdownButtonFormField<String>(
-                  value: _selectedStyle,
+                  initialValue: _selectedStyle,
                   decoration: _buildInputDecoration(),
-                  items: _travelStyles.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                  onChanged: (val) => {if (val != null) setState(() => _selectedStyle = val)},
+                  items: _travelStyles
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                      .toList(),
+                  onChanged: (val) => {
+                    if (val != null) setState(() => _selectedStyle = val),
+                  },
                 ),
                 20.h.verticalSpace,
 
@@ -197,10 +243,14 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
                 _buildLabel("Budget Preference"),
                 8.h.verticalSpace,
                 DropdownButtonFormField<String>(
-                  value: _selectedBudget,
+                  initialValue: _selectedBudget,
                   decoration: _buildInputDecoration(),
-                  items: _budgetPreferences.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
-                  onChanged: (val) => {if (val != null) setState(() => _selectedBudget = val)},
+                  items: _budgetPreferences
+                      .map((b) => DropdownMenuItem(value: b, child: Text(b)))
+                      .toList(),
+                  onChanged: (val) => {
+                    if (val != null) setState(() => _selectedBudget = val),
+                  },
                 ),
                 20.h.verticalSpace,
 
@@ -208,10 +258,14 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
                 _buildLabel("Accommodation Type"),
                 8.h.verticalSpace,
                 DropdownButtonFormField<String>(
-                  value: _selectedAcc,
+                  initialValue: _selectedAcc,
                   decoration: _buildInputDecoration(),
-                  items: _accommodationPreferences.map((a) => DropdownMenuItem(value: a, child: Text(a))).toList(),
-                  onChanged: (val) => {if (val != null) setState(() => _selectedAcc = val)},
+                  items: _accommodationPreferences
+                      .map((a) => DropdownMenuItem(value: a, child: Text(a)))
+                      .toList(),
+                  onChanged: (val) => {
+                    if (val != null) setState(() => _selectedAcc = val),
+                  },
                 ),
                 24.h.verticalSpace,
 
@@ -231,7 +285,9 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
                       backgroundColor: context.mutedBackground,
                       labelStyle: TextStyle(
                         color: isSelected ? Colors.white : context.onSurface,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.r),
@@ -258,7 +314,9 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
                       backgroundColor: context.mutedBackground,
                       labelStyle: TextStyle(
                         color: isSelected ? Colors.white : context.onSurface,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.r),

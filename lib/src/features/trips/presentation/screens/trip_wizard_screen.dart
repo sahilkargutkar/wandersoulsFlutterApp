@@ -12,10 +12,7 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/trip_detail
 class TripWizardScreen extends StatefulWidget {
   final Map<String, String> destination;
 
-  const TripWizardScreen({
-    super.key,
-    required this.destination,
-  });
+  const TripWizardScreen({super.key, required this.destination});
 
   static const String routeName = "/TripWizardScreen";
 
@@ -48,14 +45,8 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
 
   // Party Options
   final List<Map<String, String>> _partyOptions = [
-    {
-      'title': 'Only Me 🏃',
-      'subtitle': 'Traveling solo, just you.',
-    },
-    {
-      'title': 'A Couple ❤️',
-      'subtitle': 'A romantic getaway for two.',
-    },
+    {'title': 'Only Me 🏃', 'subtitle': 'Traveling solo, just you.'},
+    {'title': 'A Couple ❤️', 'subtitle': 'A romantic getaway for two.'},
     {
       'title': 'Family 👨‍👩‍👧‍👦',
       'subtitle': 'Quality time with your loved ones.',
@@ -64,10 +55,7 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
       'title': 'Friends 🧑‍🤝‍🧑',
       'subtitle': 'Adventure with your closest pals.',
     },
-    {
-      'title': 'Work 💼',
-      'subtitle': 'Business or corporate travel.',
-    },
+    {'title': 'Work 💼', 'subtitle': 'Business or corporate travel.'},
   ];
 
   // Interest Options
@@ -94,22 +82,13 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
 
   // Budget Options
   final List<Map<String, String>> _budgetOptions = [
-    {
-      'title': 'Cheap 🪙',
-      'subtitle': 'Budget-friendly, economical travel.',
-    },
+    {'title': 'Cheap 🪙', 'subtitle': 'Budget-friendly, economical travel.'},
     {
       'title': 'Balanced ⚖️',
       'subtitle': 'Moderate spending for a balanced trip.',
     },
-    {
-      'title': 'Luxury 💎',
-      'subtitle': 'High-end, indulgent experiences.',
-    },
-    {
-      'title': 'Flexible 👐',
-      'subtitle': 'No budget restrictions.',
-    },
+    {'title': 'Luxury 💎', 'subtitle': 'High-end, indulgent experiences.'},
+    {'title': 'Flexible 👐', 'subtitle': 'No budget restrictions.'},
   ];
 
   void _nextStep() {
@@ -136,7 +115,9 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
       _generationProgress = 0;
     });
 
-    _generationTimer = Timer.periodic(const Duration(milliseconds: 25), (timer) {
+    _generationTimer = Timer.periodic(const Duration(milliseconds: 25), (
+      timer,
+    ) {
       setState(() {
         if (_generationProgress < 100) {
           _generationProgress++;
@@ -182,8 +163,18 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
 
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
@@ -261,9 +252,7 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
     String text = _currentStep == 4 ? 'Build My Itinerary' : 'Continue';
     return Container(
       padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: context.surface,
-      ),
+      decoration: BoxDecoration(color: context.surface),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: context.primary,
@@ -404,14 +393,32 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
           ),
         ),
         24.h.height,
-        _buildCalendarMonth('December 2023', 12, 2023, 31, 5), // Dec 2023 starts on Friday (5)
+        _buildCalendarMonth(
+          'December 2023',
+          12,
+          2023,
+          31,
+          5,
+        ), // Dec 2023 starts on Friday (5)
         24.h.height,
-        _buildCalendarMonth('January 2024', 1, 2024, 31, 1), // Jan 2024 starts on Monday (1)
+        _buildCalendarMonth(
+          'January 2024',
+          1,
+          2024,
+          31,
+          1,
+        ), // Jan 2024 starts on Monday (1)
       ],
     );
   }
 
-  Widget _buildCalendarMonth(String monthTitle, int month, int year, int totalDays, int startWeekday) {
+  Widget _buildCalendarMonth(
+    String monthTitle,
+    int month,
+    int year,
+    int totalDays,
+    int startWeekday,
+  ) {
     final weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
     final blankDays = startWeekday - 1;
 
@@ -465,9 +472,12 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
             final currentDayDate = DateTime(year, month, day);
 
             // Determine Selection Style
-            bool isSelectedStart = _startDate != null && _isSameDay(_startDate!, currentDayDate);
-            bool isSelectedEnd = _endDate != null && _isSameDay(_endDate!, currentDayDate);
-            bool isBetween = _startDate != null &&
+            bool isSelectedStart =
+                _startDate != null && _isSameDay(_startDate!, currentDayDate);
+            bool isSelectedEnd =
+                _endDate != null && _isSameDay(_endDate!, currentDayDate);
+            bool isBetween =
+                _startDate != null &&
                 _endDate != null &&
                 currentDayDate.isAfter(_startDate!) &&
                 currentDayDate.isBefore(_endDate!);
@@ -481,24 +491,39 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
 
             if (isSelectedStart) {
               cellColor = context.primary;
-              borderRadius = BorderRadius.horizontal(left: Radius.circular(20.r));
-              textStyle = textStyle?.copyWith(color: Colors.white, fontWeight: FontWeight.bold);
+              borderRadius = BorderRadius.horizontal(
+                left: Radius.circular(20.r),
+              );
+              textStyle = textStyle?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              );
             } else if (isSelectedEnd) {
               cellColor = context.primary;
-              borderRadius = BorderRadius.horizontal(right: Radius.circular(20.r));
-              textStyle = textStyle?.copyWith(color: Colors.white, fontWeight: FontWeight.bold);
+              borderRadius = BorderRadius.horizontal(
+                right: Radius.circular(20.r),
+              );
+              textStyle = textStyle?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              );
             } else if (isBetween) {
               cellColor = context.primary.withAlpha(40);
-              textStyle = textStyle?.copyWith(color: context.primary, fontWeight: FontWeight.bold);
+              textStyle = textStyle?.copyWith(
+                color: context.primary,
+                fontWeight: FontWeight.bold,
+              );
             }
 
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  if (_startDate == null || (_startDate != null && _endDate != null)) {
+                  if (_startDate == null ||
+                      (_startDate != null && _endDate != null)) {
                     _startDate = currentDayDate;
                     _endDate = null;
-                  } else if (_startDate != null && currentDayDate.isBefore(_startDate!)) {
+                  } else if (_startDate != null &&
+                      currentDayDate.isBefore(_startDate!)) {
                     _startDate = currentDayDate;
                   } else {
                     _endDate = currentDayDate;
@@ -509,14 +534,11 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
                 decoration: BoxDecoration(
                   color: cellColor,
                   borderRadius: borderRadius,
-                  shape: (isSelectedStart && _endDate == null) ? BoxShape.circle : BoxShape.rectangle,
+                  shape: (isSelectedStart && _endDate == null)
+                      ? BoxShape.circle
+                      : BoxShape.rectangle,
                 ),
-                child: Center(
-                  child: Text(
-                    day.toString(),
-                    style: textStyle,
-                  ),
-                ),
+                child: Center(child: Text(day.toString(), style: textStyle)),
               ),
             );
           },
@@ -526,7 +548,9 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
   }
 
   bool _isSameDay(DateTime date1, DateTime date2) {
-    return date1.year == date2.year && date1.month == date2.month && date1.day == date2.day;
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   // --- Step 3: Interests ---
@@ -716,7 +740,8 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
               ),
             ],
           ),
-          onEdit: () => setState(() => _currentStep = 0), // Jump to first or navigate
+          onEdit: () =>
+              setState(() => _currentStep = 0), // Jump to first or navigate
         ),
         16.h.height,
 
@@ -820,7 +845,11 @@ class _TripWizardScreenState extends State<TripWizardScreen> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.edit_outlined, color: context.primary, size: 18.sp),
+                icon: Icon(
+                  Icons.edit_outlined,
+                  color: context.primary,
+                  size: 18.sp,
+                ),
                 onPressed: onEdit,
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,

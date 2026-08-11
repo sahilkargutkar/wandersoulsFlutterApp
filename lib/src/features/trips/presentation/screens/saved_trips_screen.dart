@@ -35,7 +35,9 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: DestinationCardList(
-            imageUrl: place.googleMapsUrl ?? "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=1200",
+            imageUrl:
+                place.googleMapsUrl ??
+                "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=1200",
             city: place.name,
             country: place.address,
             flagEmoji: "📍",

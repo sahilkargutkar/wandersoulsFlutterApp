@@ -74,18 +74,29 @@ class PartyStep extends StatelessWidget {
 
                     return InkWell(
                       onTap: () {
-                        context.read<TripWizardCubit>().setPartyType(option["value"]!);
+                        context.read<TripWizardCubit>().setPartyType(
+                          option["value"]!,
+                        );
                       },
                       borderRadius: BorderRadius.circular(12.r),
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 16.h,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: isSelected ? context.colors.primary : context.colors.onSurface.withOpacity(0.1),
+                            color: isSelected
+                                ? context.colors.primary
+                                : context.colors.onSurface.withValues(
+                                    alpha: 0.1,
+                                  ),
                             width: isSelected ? 2 : 1,
                           ),
                           borderRadius: BorderRadius.circular(12.r),
-                          color: isSelected ? context.colors.primary.withOpacity(0.05) : Colors.transparent,
+                          color: isSelected
+                              ? context.colors.primary.withValues(alpha: 0.05)
+                              : Colors.transparent,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

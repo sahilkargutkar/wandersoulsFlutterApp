@@ -1,4 +1,3 @@
-
 import 'package:wonder_souls/src/config/model/user_model.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 import 'package:wonder_souls/src/config/core/local_storage/token_storage.dart';
@@ -53,7 +52,10 @@ abstract interface class AuthRemoteDataSource {
   });
 
   Future<ApiResult<void>> savePreferences(TravelPreferenceModel preference);
-  Future<ApiResult<void>> updatePreferences(String id, TravelPreferenceModel preference);
+  Future<ApiResult<void>> updatePreferences(
+    String id,
+    TravelPreferenceModel preference,
+  );
   Future<ApiResult<TravelPreferenceModel>> getPreferences();
 }
 
@@ -150,10 +152,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) {
     return apiService.getWithParams<void>(
       ApiConstants.verifyEmail,
-      queryParameters: {
-        "email": email,
-        "token": token,
-      },
+      queryParameters: {"email": email, "token": token},
       fromJson: (_) {},
     );
   }
@@ -180,7 +179,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<ApiResult<void>> updatePreferences(String id, TravelPreferenceModel preference) {
+  Future<ApiResult<void>> updatePreferences(
+    String id,
+    TravelPreferenceModel preference,
+  ) {
     return apiService.putWithParams<void>(
       ApiConstants.updatePreference,
       queryParameters: {"id": id},

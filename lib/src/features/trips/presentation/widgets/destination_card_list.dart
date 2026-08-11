@@ -30,10 +30,7 @@ class DestinationCardList extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.surface,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(
-          color: context.borderColor.withAlpha(20),
-          width: 1,
-        ),
+        border: Border.all(color: context.borderColor.withAlpha(20), width: 1),
         boxShadow: [
           BoxShadow(
             color: context.softShadow,
@@ -73,10 +70,7 @@ class DestinationCardList extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withAlpha(20),
-                      ],
+                      colors: [Colors.transparent, Colors.black.withAlpha(20)],
                     ),
                   ),
                 ),

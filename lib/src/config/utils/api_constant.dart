@@ -6,7 +6,7 @@ class ApiConstants {
 
   static const String baseUrl = "https://wandersouls.azurewebsites.net/api";
   static const String mapURL = "https://maps.googleapis.com/";
-  static String get googleMapApiKey => dotenv.env["GOOGLE_API_KEY"] ?? "";
+  static String get googleMapApiKey => dotenv.env["GOOGLE_KEY"] ?? "";
 
   // AI Service
   static String get aiBaseUrl {
@@ -15,6 +15,7 @@ class ApiConstants {
     }
     return "http://10.0.2.2:8000"; // Android emulator
   }
+
   static const String generateItinerary = "/generate-itinerary";
 
   // Auth & User

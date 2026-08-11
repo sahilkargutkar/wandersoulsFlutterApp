@@ -30,10 +30,7 @@ class _StaggeredFadeSlideState extends State<StaggeredFadeSlide>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -42,12 +39,10 @@ class _StaggeredFadeSlideState extends State<StaggeredFadeSlide>
       ),
     );
 
-    _offsetY = Tween<double>(begin: widget.offsetSlide, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    _offsetY = Tween<double>(
+      begin: widget.offsetSlide,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     // Run after delay
     Future.delayed(widget.delayStep * widget.index, () {

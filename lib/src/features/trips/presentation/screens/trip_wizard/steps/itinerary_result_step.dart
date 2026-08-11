@@ -55,7 +55,9 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
         final tripName = itinerary["tripName"] ?? "Your Trip";
         final destination = itinerary["destination"] ?? "";
         final totalDays = itinerary["totalDays"] ?? 0;
-        final days = (itinerary["itinerary"] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        final days =
+            (itinerary["itinerary"] as List?)?.cast<Map<String, dynamic>>() ??
+            [];
         final estimatedCost = (itinerary["estimatedTotalCost"] ?? 0).toDouble();
         final tips = (itinerary["travelTips"] as List?)?.cast<String>() ?? [];
 
@@ -66,11 +68,16 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
         return Column(
           children: [
             // Header
-            _buildHeader(context, tripName, destination, totalDays, estimatedCost),
+            _buildHeader(
+              context,
+              tripName,
+              destination,
+              totalDays,
+              estimatedCost,
+            ),
 
             // Day Tabs
-            if (days.isNotEmpty)
-              _buildDayTabs(context, days),
+            if (days.isNotEmpty) _buildDayTabs(context, days),
 
             // Activities List
             Expanded(
@@ -101,7 +108,11 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome, color: context.colors.primary, size: 24.sp),
+              Icon(
+                Icons.auto_awesome,
+                color: context.colors.primary,
+                size: 24.sp,
+              ),
               8.w.horizontalSpace,
               Expanded(
                 child: Text(
@@ -126,7 +137,11 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
           4.h.verticalSpace,
           Row(
             children: [
-              Icon(Icons.location_on, size: 14.sp, color: context.colors.onSurfaceVariant),
+              Icon(
+                Icons.location_on,
+                size: 14.sp,
+                color: context.colors.onSurfaceVariant,
+              ),
               4.w.horizontalSpace,
               Text(
                 destination,
@@ -135,7 +150,11 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                 ),
               ),
               16.w.horizontalSpace,
-              Icon(Icons.calendar_today, size: 14.sp, color: context.colors.onSurfaceVariant),
+              Icon(
+                Icons.calendar_today,
+                size: 14.sp,
+                color: context.colors.onSurfaceVariant,
+              ),
               4.w.horizontalSpace,
               Text(
                 "$totalDays days",
@@ -144,7 +163,11 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                 ),
               ),
               16.w.horizontalSpace,
-              Icon(Icons.account_balance_wallet, size: 14.sp, color: context.colors.onSurfaceVariant),
+              Icon(
+                Icons.account_balance_wallet,
+                size: 14.sp,
+                color: context.colors.onSurfaceVariant,
+              ),
               4.w.horizontalSpace,
               Text(
                 "\$${estimatedCost.toStringAsFixed(0)}",
@@ -174,7 +197,9 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
         onTap: (index) => setState(() => _selectedDay = index),
         labelColor: Colors.white,
         unselectedLabelColor: context.colors.onSurfaceVariant,
-        labelStyle: context.text.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+        labelStyle: context.text.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
         unselectedLabelStyle: context.text.labelMedium,
         indicator: BoxDecoration(
           color: context.colors.primary,
@@ -190,13 +215,17 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
     );
   }
 
-  Widget _buildActivitiesList(BuildContext context, List<Map<String, dynamic>> days) {
+  Widget _buildActivitiesList(
+    BuildContext context,
+    List<Map<String, dynamic>> days,
+  ) {
     if (_selectedDay >= days.length) return const SizedBox.shrink();
 
     final day = days[_selectedDay];
     final title = day["title"] ?? "Day ${_selectedDay + 1}";
     final date = day["date"] ?? "";
-    final activities = (day["activities"] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final activities =
+        (day["activities"] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
@@ -230,7 +259,7 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: context.colors.primary.withOpacity(0.1),
+                color: context.colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(
@@ -255,7 +284,11 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
     );
   }
 
-  Widget _buildActivityCard(BuildContext context, Map<String, dynamic> activity, bool isLast) {
+  Widget _buildActivityCard(
+    BuildContext context,
+    Map<String, dynamic> activity,
+    bool isLast,
+  ) {
     final time = activity["time"] ?? "";
     final name = activity["name"] ?? "";
     final description = activity["description"] ?? "";
@@ -294,7 +327,7 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: categoryColor.withOpacity(0.3),
+                        color: categoryColor.withValues(alpha: 0.3),
                         blurRadius: 4,
                       ),
                     ],
@@ -304,7 +337,7 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                   Expanded(
                     child: Container(
                       width: 1.5,
-                      color: context.colors.onSurface.withOpacity(0.1),
+                      color: context.colors.onSurface.withValues(alpha: 0.1),
                     ),
                   ),
               ],
@@ -320,7 +353,7 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                 color: context.colors.surface,
                 borderRadius: BorderRadius.circular(14.r),
                 border: Border.all(
-                  color: context.colors.onSurface.withOpacity(0.06),
+                  color: context.colors.onSurface.withValues(alpha: 0.06),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -337,15 +370,22 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 3.h,
+                        ),
                         decoration: BoxDecoration(
-                          color: categoryColor.withOpacity(0.12),
+                          color: categoryColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(categoryIcon, size: 12.sp, color: categoryColor),
+                            Icon(
+                              categoryIcon,
+                              size: 12.sp,
+                              color: categoryColor,
+                            ),
                             4.w.horizontalSpace,
                             Text(
                               category,
@@ -395,7 +435,11 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                     10.h.verticalSpace,
                     Row(
                       children: [
-                        Icon(Icons.schedule, size: 14.sp, color: context.colors.onSurfaceVariant),
+                        Icon(
+                          Icons.schedule,
+                          size: 14.sp,
+                          color: context.colors.onSurfaceVariant,
+                        ),
                         4.w.horizontalSpace,
                         Text(
                           duration,
@@ -413,13 +457,17 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                     Container(
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.08),
+                        color: Colors.amber.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.lightbulb_outline, size: 14.sp, color: Colors.amber[700]),
+                          Icon(
+                            Icons.lightbulb_outline,
+                            size: 14.sp,
+                            color: Colors.amber[700],
+                          ),
                           6.w.horizontalSpace,
                           Expanded(
                             child: Text(
@@ -469,7 +517,11 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
               title: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.tips_and_updates, size: 18.sp, color: context.colors.primary),
+                  Icon(
+                    Icons.tips_and_updates,
+                    size: 18.sp,
+                    color: context.colors.primary,
+                  ),
                   8.w.horizontalSpace,
                   Text(
                     "Travel Tips",
@@ -488,7 +540,10 @@ class _ItineraryResultStepState extends State<ItineraryResultStep>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("•  ", style: TextStyle(color: context.colors.primary)),
+                      Text(
+                        "•  ",
+                        style: TextStyle(color: context.colors.primary),
+                      ),
                       Expanded(
                         child: Text(
                           tip,

@@ -22,20 +22,24 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   final List<Map<String, String>> _faqs = [
     {
       "q": "How does the AI Trip Wizard planning work?",
-      "a": "WanderSouls uses advanced AI planning proxy endpoints to generate custom multi-day schedules based on your destination city, budget type, and travel tastes. You can then edit activities, invite collaborators, or add accommodations."
+      "a":
+          "WanderSouls uses advanced AI planning proxy endpoints to generate custom multi-day schedules based on your destination city, budget type, and travel tastes. You can then edit activities, invite collaborators, or add accommodations.",
     },
     {
       "q": "Can I invite collaborators to plan trips with me?",
-      "a": "Yes! In any active trip, go to the Collaborators section, search for active users by their email or name, and click invite. Collaborators can view and edit the itinerary."
+      "a":
+          "Yes! In any active trip, go to the Collaborators section, search for active users by their email or name, and click invite. Collaborators can view and edit the itinerary.",
     },
     {
       "q": "Where are my uploaded document snaps saved?",
-      "a": "Uploaded reservation vouchers, boarding passes, or tickets are uploaded to secure Azure Blob Storage. They are associated with your trip details page for easy access."
+      "a":
+          "Uploaded reservation vouchers, boarding passes, or tickets are uploaded to secure Azure Blob Storage. They are associated with your trip details page for easy access.",
     },
     {
       "q": "How do I upgrade to Explorer Pro?",
-      "a": "Navigate to Settings -> Billing & Subscriptions, and select 'Upgrade to Premium'. Select your plan and payment method to unlock unlimited itinerary plans."
-    }
+      "a":
+          "Navigate to Settings -> Billing & Subscriptions, and select 'Upgrade to Premium'. Select your plan and payment method to unlock unlimited itinerary plans.",
+    },
   ];
 
   @override
@@ -59,7 +63,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           children: [
             Text(
               "Frequently Asked Questions",
-              style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: context.text.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             12.h.verticalSpace,
             Container(
@@ -104,7 +110,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
             Text(
               "Contact Support",
-              style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: context.text.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             12.h.verticalSpace,
             Form(
@@ -114,14 +122,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   TextFormField(
                     controller: _subjectController,
                     decoration: const InputDecoration(labelText: "Subject"),
-                    validator: (val) => val == null || val.trim().isEmpty ? "Subject is required" : null,
+                    validator: (val) => val == null || val.trim().isEmpty
+                        ? "Subject is required"
+                        : null,
                   ),
                   12.h.verticalSpace,
                   TextFormField(
                     controller: _messageController,
                     maxLines: 4,
                     decoration: const InputDecoration(labelText: "Message"),
-                    validator: (val) => val == null || val.trim().isEmpty ? "Message is required" : null,
+                    validator: (val) => val == null || val.trim().isEmpty
+                        ? "Message is required"
+                        : null,
                   ),
                   20.h.verticalSpace,
                   CommonButton(
@@ -131,7 +143,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       if (!_formKey.currentState!.validate()) return;
                       _subjectController.clear();
                       _messageController.clear();
-                      AppToast.success("Support ticket submitted! We will email you back soon.");
+                      AppToast.success(
+                        "Support ticket submitted! We will email you back soon.",
+                      );
                     },
                   ),
                 ],
@@ -142,7 +156,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             // Links list
             Text(
               "Links & Documents",
-              style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: context.text.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             12.h.verticalSpace,
             Container(

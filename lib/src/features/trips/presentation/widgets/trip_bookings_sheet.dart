@@ -63,7 +63,8 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
       } else {
         setState(() => _loadingAccommodations = false);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint("Failed to fetch accommodations: $e");
       setState(() => _loadingAccommodations = false);
     }
   }
@@ -89,7 +90,8 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
       } else {
         setState(() => _loadingTransports = false);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint("Failed to fetch transports: $e");
       setState(() => _loadingTransports = false);
     }
   }
@@ -109,7 +111,9 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: "Hotel / Place Name"),
+                decoration: const InputDecoration(
+                  labelText: "Hotel / Place Name",
+                ),
               ),
               TextField(
                 controller: addressController,
@@ -183,24 +187,38 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                     DropdownButtonFormField<String>(
                       initialValue: transportType,
                       items: ["Flight", "Train", "Bus", "Car", "Ferry"]
-                          .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                          .map(
+                            (type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            ),
+                          )
                           .toList(),
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => transportType = val);
+                        if (val != null)
+                          setDialogState(() => transportType = val);
                       },
-                      decoration: const InputDecoration(labelText: "Transport Type"),
+                      decoration: const InputDecoration(
+                        labelText: "Transport Type",
+                      ),
                     ),
                     TextField(
                       controller: providerController,
-                      decoration: const InputDecoration(labelText: "Provider / Airline"),
+                      decoration: const InputDecoration(
+                        labelText: "Provider / Airline",
+                      ),
                     ),
                     TextField(
                       controller: fromController,
-                      decoration: const InputDecoration(labelText: "Departure Location"),
+                      decoration: const InputDecoration(
+                        labelText: "Departure Location",
+                      ),
                     ),
                     TextField(
                       controller: toController,
-                      decoration: const InputDecoration(labelText: "Arrival Location"),
+                      decoration: const InputDecoration(
+                        labelText: "Arrival Location",
+                      ),
                     ),
                     TextField(
                       controller: costController,
@@ -254,7 +272,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
 
   Future<void> _showAccommodationDetails(AccommodationModel baseModel) async {
     if (baseModel.id == null) return;
-    
+
     AppToast.success("Loading details...");
     AccommodationModel? latestModel;
     try {
@@ -265,11 +283,13 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
       if (res is Success && res.data != null) {
         latestModel = AccommodationModel.fromJson(res.data["data"] ?? res.data);
       }
-    } catch (_) {}
-    
+    } catch (e) {
+      debugPrint("Failed to load accommodation details: $e");
+    }
+
     final model = latestModel ?? baseModel;
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -281,15 +301,33 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (model.address != null && model.address!.isNotEmpty) ...[
-                  Text("Address:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(
+                    "Address:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text(model.address!),
                   12.h.verticalSpace,
                 ],
-                Text("Cost:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                Text(
+                  "Cost:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
                 Text("\$${model.cost}"),
                 12.h.verticalSpace,
                 if (model.notes != null && model.notes!.isNotEmpty) ...[
-                  Text("Notes:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(
+                    "Notes:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text(model.notes!),
                   12.h.verticalSpace,
                 ],
@@ -407,7 +445,9 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
       if (res is Success && res.data != null) {
         latestModel = TripTransportModel.fromJson(res.data["data"] ?? res.data);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint("Failed to load accommodation details: $e");
+    }
 
     final model = latestModel ?? baseModel;
     if (!mounted) return;
@@ -423,20 +463,45 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (model.provider != null && model.provider!.isNotEmpty) ...[
-                  Text("Provider / Airline:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(
+                    "Provider / Airline:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text(model.provider!),
                   12.h.verticalSpace,
                 ],
-                if (model.departureLocation != null && model.arrivalLocation != null) ...[
-                  Text("Route:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                if (model.departureLocation != null &&
+                    model.arrivalLocation != null) ...[
+                  Text(
+                    "Route:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text("${model.departureLocation} ➔ ${model.arrivalLocation}"),
                   12.h.verticalSpace,
                 ],
-                Text("Cost:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                Text(
+                  "Cost:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
                 Text("\$${model.cost}"),
                 12.h.verticalSpace,
                 if (model.notes != null && model.notes!.isNotEmpty) ...[
-                  Text("Notes:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                  Text(
+                    "Notes:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
                   Text(model.notes!),
                   12.h.verticalSpace,
                 ],
@@ -463,8 +528,12 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
 
   void _showEditTransportDialog(TripTransportModel model) {
     final providerController = TextEditingController(text: model.provider);
-    final departureController = TextEditingController(text: model.departureLocation);
-    final arrivalController = TextEditingController(text: model.arrivalLocation);
+    final departureController = TextEditingController(
+      text: model.departureLocation,
+    );
+    final arrivalController = TextEditingController(
+      text: model.arrivalLocation,
+    );
     final costController = TextEditingController(text: model.cost.toString());
     final notesController = TextEditingController(text: model.notes);
 
@@ -479,15 +548,21 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
               children: [
                 TextField(
                   controller: providerController,
-                  decoration: const InputDecoration(labelText: "Provider / Airline"),
+                  decoration: const InputDecoration(
+                    labelText: "Provider / Airline",
+                  ),
                 ),
                 TextField(
                   controller: departureController,
-                  decoration: const InputDecoration(labelText: "Departure Location"),
+                  decoration: const InputDecoration(
+                    labelText: "Departure Location",
+                  ),
                 ),
                 TextField(
                   controller: arrivalController,
-                  decoration: const InputDecoration(labelText: "Arrival Location"),
+                  decoration: const InputDecoration(
+                    labelText: "Arrival Location",
+                  ),
                 ),
                 TextField(
                   controller: costController,
@@ -600,49 +675,70 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                                 : ListView.separated(
                                     padding: EdgeInsets.all(16.w),
                                     itemCount: _accommodations.length,
-                                    separatorBuilder: (_, __) => 12.h.verticalSpace,
+                                    separatorBuilder: (_, __) =>
+                                        12.h.verticalSpace,
                                     itemBuilder: (context, index) {
                                       final acc = _accommodations[index];
                                       return InkWell(
-                                        onTap: () => _showAccommodationDetails(acc),
-                                        borderRadius: BorderRadius.circular(16.r),
+                                        onTap: () =>
+                                            _showAccommodationDetails(acc),
+                                        borderRadius: BorderRadius.circular(
+                                          16.r,
+                                        ),
                                         child: Container(
                                           padding: EdgeInsets.all(14.w),
                                           decoration: BoxDecoration(
                                             color: context.mutedBackground,
-                                            borderRadius: BorderRadius.circular(16.r),
+                                            borderRadius: BorderRadius.circular(
+                                              16.r,
+                                            ),
                                           ),
                                           child: Row(
                                             children: [
-                                              Icon(Icons.hotel_rounded,
-                                                  color: context.primary, size: 28.sp),
+                                              Icon(
+                                                Icons.hotel_rounded,
+                                                color: context.primary,
+                                                size: 28.sp,
+                                              ),
                                               12.w.horizontalSpace,
                                               Expanded(
                                                 child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     Text(
                                                       acc.name,
-                                                      style: context.text.bodyMedium?.copyWith(
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
+                                                      style: context
+                                                          .text
+                                                          .bodyMedium
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
                                                     ),
-                                                    if (acc.address != null && acc.address!.isNotEmpty)
+                                                    if (acc.address != null &&
+                                                        acc.address!.isNotEmpty)
                                                       Text(
                                                         acc.address!,
-                                                        style: context.text.bodySmall?.copyWith(
-                                                          color: context.onSurfaceVariant,
-                                                        ),
+                                                        style: context
+                                                            .text
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              color: context
+                                                                  .onSurfaceVariant,
+                                                            ),
                                                       ),
                                                   ],
                                                 ),
                                               ),
                                               Text(
                                                 "\$${acc.cost}",
-                                                style: context.text.bodyMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: context.primary,
-                                                ),
+                                                style: context.text.bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: context.primary,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -663,8 +759,13 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                               ),
                               onPressed: _showAddAccommodationDialog,
                               icon: const Icon(Icons.add, color: Colors.white),
-                              label: const Text("Add Accommodation",
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              label: const Text(
+                                "Add Accommodation",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -688,54 +789,75 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                                 : ListView.separated(
                                     padding: EdgeInsets.all(16.w),
                                     itemCount: _transports.length,
-                                    separatorBuilder: (_, __) => 12.h.verticalSpace,
+                                    separatorBuilder: (_, __) =>
+                                        12.h.verticalSpace,
                                     itemBuilder: (context, index) {
                                       final t = _transports[index];
                                       return InkWell(
                                         onTap: () => _showTransportDetails(t),
-                                        borderRadius: BorderRadius.circular(16.r),
+                                        borderRadius: BorderRadius.circular(
+                                          16.r,
+                                        ),
                                         child: Container(
                                           padding: EdgeInsets.all(14.w),
                                           decoration: BoxDecoration(
                                             color: context.mutedBackground,
-                                            borderRadius: BorderRadius.circular(16.r),
+                                            borderRadius: BorderRadius.circular(
+                                              16.r,
+                                            ),
                                           ),
                                           child: Row(
                                             children: [
                                               Icon(
                                                 t.type == "Flight"
-                                                    ? Icons.flight_takeoff_rounded
-                                                    : Icons.directions_transit_rounded,
+                                                    ? Icons
+                                                          .flight_takeoff_rounded
+                                                    : Icons
+                                                          .directions_transit_rounded,
                                                 color: context.primary,
                                                 size: 28.sp,
                                               ),
                                               12.w.horizontalSpace,
                                               Expanded(
                                                 child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     Text(
                                                       "${t.type}${t.provider != null && t.provider!.isNotEmpty ? " • ${t.provider}" : ""}",
-                                                      style: context.text.bodyMedium?.copyWith(
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
+                                                      style: context
+                                                          .text
+                                                          .bodyMedium
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
                                                     ),
-                                                    if (t.departureLocation != null && t.arrivalLocation != null)
+                                                    if (t.departureLocation !=
+                                                            null &&
+                                                        t.arrivalLocation !=
+                                                            null)
                                                       Text(
                                                         "${t.departureLocation} ➔ ${t.arrivalLocation}",
-                                                        style: context.text.bodySmall?.copyWith(
-                                                          color: context.onSurfaceVariant,
-                                                        ),
+                                                        style: context
+                                                            .text
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              color: context
+                                                                  .onSurfaceVariant,
+                                                            ),
                                                       ),
                                                   ],
                                                 ),
                                               ),
                                               Text(
                                                 "\$${t.cost}",
-                                                style: context.text.bodyMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: context.primary,
-                                                ),
+                                                style: context.text.bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: context.primary,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -756,8 +878,13 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                               ),
                               onPressed: _showAddTransportDialog,
                               icon: const Icon(Icons.add, color: Colors.white),
-                              label: const Text("Add Transport",
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              label: const Text(
+                                "Add Transport",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                         ],

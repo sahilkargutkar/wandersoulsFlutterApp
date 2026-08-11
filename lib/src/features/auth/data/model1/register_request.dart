@@ -3,7 +3,7 @@ class RegisterRequest {
   final String userName;
   final String email;
   final String phoneNumber;
-  final String passwordHash;
+  final String password;
   final String name;
   final String profilePicture;
   final String defaultCurrency;
@@ -19,7 +19,7 @@ class RegisterRequest {
     required this.userName,
     required this.email,
     required this.phoneNumber,
-    required this.passwordHash,
+    required this.password,
     required this.name,
     required this.profilePicture,
     required this.defaultCurrency,
@@ -37,7 +37,7 @@ class RegisterRequest {
       "userName": userName,
       "email": email,
       "phoneNumber": phoneNumber,
-      "passwordHash": passwordHash,
+      "passwordHash": password,
       "name": name,
       "profilePicture": profilePicture,
       "defaultCurrency": defaultCurrency,

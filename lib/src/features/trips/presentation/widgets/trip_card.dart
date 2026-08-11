@@ -16,10 +16,7 @@ class TripCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.surface,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(
-          color: context.borderColor.withAlpha(20),
-          width: 1,
-        ),
+        border: Border.all(color: context.borderColor.withAlpha(20), width: 1),
         boxShadow: [
           BoxShadow(
             color: context.softShadow,
@@ -46,7 +43,11 @@ class TripCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorWidget: (_, __, ___) => Container(
                       color: context.shimmerBase,
-                      child: Icon(Icons.image_rounded, size: 40, color: context.onSurfaceVariant.withAlpha(60)),
+                      child: Icon(
+                        Icons.image_rounded,
+                        size: 40,
+                        color: context.onSurfaceVariant.withAlpha(60),
+                      ),
                     ),
                   ),
                 ),

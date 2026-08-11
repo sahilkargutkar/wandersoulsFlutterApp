@@ -100,19 +100,23 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _submitRegistration() {
-    if (_formKey.currentState!.validate()) {
-      context.read<SignUpCubit>().registerUser(
-        name: _nameController.text,
-        email: _emailController.text,
-        password: _passwordController.text,
-        country: _countryController.text,
-        phone: '+$_phoneCode${_phoneController.text}',
-        preferences: _selectedPreferences,
-        currency: _currencyController.text.isNotEmpty ? _currencyController.text : 'USD',
-        language: _languageController.text.isNotEmpty ? _languageController.text : 'English',
-        profilePicturePath: _profileImage?.path,
-      );
-    }
+    if (_formKey.currentState?.validate() != true) return;
+    if (!mounted) return;
+    context.read<SignUpCubit>().registerUser(
+      name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+      country: _countryController.text,
+      phone: '+$_phoneCode${_phoneController.text}',
+      preferences: _selectedPreferences,
+      currency: _currencyController.text.isNotEmpty
+          ? _currencyController.text
+          : 'USD',
+      language: _languageController.text.isNotEmpty
+          ? _languageController.text
+          : 'English',
+      profilePicturePath: _profileImage?.path,
+    );
   }
 
   @override
@@ -222,9 +226,7 @@ class _SignupScreenState extends State<SignupScreen> {
         SizedBox(height: 20.h),
 
         // Using consistent AppSearchBar
-        AppSearchBar(
-          hintText: "Search travel preferences",
-        ),
+        AppSearchBar(hintText: "Search travel preferences"),
 
         SizedBox(height: 20.h),
         Expanded(
@@ -390,7 +392,11 @@ class _SignupScreenState extends State<SignupScreen> {
             CommonTextFormField(
               controller: _nameController,
               hintText: "Andrew Andey",
-              prefixIcon: Icon(Icons.person_outline, size: 20.sp, color: context.onSurfaceVariant),
+              prefixIcon: Icon(
+                Icons.person_outline,
+                size: 20.sp,
+                color: context.onSurfaceVariant,
+              ),
               validator: (v) => v!.isEmpty ? "Required" : null,
             ),
             SizedBox(height: 16.h),
@@ -400,7 +406,11 @@ class _SignupScreenState extends State<SignupScreen> {
             CommonTextFormField(
               controller: _emailController,
               hintText: "andrew@yourdomain.com",
-              prefixIcon: Icon(Icons.email_outlined, size: 20.sp, color: context.onSurfaceVariant),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                size: 20.sp,
+                color: context.onSurfaceVariant,
+              ),
               validator: (v) => v!.isEmpty || !v.contains('@')
                   ? "Valid email required"
                   : null,
@@ -413,7 +423,11 @@ class _SignupScreenState extends State<SignupScreen> {
               controller: _passwordController,
               hintText: "Enter your password",
               obscureText: true,
-              prefixIcon: Icon(Icons.lock_outline, size: 20.sp, color: context.onSurfaceVariant),
+              prefixIcon: Icon(
+                Icons.lock_outline,
+                size: 20.sp,
+                color: context.onSurfaceVariant,
+              ),
               validator: (v) => v!.length < 6 ? "Minimum 6 characters" : null,
             ),
             SizedBox(height: 16.h),
@@ -426,7 +440,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   context: context,
                   showPhoneCode: true,
                   countryListTheme: CountryListThemeData(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24.r),
+                    ),
                     backgroundColor: context.surface,
                     searchTextStyle: context.text.bodyMedium?.copyWith(
                       color: context.onSurface,
@@ -437,10 +453,17 @@ class _SignupScreenState extends State<SignupScreen> {
                       hintStyle: context.text.bodyMedium?.copyWith(
                         color: context.onSurfaceVariant.withAlpha(140),
                       ),
-                      prefixIcon: Icon(Icons.search_rounded, size: 20.sp, color: context.onSurfaceVariant),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        size: 20.sp,
+                        color: context.onSurfaceVariant,
+                      ),
                       filled: true,
                       fillColor: context.mutedBackground,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 12.h,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12.r),
                         borderSide: BorderSide.none,
@@ -473,8 +496,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: CommonTextFormField(
                   controller: _countryController,
                   hintText: "Select your country",
-                  prefixIcon: Icon(Icons.public, size: 20.sp, color: context.onSurfaceVariant),
-                  suffixIcon: Icon(Icons.keyboard_arrow_down_rounded, color: context.onSurfaceVariant),
+                  prefixIcon: Icon(
+                    Icons.public,
+                    size: 20.sp,
+                    color: context.onSurfaceVariant,
+                  ),
+                  suffixIcon: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: context.onSurfaceVariant,
+                  ),
                   validator: (v) => v!.isEmpty ? "Required" : null,
                 ),
               ),
@@ -492,7 +522,11 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.phone_outlined, size: 20.sp, color: context.onSurfaceVariant),
+                    Icon(
+                      Icons.phone_outlined,
+                      size: 20.sp,
+                      color: context.onSurfaceVariant,
+                    ),
                     if (_phoneCode.isNotEmpty) ...[
                       SizedBox(width: 8.w),
                       Text(
@@ -536,8 +570,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: CommonTextFormField(
                   controller: _currencyController,
                   hintText: "Select Currency",
-                  prefixIcon: Icon(Icons.monetization_on_outlined, size: 20.sp, color: context.onSurfaceVariant),
-                  suffixIcon: Icon(Icons.keyboard_arrow_down_rounded, color: context.onSurfaceVariant),
+                  prefixIcon: Icon(
+                    Icons.monetization_on_outlined,
+                    size: 20.sp,
+                    color: context.onSurfaceVariant,
+                  ),
+                  suffixIcon: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: context.onSurfaceVariant,
+                  ),
                   validator: (v) => v!.isEmpty ? "Required" : null,
                 ),
               ),
@@ -551,7 +592,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 _showSelectionPicker(
                   context: context,
                   title: "Select Language",
-                  items: ['English', 'Spanish', 'French', 'German', 'Hindi', 'Chinese', 'Japanese'],
+                  items: [
+                    'English',
+                    'Spanish',
+                    'French',
+                    'German',
+                    'Hindi',
+                    'Chinese',
+                    'Japanese',
+                  ],
                   onSelect: (val) {
                     setState(() {
                       _languageController.text = val;
@@ -563,8 +612,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: CommonTextFormField(
                   controller: _languageController,
                   hintText: "Select Language",
-                  prefixIcon: Icon(Icons.language_outlined, size: 20.sp, color: context.onSurfaceVariant),
-                  suffixIcon: Icon(Icons.keyboard_arrow_down_rounded, color: context.onSurfaceVariant),
+                  prefixIcon: Icon(
+                    Icons.language_outlined,
+                    size: 20.sp,
+                    color: context.onSurfaceVariant,
+                  ),
+                  suffixIcon: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: context.onSurfaceVariant,
+                  ),
                   validator: (v) => v!.isEmpty ? "Required" : null,
                 ),
               ),
@@ -608,11 +664,16 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: StatefulBuilder(
             builder: (context, setModalState) {
               final filteredItems = items
-                  .where((item) => item.toLowerCase().contains(searchQuery.toLowerCase()))
+                  .where(
+                    (item) =>
+                        item.toLowerCase().contains(searchQuery.toLowerCase()),
+                  )
                   .toList();
               return DraggableScrollableSheet(
                 initialChildSize: 0.6,
@@ -651,10 +712,17 @@ class _SignupScreenState extends State<SignupScreen> {
                             hintStyle: context.text.bodyMedium?.copyWith(
                               color: context.onSurfaceVariant.withAlpha(140),
                             ),
-                            prefixIcon: Icon(Icons.search_rounded, size: 20.sp, color: context.onSurfaceVariant),
+                            prefixIcon: Icon(
+                              Icons.search_rounded,
+                              size: 20.sp,
+                              color: context.onSurfaceVariant,
+                            ),
                             filled: true,
                             fillColor: context.mutedBackground,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.r),
                               borderSide: BorderSide.none,
@@ -685,9 +753,13 @@ class _SignupScreenState extends State<SignupScreen> {
                       Expanded(
                         child: ListView.separated(
                           controller: scrollController,
-                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 8.h,
+                          ),
                           itemCount: filteredItems.length,
-                          separatorBuilder: (context, index) => Divider(color: context.borderColor.withAlpha(50)),
+                          separatorBuilder: (context, index) =>
+                              Divider(color: context.borderColor.withAlpha(50)),
                           itemBuilder: (context, index) {
                             final item = filteredItems[index];
                             return ListTile(
@@ -833,10 +905,7 @@ class _SignupScreenState extends State<SignupScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                context.primary,
-                context.primary.withAlpha(200),
-              ],
+              colors: [context.primary, context.primary.withAlpha(200)],
             ),
             shape: BoxShape.circle,
             boxShadow: [
@@ -847,11 +916,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.check_rounded,
-            color: Colors.white,
-            size: 48,
-          ),
+          child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
         ),
 
         SizedBox(height: 28.h),

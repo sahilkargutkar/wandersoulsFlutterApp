@@ -29,7 +29,7 @@ class SavedPlacesCubit extends Cubit<List<PlaceModel>> {
 
   void toggleSave(PlaceModel place) {
     final currentList = List<PlaceModel>.from(state);
-    
+
     // Check if place is already saved using placeId (or name as fallback)
     final isSavedIndex = currentList.indexWhere((p) {
       if (p.placeId.isNotEmpty && place.placeId.isNotEmpty) {
@@ -37,7 +37,7 @@ class SavedPlacesCubit extends Cubit<List<PlaceModel>> {
       }
       return p.name == place.name;
     });
-    
+
     if (isSavedIndex >= 0) {
       // Remove it
       currentList.removeAt(isSavedIndex);
@@ -45,7 +45,7 @@ class SavedPlacesCubit extends Cubit<List<PlaceModel>> {
       // Add it
       currentList.add(place);
     }
-    
+
     emit(currentList);
     _saveToPrefs(currentList);
   }

@@ -79,7 +79,10 @@ class _TripDetailsStepState extends State<TripDetailsStep> {
                         controller: _nameController,
                         hintText: "e.g., Summer Holiday in Paris",
                         labelText: "Trip Name",
-                        prefixIcon: Icon(Icons.title_rounded, color: context.colors.onSurfaceVariant),
+                        prefixIcon: Icon(
+                          Icons.title_rounded,
+                          color: context.colors.onSurfaceVariant,
+                        ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return "Trip name is required";
@@ -90,16 +93,27 @@ class _TripDetailsStepState extends State<TripDetailsStep> {
                       20.h.verticalSpace,
                       CommonTextFormField(
                         controller: _descController,
-                        hintText: "e.g., Exploring museums, trying local food, and sightseeing.",
+                        hintText:
+                            "e.g., Exploring museums, trying local food, and sightseeing.",
                         labelText: "Description (Optional)",
-                        prefixIcon: Icon(Icons.description_outlined, color: context.colors.onSurfaceVariant),
+                        prefixIcon: Icon(
+                          Icons.description_outlined,
+                          color: context.colors.onSurfaceVariant,
+                        ),
                         maxLines: 3,
                       ),
                       24.h.verticalSpace,
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 12.h,
+                        ),
                         decoration: BoxDecoration(
-                          border: Border.all(color: context.colors.onSurface.withOpacity(0.1)),
+                          border: Border.all(
+                            color: context.colors.onSurface.withValues(
+                              alpha: 0.1,
+                            ),
+                          ),
                           borderRadius: BorderRadius.circular(12.r),
                           color: context.colors.surface,
                         ),
@@ -130,9 +144,11 @@ class _TripDetailsStepState extends State<TripDetailsStep> {
                             Switch(
                               value: state.isPublic,
                               onChanged: (val) {
-                                context.read<TripWizardCubit>().setIsPublic(val);
+                                context.read<TripWizardCubit>().setIsPublic(
+                                  val,
+                                );
                               },
-                              activeColor: context.colors.primary,
+                              activeThumbColor: context.colors.primary,
                             ),
                           ],
                         ),

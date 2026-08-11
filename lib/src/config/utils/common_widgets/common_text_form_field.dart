@@ -72,10 +72,7 @@ class CommonTextFormField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide(
-            color: context.primary,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: context.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.r),

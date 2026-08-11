@@ -16,8 +16,10 @@ class UpgradePlanScreen extends StatefulWidget {
 }
 
 class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
-  int _selectedPlan = 0; // 0: Explorer Pro ($19.99/mo), 1: Globetrotter Elite ($39.99/mo)
-  int _selectedPayment = 0; // 0: Visa ending in 4242, 1: Apple Pay, 2: Google Pay
+  int _selectedPlan =
+      0; // 0: Explorer Pro ($19.99/mo), 1: Globetrotter Elite ($39.99/mo)
+  int _selectedPayment =
+      0; // 0: Visa ending in 4242, 1: Apple Pay, 2: Google Pay
   bool _processing = false;
   bool _success = false;
 
@@ -27,15 +29,25 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       "price": "\$19.99",
       "period": "month",
       "description": "Best for solo globetrotters and couples.",
-      "features": ["Unlimited AI Itinerary Generations", "Unlimited Travel Collaborators", "Offline Trip Downloads", "Ad-Free Map View"]
+      "features": [
+        "Unlimited AI Itinerary Generations",
+        "Unlimited Travel Collaborators",
+        "Offline Trip Downloads",
+        "Ad-Free Map View",
+      ],
     },
     {
       "name": "Globetrotter Elite",
       "price": "\$39.99",
       "period": "month",
       "description": "Best for tour guides, families, and organizations.",
-      "features": ["Everything in Pro Plan", "Multi-Destination Optimization", "Priority Support & Local Guides", "Dedicated Travel Concierge"]
-    }
+      "features": [
+        "Everything in Pro Plan",
+        "Multi-Destination Optimization",
+        "Priority Support & Local Guides",
+        "Dedicated Travel Concierge",
+      ],
+    },
   ];
 
   void _showAddCardBottomSheet() {
@@ -50,7 +62,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, MediaQuery.of(context).viewInsets.bottom + 20.h),
+          padding: EdgeInsets.fromLTRB(
+            20.w,
+            20.h,
+            20.w,
+            MediaQuery.of(context).viewInsets.bottom + 20.h,
+          ),
           decoration: BoxDecoration(
             color: context.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
@@ -61,7 +78,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
             children: [
               Text(
                 "Add Credit Card",
-                style: context.text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: context.text.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               16.h.verticalSpace,
               TextField(
@@ -80,7 +99,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   Expanded(
                     child: TextField(
                       controller: expiryController,
-                      decoration: const InputDecoration(labelText: "Expiry Date (MM/YY)"),
+                      decoration: const InputDecoration(
+                        labelText: "Expiry Date (MM/YY)",
+                      ),
                     ),
                   ),
                   16.w.horizontalSpace,
@@ -98,7 +119,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 title: "Save Card",
                 useGradient: true,
                 onPressed: () {
-                  if (nameController.text.isEmpty || numberController.text.isEmpty) return;
+                  if (nameController.text.isEmpty ||
+                      numberController.text.isEmpty)
+                    return;
                   Navigator.pop(context);
                   AppToast.success("Card added successfully!");
                 },
@@ -112,10 +135,10 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
 
   Future<void> _processPayment() async {
     setState(() => _processing = true);
-    
+
     // Simulate processing payment delay
     await Future.delayed(const Duration(seconds: 2));
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("user_plan", _plans[_selectedPlan]["name"]);
 
@@ -138,7 +161,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
               24.h.verticalSpace,
               Text(
                 "Processing payment securely...",
-                style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: context.text.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -154,17 +179,25 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 80),
+              const Icon(
+                Icons.check_circle_outline_rounded,
+                color: Colors.green,
+                size: 80,
+              ),
               24.h.verticalSpace,
               Text(
                 "Upgrade Successful!",
-                style: context.text.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                style: context.text.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               12.h.verticalSpace,
               Text(
                 "You are now subscribed to ${_plans[_selectedPlan]["name"]} plan. Enjoy unlimited travel wizard integrations!",
                 textAlign: TextAlign.center,
-                style: context.text.bodyMedium?.copyWith(color: context.onSurfaceVariant),
+                style: context.text.bodyMedium?.copyWith(
+                  color: context.onSurfaceVariant,
+                ),
               ),
               32.h.verticalSpace,
               CommonButton(
@@ -197,7 +230,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
           children: [
             Text(
               "Select Subscription",
-              style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: context.text.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             12.h.verticalSpace,
             Column(
@@ -211,11 +246,15 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: isSelected ? context.primary : context.borderColor.withAlpha(50),
+                        color: isSelected
+                            ? context.primary
+                            : context.borderColor.withAlpha(50),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(16.r),
-                      color: isSelected ? context.primaryTint.withAlpha(20) : context.mutedBackground,
+                      color: isSelected
+                          ? context.primaryTint.withAlpha(20)
+                          : context.mutedBackground,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +264,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                           children: [
                             Text(
                               plan["name"],
-                              style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                              style: context.text.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               "${plan["price"]}/${plan["period"]}",
@@ -239,7 +280,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                         8.h.verticalSpace,
                         Text(
                           plan["description"],
-                          style: context.text.bodySmall?.copyWith(color: context.onSurfaceVariant),
+                          style: context.text.bodySmall?.copyWith(
+                            color: context.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -251,13 +294,19 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
             24.h.verticalSpace,
             Text(
               "Payment Method",
-              style: context.text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: context.text.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             12.h.verticalSpace,
-            _buildPaymentMethodRow(0, "Visa ending in 4242", Icons.credit_card_rounded),
+            _buildPaymentMethodRow(
+              0,
+              "Visa ending in 4242",
+              Icons.credit_card_rounded,
+            ),
             _buildPaymentMethodRow(1, "Apple Pay", Icons.apple_rounded),
             _buildPaymentMethodRow(2, "Google Pay", Icons.android_rounded),
-            
+
             16.h.verticalSpace,
             TextButton.icon(
               onPressed: _showAddCardBottomSheet,
@@ -278,8 +327,17 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Plan Subscription:", style: TextStyle(fontSize: 13.sp)),
-                      Text(_plans[_selectedPlan]["price"], style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Plan Subscription:",
+                        style: TextStyle(fontSize: 13.sp),
+                      ),
+                      Text(
+                        _plans[_selectedPlan]["price"],
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   8.h.verticalSpace,
@@ -287,14 +345,25 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text("Tax (0%):", style: TextStyle(fontSize: 13.sp)),
-                      Text("\$0.00", style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                      Text(
+                        "\$0.00",
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   const Divider(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Total Amount:", style: context.text.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        "Total Amount:",
+                        style: context.text.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Text(
                         _plans[_selectedPlan]["price"],
                         style: context.text.bodyMedium?.copyWith(

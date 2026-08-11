@@ -6,7 +6,6 @@ import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
-import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/config/utils/app_toast.dart';
 
 import 'package:wonder_souls/src/config/utils/common_widgets/destination_card.dart';
@@ -40,7 +39,8 @@ class _ListDestinationState extends State<ListDestination> {
   int page = 1;
   final int pageSize = 10;
   String? _errorMessage;
-  int _selectedTab = 0; // 0 for Popular (Locations), 1 for Curated (Destinations)
+  int _selectedTab =
+      0; // 0 for Popular (Locations), 1 for Curated (Destinations)
 
   @override
   void initState() {
@@ -138,7 +138,10 @@ class _ListDestinationState extends State<ListDestination> {
     final nameController = TextEditingController();
     final addressController = TextEditingController();
     final descController = TextEditingController();
-    final imageController = TextEditingController(text: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800");
+    final imageController = TextEditingController(
+      text:
+          "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800",
+    );
 
     showDialog(
       context: context,
@@ -155,7 +158,9 @@ class _ListDestinationState extends State<ListDestination> {
                 ),
                 TextField(
                   controller: addressController,
-                  decoration: const InputDecoration(labelText: "Address / Country"),
+                  decoration: const InputDecoration(
+                    labelText: "Address / Country",
+                  ),
                 ),
                 TextField(
                   controller: descController,
@@ -229,7 +234,9 @@ class _ListDestinationState extends State<ListDestination> {
                 ),
                 TextField(
                   controller: addressController,
-                  decoration: const InputDecoration(labelText: "Address / Country"),
+                  decoration: const InputDecoration(
+                    labelText: "Address / Country",
+                  ),
                 ),
                 TextField(
                   controller: descController,
@@ -300,7 +307,8 @@ class _ListDestinationState extends State<ListDestination> {
           context.push(DestinationDetailsScreen.routeName, extra: destination);
         },
         child: DestinationCard(
-          imageUrl: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=1200",
+          imageUrl:
+              "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?q=80&w=1200",
           city: destination.name,
           country: destination.address,
           flagEmoji: "📍",
@@ -349,7 +357,11 @@ class _ListDestinationState extends State<ListDestination> {
                 radius: 18.r,
                 child: IconButton(
                   padding: EdgeInsets.zero,
-                  icon: Icon(Icons.edit_outlined, color: context.primary, size: 18.sp),
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    color: context.primary,
+                    size: 18.sp,
+                  ),
                   onPressed: () => _showEditCuratedDialog(item),
                 ),
               ),
@@ -381,7 +393,7 @@ class _ListDestinationState extends State<ListDestination> {
           TextButton(
             onPressed: () => fetchDestinations(refresh: true),
             child: const Text("Retry"),
-          )
+          ),
         ],
       ),
     );
@@ -484,72 +496,91 @@ class _ListDestinationState extends State<ListDestination> {
           Expanded(
             child: _selectedTab == 0
                 ? (isInitialLoading
-                    ? _buildLoader()
-                    : _errorMessage != null
-                        ? _buildErrorState()
-                        : RefreshIndicator(
-                            color: context.primary,
-                            onRefresh: () => fetchDestinations(refresh: true),
-                            child: ListView.builder(
-                              controller: _scrollController,
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                              itemCount: destinations.length + (hasMore ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                if (index >= destinations.length) {
-                                  return _buildLoader();
-                                }
-                                final destination = destinations[index];
-                                return _buildDestinationCard(destination);
-                              },
+                      ? _buildLoader()
+                      : _errorMessage != null
+                      ? _buildErrorState()
+                      : RefreshIndicator(
+                          color: context.primary,
+                          onRefresh: () => fetchDestinations(refresh: true),
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
                             ),
-                          ))
+                            itemCount: destinations.length + (hasMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index >= destinations.length) {
+                                return _buildLoader();
+                              }
+                              final destination = destinations[index];
+                              return _buildDestinationCard(destination);
+                            },
+                          ),
+                        ))
                 : (_loadingCurated
-                    ? _buildLoader()
-                    : Column(
-                        children: [
-                          Expanded(
-                            child: _curatedDestinations.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      "No curated guides suggested yet.",
-                                      style: context.text.bodyMedium?.copyWith(
-                                        color: context.onSurfaceVariant,
+                      ? _buildLoader()
+                      : Column(
+                          children: [
+                            Expanded(
+                              child: _curatedDestinations.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        "No curated guides suggested yet.",
+                                        style: context.text.bodyMedium
+                                            ?.copyWith(
+                                              color: context.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    )
+                                  : RefreshIndicator(
+                                      color: context.primary,
+                                      onRefresh: _fetchCuratedDestinations,
+                                      child: ListView.builder(
+                                        physics:
+                                            const AlwaysScrollableScrollPhysics(),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 20.w,
+                                          vertical: 12.h,
+                                        ),
+                                        itemCount: _curatedDestinations.length,
+                                        itemBuilder: (context, index) {
+                                          final item =
+                                              _curatedDestinations[index];
+                                          return _buildCuratedDestinationCard(
+                                            item,
+                                          );
+                                        },
                                       ),
                                     ),
-                                  )
-                                : RefreshIndicator(
-                                    color: context.primary,
-                                    onRefresh: _fetchCuratedDestinations,
-                                    child: ListView.builder(
-                                      physics: const AlwaysScrollableScrollPhysics(),
-                                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                                      itemCount: _curatedDestinations.length,
-                                      itemBuilder: (context, index) {
-                                        final item = _curatedDestinations[index];
-                                        return _buildCuratedDestinationCard(item);
-                                      },
-                                    ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(16.w),
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: context.primary,
+                                  minimumSize: Size(double.infinity, 48.h),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24.r),
                                   ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(16.w),
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: context.primary,
-                                minimumSize: Size(double.infinity, 48.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24.r),
+                                ),
+                                onPressed: _showCreateCuratedDialog,
+                                icon: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  "Suggest Curated Destination",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              onPressed: _showCreateCuratedDialog,
-                              icon: const Icon(Icons.add, color: Colors.white),
-                              label: const Text("Suggest Curated Destination",
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
-                          ),
-                        ],
-                      )),
+                          ],
+                        )),
           ),
         ],
       ),

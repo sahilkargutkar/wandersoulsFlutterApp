@@ -40,7 +40,7 @@ class SignUpCubit extends Cubit<SignUpState> {
       userName: name.replaceAll(' ', '').toLowerCase(),
       email: email,
       phoneNumber: phone,
-      passwordHash: password,
+      password: password,
       name: name,
       profilePicture: profilePicturePath ?? '',
       defaultCurrency: currency,
