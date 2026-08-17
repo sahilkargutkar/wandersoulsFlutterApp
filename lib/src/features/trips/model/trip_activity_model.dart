@@ -39,6 +39,23 @@ class TripActivityModel {
     final details =
         (json['activityDetails'] ?? json['activityDetailsDto'])
             as Map<String, dynamic>?;
+    final rawCategory = details?['category'] ?? details?['categoryDto'];
+    final int categoryVal;
+    if (rawCategory is int) {
+      categoryVal = rawCategory;
+    } else if (rawCategory is String) {
+      final parsed = int.tryParse(rawCategory);
+      if (parsed != null) {
+        categoryVal = parsed;
+      } else if (rawCategory.toLowerCase() == 'food') {
+        categoryVal = 1;
+      } else {
+        categoryVal = 6;
+      }
+    } else {
+      categoryVal = 0;
+    }
+
     return TripActivityModel(
       id: json['id'] ?? '',
       tripId: json['tripId'] ?? '',
@@ -54,7 +71,7 @@ class TripActivityModel {
       bookingUrl: json['bookingUrl'],
       confirmationDocumentUrl: json['confirmationDocumentUrl'],
       notes: json['notes'],
-      category: details?['category'] ?? details?['categoryDto'] ?? 0,
+      category: categoryVal,
       cost: (details?['cost'] as num?)?.toDouble() ?? 0.0,
       tips: details?['tips'],
       imageUrl: details?['imageUrl'],
@@ -87,5 +104,43 @@ class TripActivityModel {
         "imageUrl": imageUrl,
       },
     };
+  }
+
+  TripActivityModel copyWith({
+    String? id,
+    String? tripId,
+    String? placeId,
+    String? dayId,
+    String? name,
+    String? bookingReference,
+    DateTime? startDatetime,
+    DateTime? endDatetime,
+    String? currency,
+    String? bookingUrl,
+    String? confirmationDocumentUrl,
+    String? notes,
+    int? category,
+    double? cost,
+    String? tips,
+    String? imageUrl,
+  }) {
+    return TripActivityModel(
+      id: id ?? this.id,
+      tripId: tripId ?? this.tripId,
+      placeId: placeId ?? this.placeId,
+      dayId: dayId ?? this.dayId,
+      name: name ?? this.name,
+      bookingReference: bookingReference ?? this.bookingReference,
+      startDatetime: startDatetime ?? this.startDatetime,
+      endDatetime: endDatetime ?? this.endDatetime,
+      currency: currency ?? this.currency,
+      bookingUrl: bookingUrl ?? this.bookingUrl,
+      confirmationDocumentUrl: confirmationDocumentUrl ?? this.confirmationDocumentUrl,
+      notes: notes ?? this.notes,
+      category: category ?? this.category,
+      cost: cost ?? this.cost,
+      tips: tips ?? this.tips,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
   }
 }
