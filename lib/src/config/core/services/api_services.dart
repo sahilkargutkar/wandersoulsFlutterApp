@@ -44,6 +44,7 @@ class ApiService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await _tokenStorage.getToken();
+          debugPrint("API Request: path=${options.path}, hasToken=${token != null}");
 
           if (token != null) {
             options.headers["Authorization"] = "Bearer $token";
@@ -52,8 +53,10 @@ class ApiService {
           return handler.next(options);
         },
         onError: (error, handler) async {
+          debugPrint("API Error: path=${error.requestOptions.path}, statusCode=${error.response?.statusCode}, message=${error.message}");
           if (error.response?.statusCode == 401 &&
               error.requestOptions.path != ApiConstants.login) {
+            debugPrint("Session expired (401), clearing token and triggering redirect");
             await _tokenStorage.clearToken();
             onSessionExpired?.call();
           }
@@ -65,7 +68,12 @@ class ApiService {
 
     if (kDebugMode) {
       _dio.interceptors.add(
-        LogInterceptor(requestBody: false, responseBody: false),
+        LogInterceptor(
+          requestHeader: false,
+          requestBody: true,
+          responseHeader: false,
+          responseBody: true,
+        ),
       );
     }
   }

@@ -49,13 +49,17 @@ GoRouter buildRouter({
       final location = state.uri.toString();
       final isPublic = _publicRoutes.any((r) => location.startsWith(r));
 
+      debugPrint("GoRouter Redirect: location=$location, authState=${authState.runtimeType}, isPublic=$isPublic");
+
       if (authState is Authenticated &&
           isPublic &&
           location != SplashScreen.routeName) {
+        debugPrint("GoRouter Redirect: Redirecting to HomeBottomBar");
         return HomeBottomBar.routeName;
       }
 
       if (authState is Unauthenticated && !isPublic) {
+        debugPrint("GoRouter Redirect: Redirecting to LoginScreen");
         return LoginScreen.routeName;
       }
 
@@ -88,7 +92,27 @@ GoRouter buildRouter({
       GoRoute(
         path: TripDetailsScreen.routeName,
         builder: (context, state) {
-          final trip = state.extra as TripData;
+          final TripData trip;
+          final extra = state.extra;
+          if (extra is TripData) {
+            trip = extra;
+          } else if (extra is Map<String, dynamic>) {
+            trip = TripData.fromJson(extra);
+          } else {
+            final args = ModalRoute.of(context)?.settings.arguments;
+            if (args is TripData) {
+              trip = args;
+            } else if (args is Map<String, dynamic>) {
+              trip = TripData.fromJson(args);
+            } else {
+              debugPrint("GoRouter Error: Trip data not found for TripDetailsScreen");
+              return const Scaffold(
+                body: Center(
+                  child: Text("Error: Trip data could not be loaded."),
+                ),
+              );
+            }
+          }
           return TripDetailsScreen(trip: trip);
         },
       ),
@@ -107,14 +131,54 @@ GoRouter buildRouter({
       GoRoute(
         path: TripWizardScreen.routeName,
         builder: (context, state) {
-          final place = state.extra as PlaceModel;
+          final PlaceModel place;
+          final extra = state.extra;
+          if (extra is PlaceModel) {
+            place = extra;
+          } else if (extra is Map<String, dynamic>) {
+            place = PlaceModel.fromJson(extra);
+          } else {
+            final args = ModalRoute.of(context)?.settings.arguments;
+            if (args is PlaceModel) {
+              place = args;
+            } else if (args is Map<String, dynamic>) {
+              place = PlaceModel.fromJson(args);
+            } else {
+              debugPrint("GoRouter Error: Place data not found for TripWizardScreen");
+              return const Scaffold(
+                body: Center(
+                  child: Text("Error: Destination details could not be loaded."),
+                ),
+              );
+            }
+          }
           return TripWizardScreen(destination: place);
         },
       ),
       GoRoute(
         path: DestinationDetailsScreen.routeName,
         builder: (context, state) {
-          final place = state.extra as PlaceModel;
+          final PlaceModel place;
+          final extra = state.extra;
+          if (extra is PlaceModel) {
+            place = extra;
+          } else if (extra is Map<String, dynamic>) {
+            place = PlaceModel.fromJson(extra);
+          } else {
+            final args = ModalRoute.of(context)?.settings.arguments;
+            if (args is PlaceModel) {
+              place = args;
+            } else if (args is Map<String, dynamic>) {
+              place = PlaceModel.fromJson(args);
+            } else {
+              debugPrint("GoRouter Error: Place data not found for DestinationDetailsScreen");
+              return const Scaffold(
+                body: Center(
+                  child: Text("Error: Destination details could not be loaded."),
+                ),
+              );
+            }
+          }
           return DestinationDetailsScreen(place: place);
         },
       ),

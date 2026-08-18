@@ -122,7 +122,7 @@ class TripData {
   });
 
   factory TripData.fromJson(Map<String, dynamic> jsonMap) {
-    final id = jsonMap["id"] ?? "";
+    final id = _parseId(jsonMap["id"]);
     final mainDest = jsonMap["mainDestination"] ?? "";
     final name =
         jsonMap["name"] ??
@@ -183,18 +183,27 @@ class TripData {
       "Nov",
       "Dec",
     ];
-    return "${months[start.month - 1]} ${start.day} - ${months[end.month - 1]} ${end.day}, ${end.year}";
+    return "${start.day} ${months[start.month - 1]} - ${end.day} ${months[end.month - 1]}";
   }
 
   static String _getCountryFlag(String destination) {
     final lower = destination.toLowerCase();
-    if (lower.contains("tokyo") || lower.contains("japan")) return "🇯🇵";
-    if (lower.contains("paris") || lower.contains("france")) return "🇫🇷";
+    if (lower.contains("tokyo") ||
+        lower.contains("japan") ||
+        lower.contains("osaka"))
+      return "🇯🇵";
+    if (lower.contains("paris") ||
+        lower.contains("france") ||
+        lower.contains("nice"))
+      return "🇫🇷";
     if (lower.contains("london") ||
         lower.contains("uk") ||
         lower.contains("united kingdom"))
       return "🇬🇧";
-    if (lower.contains("rome") || lower.contains("italy")) return "🇮🇹";
+    if (lower.contains("rome") ||
+        lower.contains("italy") ||
+        lower.contains("milan"))
+      return "🇮🇹";
     if (lower.contains("new york") ||
         lower.contains("usa") ||
         lower.contains("united states"))
@@ -237,4 +246,14 @@ class TripData {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
   }
+}
+
+String _parseId(dynamic jsonVal) {
+  if (jsonVal is String) {
+    return jsonVal;
+  }
+  if (jsonVal is Map<String, dynamic>) {
+    return (jsonVal["\$oid"] ?? jsonVal["oid"] ?? "").toString();
+  }
+  return (jsonVal ?? "").toString();
 }

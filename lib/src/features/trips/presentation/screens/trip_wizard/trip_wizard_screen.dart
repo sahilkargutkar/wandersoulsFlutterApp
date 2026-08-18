@@ -16,6 +16,10 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/steps/generating_step.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/steps/itinerary_result_step.dart';
 
+import 'package:go_router/go_router.dart';
+import 'package:wonder_souls/src/features/trips/model/trip.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/trip_details_screen.dart';
+
 class TripWizardScreen extends StatelessWidget {
   const TripWizardScreen({super.key, required this.destination});
 
@@ -54,9 +58,16 @@ class _TripWizardViewState extends State<_TripWizardView> {
           previous.currentStep != current.currentStep ||
           previous.status != current.status,
       listener: (context, state) {
-        if (state.status == TripWizardStatus.success) {
+        if (state.status == TripWizardStatus.itineraryReady ||
+            state.status == TripWizardStatus.success) {
           AppToast.success("Trip created successfully! 🎉");
-          Navigator.pop(context);
+          final itinerary = state.generatedItinerary;
+          if (itinerary != null) {
+            final tripData = TripData.fromJson(itinerary);
+            context.pushReplacement(TripDetailsScreen.routeName, extra: tripData);
+          } else {
+            Navigator.pop(context);
+          }
           return;
         } else if (state.status == TripWizardStatus.failure) {
           AppToast.error(

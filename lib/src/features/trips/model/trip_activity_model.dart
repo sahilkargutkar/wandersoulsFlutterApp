@@ -57,9 +57,9 @@ class TripActivityModel {
     }
 
     return TripActivityModel(
-      id: json['id'] ?? '',
-      tripId: json['tripId'] ?? '',
-      placeId: json['placeId'] ?? '',
+      id: _parseId(json['id']),
+      tripId: _parseId(json['tripId']),
+      placeId: _parseId(json['placeId']),
       dayId: json['dayId'] ?? '',
       name: json['name'] ?? '',
       bookingReference: json['bookingReference'],
@@ -92,13 +92,8 @@ class TripActivityModel {
       "bookingUrl": bookingUrl,
       "confirmationDocumentUrl": confirmationDocumentUrl,
       "notes": notes,
-      "activityDetailsDto": {
-        "categoryDto": category,
-        "participants": [],
-        "meetingPoint": "",
-        "duration": 0,
-        "difficulty": "",
-        "ageRestriction": "",
+      "activityDetails": {
+        "category": category,
         "cost": cost,
         "tips": tips,
         "imageUrl": imageUrl,
@@ -143,4 +138,14 @@ class TripActivityModel {
       imageUrl: imageUrl ?? this.imageUrl,
     );
   }
+}
+
+String _parseId(dynamic jsonVal) {
+  if (jsonVal is String) {
+    return jsonVal;
+  }
+  if (jsonVal is Map<String, dynamic>) {
+    return (jsonVal["\$oid"] ?? jsonVal["oid"] ?? "").toString();
+  }
+  return (jsonVal ?? "").toString();
 }

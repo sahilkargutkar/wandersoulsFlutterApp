@@ -8,6 +8,8 @@ import 'package:wonder_souls/src/config/utils/app_toast.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/circular_icon.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:wonder_souls/src/config/utils/mongo_id_helper.dart';
+import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/model/trip_activity_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/add_event_screen.dart';
@@ -341,10 +343,13 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
       // 1. Delete removed activities from API
       for (var id in _deletedActivityIds) {
         if (id.isNotEmpty) {
-          await apiService.delete<dynamic>(
+          final res = await apiService.delete<dynamic>(
             "/TripActivity/$id",
             fromJson: (data) => data,
           );
+          if (res is Failure) {
+            throw Exception(res.message);
+          }
         }
       }
 
@@ -369,7 +374,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
             // New activity, need to POST
             final payload = {
               "tripId": act.tripId,
-              "placeId": act.placeId,
+              "placeId": convertToMongoObjectId(act.placeId),
               "dayId": newDayId,
               "name": act.name,
               "bookingReference": "",
@@ -394,11 +399,14 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
               "notes": act.tips ?? "",
             };
 
-            await apiService.post<dynamic>(
+            final res = await apiService.post<dynamic>(
               "/TripActivity",
               data: payload,
               fromJson: (data) => data,
             );
+            if (res is Failure) {
+              throw Exception(res.message);
+            }
           } else {
             // Existing activity, check if it needs update (reordered or day changed)
             final originalDayId = act.dayId;
@@ -413,7 +421,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
               final payload = {
                 "id": act.id,
                 "tripId": act.tripId,
-                "placeId": act.placeId,
+                "placeId": convertToMongoObjectId(act.placeId),
                 "dayId": newDayId,
                 "name": act.name,
                 "bookingReference": act.bookingReference ?? "",
@@ -438,11 +446,14 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                 "notes": act.notes ?? act.tips ?? "",
               };
 
-              await apiService.put<dynamic>(
+              final res = await apiService.put<dynamic>(
                 "/TripActivity/${act.id}",
                 data: payload,
                 fromJson: (data) => data,
               );
+              if (res is Failure) {
+                throw Exception(res.message);
+              }
             }
           }
         }

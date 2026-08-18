@@ -38,6 +38,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   List<TripActivityModel> _activities = [];
   bool _loadingActivities = false;
   OverlayEntry? _notificationOverlay;
+  bool _hasTriggeredScheduledNotification = false;
 
   // Search & suggestions
   final TextEditingController _searchController = TextEditingController();
@@ -448,14 +449,24 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     setState(() => _loadingActivities = true);
     try {
       final apiService = sl<ApiService>();
-      final result = await apiService.get<List<dynamic>>(
+      final result = await apiService.get<dynamic>(
         "/TripActivity?TripId=${_tripState.id}",
-        fromJson: (json) => json as List<dynamic>,
+        fromJson: (json) => json,
       );
 
-      if (result is Success<List<dynamic>>) {
+      if (result is Success<dynamic> && result.data != null) {
+        final dynamic rawData = result.data;
+        final List<dynamic> list;
+        if (rawData is Map<String, dynamic> && rawData.containsKey("data")) {
+          list = rawData["data"] as List<dynamic>;
+        } else if (rawData is List<dynamic>) {
+          list = rawData;
+        } else {
+          list = [];
+        }
+
         final start = _tripState.startDate ?? DateTime.now();
-        final List<TripActivityModel> all = result.data
+        final List<TripActivityModel> all = list
             .map(
               (item) {
                 final model = TripActivityModel.fromJson(item as Map<String, dynamic>);
@@ -477,10 +488,31 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           );
           _loadingActivities = false;
         });
+
+        // Trigger scheduled morning reminder notification automatically on load
+        if (!_hasTriggeredScheduledNotification && _activities.isNotEmpty) {
+          _hasTriggeredScheduledNotification = true;
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              _showInAppNotification(
+                title: "Ready for today?",
+                message:
+                    "Your first experience starts in 30 minutes. Check your itinerary and get ready for an amazing day.",
+                cta: "View Today's Plan",
+                icon: Icons.wb_sunny_outlined,
+                iconColor: Colors.amber,
+                onAccept: () {
+                  AppToast.success("Enjoy your day!");
+                },
+              );
+            }
+          });
+        }
       } else {
         setState(() => _loadingActivities = false);
       }
     } catch (e) {
+      debugPrint("Error fetching activities: $e");
       setState(() => _loadingActivities = false);
     }
   }
@@ -773,6 +805,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     _notificationOverlay = null;
   }
 
+  /*
   void _showRecommendationDialog({
     required String title,
     required String content,
@@ -967,164 +1000,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     await _fetchActivities();
     AppToast.success("Mattupetty Dam restored to itinerary!");
   }
+  */
 
-  void _showNotificationSimulatorSheet() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (sheetCtx) {
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "In-App Notification Simulator",
-                style: context.text.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: context.onSurface,
-                ),
-              ),
-              8.h.verticalSpace,
-              Text(
-                "Select a scenario to trigger an in-app notification:",
-                style: context.text.bodySmall?.copyWith(
-                  color: context.onSurfaceVariant,
-                ),
-              ),
-              16.h.verticalSpace,
-              
-              _buildSimulatorOption(
-                sheetCtx,
-                icon: Icons.wb_sunny_outlined,
-                title: "1. Morning Reminder (30-min-before)",
-                description: "Notify user 30 minutes before first activity",
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _showInAppNotification(
-                    title: "Ready for today?",
-                    message: "Your first experience starts in 30 minutes. Check your itinerary and get ready for an amazing day.",
-                    cta: "View Today's Plan",
-                    icon: Icons.wb_sunny_outlined,
-                    iconColor: Colors.amber,
-                    onAccept: () {
-                      AppToast.success("Enjoy your day!");
-                    },
-                  );
-                },
-              ),
-              
-              _buildSimulatorOption(
-                sheetCtx,
-                icon: Icons.timer_outlined,
-                title: "2. Trip Delay Optimization",
-                description: "AI optimizes itinerary due to a 45-min delay",
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _showInAppNotification(
-                    title: "We've optimized your itinerary",
-                    message: "You're running behind schedule. To avoid rushing, we've skipped Echo Point and adjusted the rest of your day. Your next activity is Kundala Lake at 3:30 PM.",
-                    cta: "See New Plan",
-                    icon: Icons.auto_awesome,
-                    iconColor: Colors.teal,
-                    onAccept: () {
-                      _showRecommendationDialog(
-                        title: "AI Itinerary Optimization",
-                        content: "You're running behind schedule. To avoid rushing, WanderSouls AI recommends skipping Echo Point and updating Kundala Lake to start at 3:30 PM.",
-                        onAccept: () async {
-                          await _applyDelayOptimization();
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-              
-              _buildSimulatorOption(
-                sheetCtx,
-                icon: Icons.cloud_outlined,
-                title: "3. Rain Detection (Outdoor to Indoor)",
-                description: "Weather warning: replace outdoor Dam with indoor Museum",
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _showInAppNotification(
-                    title: "Weather update",
-                    message: "Rain is expected during your next outdoor activity. We've found a better option nearby so you can keep enjoying your day.",
-                    cta: "View AI Recommendation",
-                    icon: Icons.cloud,
-                    iconColor: Colors.blue,
-                    onAccept: () {
-                      _showRecommendationDialog(
-                        title: "Rain Alert & AI Recommendation",
-                        content: "Rain is expected at 3:00 PM when you're scheduled to visit Mattupetty Dam (outdoor). WanderSouls AI recommends swapping it for the Munnar Tea Museum (indoor).",
-                        onAccept: () async {
-                          await _applyRainAlternative();
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-              
-              _buildSimulatorOption(
-                sheetCtx,
-                icon: Icons.sunny,
-                title: "4. Weather Improves (Restore Outdoor)",
-                description: "Rain cleared: restore Mattupetty Dam back to timeline",
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _showInAppNotification(
-                    title: "Good news — the weather cleared up",
-                    message: "The rain has moved away and Mattupetty Dam is looking good again. We've updated your itinerary to make the most of the weather.",
-                    cta: "View Updated Plan",
-                    icon: Icons.sunny,
-                    iconColor: Colors.orange,
-                    onAccept: () {
-                      _showRecommendationDialog(
-                        title: "Weather Cleared Up",
-                        content: "The weather has improved at Mattupetty Dam. WanderSouls AI recommends restoring it to your itinerary instead of the Tea Museum.",
-                        onAccept: () async {
-                          await _applyWeatherClearRestore();
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-              12.h.verticalSpace,
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildSimulatorOption(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: context.colors.primary.withAlpha(20),
-        child: Icon(icon, color: context.colors.primary, size: 20.sp),
-      ),
-      title: Text(
-        title,
-        style: context.text.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(
-        description,
-        style: context.text.labelSmall?.copyWith(color: context.onSurfaceVariant),
-      ),
-      onTap: onTap,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1349,17 +1227,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         ),
       ),
       actions: [
-        Padding(
-          padding: EdgeInsets.only(right: 8.w),
-          child: CircularIcon(
-            icon: Icon(
-              Icons.notifications_active_outlined,
-              size: 20.sp,
-              color: Colors.amber,
-            ),
-            onTap: _showNotificationSimulatorSheet,
-          ),
-        ),
         Padding(
           padding: EdgeInsets.only(right: 8.w),
           child: CircularIcon(

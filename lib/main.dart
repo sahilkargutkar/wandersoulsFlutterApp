@@ -39,13 +39,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final GoRouter _router;
+  late final IsLoginCubit _isLoginCubit;
+  late final AuthCubit _authCubit;
 
   @override
   void initState() {
     super.initState();
-    final isLoginCubit = sl<IsLoginCubit>()..checkAuth();
-    final authCubit = sl<AuthCubit>();
-    _router = buildRouter(isLoginCubit: isLoginCubit, authCubit: authCubit);
+    _isLoginCubit = sl<IsLoginCubit>()..checkAuth();
+    _authCubit = sl<AuthCubit>();
+    _router = buildRouter(isLoginCubit: _isLoginCubit, authCubit: _authCubit);
 
     final apiService = sl<ApiService>();
     apiService.onSessionExpired = () {
@@ -60,8 +62,8 @@ class _MyAppState extends State<MyApp> {
       builder: (context, child) {
         return MultiBlocProvider(
           providers: [
-            BlocProvider<IsLoginCubit>.value(value: sl<IsLoginCubit>()),
-            BlocProvider<AuthCubit>.value(value: sl<AuthCubit>()),
+            BlocProvider<IsLoginCubit>.value(value: _isLoginCubit),
+            BlocProvider<AuthCubit>.value(value: _authCubit),
             BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
             BlocProvider<SavedPlacesCubit>(
               create: (_) => sl<SavedPlacesCubit>(),
