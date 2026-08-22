@@ -544,15 +544,16 @@ class _DestinationDetailsScreenState extends State<DestinationDetailsScreen> {
                         ...dynamicSections.map((section) {
                           final isHours = section["isHours"] == true;
                           return Padding(
-                            padding: EdgeInsets.only(bottom: 20.h),
+                            padding: EdgeInsets.only(bottom: 12.h),
                             child: Container(
-                              padding: EdgeInsets.all(16.w),
+                              padding: EdgeInsets.symmetric(vertical: 12.h),
                               decoration: BoxDecoration(
-                                color: context.mutedBackground,
-                                borderRadius: BorderRadius.circular(16.r),
-                                border: Border.all(
-                                  color: context.borderColor.withAlpha(20),
-                                  width: 1,
+                                color: Colors.transparent,
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: context.borderColor.withAlpha(30),
+                                    width: 1,
+                                  ),
                                 ),
                               ),
                               child: Column(

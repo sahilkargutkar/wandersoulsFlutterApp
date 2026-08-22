@@ -18,6 +18,7 @@ import 'package:wonder_souls/src/features/auth/presentation/cubit/password/passw
 import 'package:wonder_souls/src/config/theme/theme_cubit.dart';
 import 'package:wonder_souls/src/features/auth/presentation/cubit/signup/signup_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_places_cubit.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -84,4 +85,5 @@ Future<void> initAuth() async {
   sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl()));
 
   sl.registerFactory<SavedPlacesCubit>(() => SavedPlacesCubit(sl()));
+  sl.registerFactory<BlogsCubit>(() => BlogsCubit());
 }

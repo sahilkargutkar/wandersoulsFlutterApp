@@ -11,6 +11,7 @@ class ArticleCard extends StatefulWidget {
   final String date;
   final double ratio;
   final double? cardWidth;
+  final String readTime;
 
   const ArticleCard({
     super.key,
@@ -19,6 +20,7 @@ class ArticleCard extends StatefulWidget {
     required this.date,
     this.ratio = 16 / 12,
     this.cardWidth,
+    this.readTime = "5 min read",
   });
 
   @override
@@ -114,7 +116,7 @@ class _ArticleCardState extends State<ArticleCard>
                               ),
                               4.w.width,
                               Text(
-                                "5 min read",
+                                widget.readTime,
                                 style: context.text.labelSmall?.copyWith(
                                   color: Colors.white,
                                   fontSize: 10.sp,

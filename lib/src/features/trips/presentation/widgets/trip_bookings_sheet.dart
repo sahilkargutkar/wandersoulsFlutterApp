@@ -96,6 +96,98 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     }
   }
 
+  Widget _buildFormField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: context.text.bodySmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: context.onSurface.withAlpha(200),
+          ),
+        ),
+        8.h.verticalSpace,
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          style: context.text.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: context.mutedBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
+          ),
+        ),
+        12.h.verticalSpace,
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String value,
+    required List<String> items,
+    required String label,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: context.text.bodySmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: context.onSurface.withAlpha(200),
+          ),
+        ),
+        8.h.verticalSpace,
+        DropdownButtonFormField<String>(
+          initialValue: value,
+          items: items
+              .map(
+                (type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(type),
+                ),
+              )
+              .toList(),
+          onChanged: onChanged,
+          style: context.text.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: context.onSurface,
+          ),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: context.mutedBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
+          ),
+        ),
+        12.h.verticalSpace,
+      ],
+    );
+  }
+
   void _showAddAccommodationDialog() {
     final nameController = TextEditingController();
     final addressController = TextEditingController();
@@ -104,63 +196,95 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Add Accommodation"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: "Hotel / Place Name",
-                ),
-              ),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(labelText: "Address"),
-              ),
-              TextField(
-                controller: costController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Cost (\$)"),
-              ),
-            ],
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.r),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+          backgroundColor: context.surface,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(24.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Add Accommodation",
+                        style: context.text.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18.sp,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  16.h.verticalSpace,
+
+                  // Fields
+                  _buildFormField(controller: nameController, label: "Hotel / Place Name"),
+                  _buildFormField(controller: addressController, label: "Address"),
+                  _buildFormField(controller: costController, label: "Cost (\$)", keyboardType: TextInputType.number),
+
+                  20.h.verticalSpace,
+
+                  // Save button
+                  SizedBox(
+                    height: 48.h,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24.r),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) return;
+                        Navigator.pop(context);
+
+                        final model = AccommodationModel(
+                          tripId: widget.tripId,
+                          name: name,
+                          address: addressController.text.trim(),
+                          cost: double.tryParse(costController.text.trim()) ?? 0.0,
+                        );
+
+                        AppToast.success("Saving accommodation...");
+                        final res = await _apiService.post<dynamic>(
+                          "/Accomodation",
+                          data: model.toJson(),
+                          fromJson: (d) => d,
+                        );
+
+                        if (res is Success) {
+                          AppToast.success("Accommodation added!");
+                          _fetchAccommodations();
+                        } else {
+                          AppToast.error("Failed to add accommodation");
+                        }
+                      },
+                      child: Text(
+                        "Save",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) return;
-                Navigator.pop(context);
-
-                final model = AccommodationModel(
-                  tripId: widget.tripId,
-                  name: name,
-                  address: addressController.text.trim(),
-                  cost: double.tryParse(costController.text.trim()) ?? 0.0,
-                );
-
-                AppToast.success("Saving accommodation...");
-                final res = await _apiService.post<dynamic>(
-                  "/Accomodation",
-                  data: model.toJson(),
-                  fromJson: (d) => d,
-                );
-
-                if (res is Success) {
-                  AppToast.success("Accommodation added!");
-                  _fetchAccommodations();
-                } else {
-                  AppToast.error("Failed to add accommodation");
-                }
-              },
-              child: const Text("Save"),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -178,91 +302,104 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text("Add Transport"),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      initialValue: transportType,
-                      items: ["Flight", "Train", "Bus", "Car", "Ferry"]
-                          .map(
-                            (type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(type),
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              backgroundColor: context.surface,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(24.w),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Add Transport",
+                            style: context.text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18.sp,
                             ),
-                          )
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null)
-                          setDialogState(() => transportType = val);
-                      },
-                      decoration: const InputDecoration(
-                        labelText: "Transport Type",
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
                       ),
-                    ),
-                    TextField(
-                      controller: providerController,
-                      decoration: const InputDecoration(
-                        labelText: "Provider / Airline",
+                      16.h.verticalSpace,
+
+                      _buildDropdownField(
+                        value: transportType,
+                        items: ["Flight", "Train", "Bus", "Car", "Ferry"],
+                        label: "Transport Type",
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() => transportType = val);
+                          }
+                        },
                       ),
-                    ),
-                    TextField(
-                      controller: fromController,
-                      decoration: const InputDecoration(
-                        labelText: "Departure Location",
+                      _buildFormField(controller: providerController, label: "Provider / Airline"),
+                      _buildFormField(controller: fromController, label: "Departure Location"),
+                      _buildFormField(controller: toController, label: "Arrival Location"),
+                      _buildFormField(controller: costController, label: "Cost (\$)", keyboardType: TextInputType.number),
+
+                      20.h.verticalSpace,
+
+                      SizedBox(
+                        height: 48.h,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: context.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24.r),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: () async {
+                            Navigator.pop(context);
+
+                            final model = TripTransportModel(
+                              tripId: widget.tripId,
+                              type: transportType,
+                              provider: providerController.text.trim(),
+                              departureLocation: fromController.text.trim(),
+                              arrivalLocation: toController.text.trim(),
+                              cost: double.tryParse(costController.text.trim()) ?? 0.0,
+                            );
+
+                            AppToast.success("Saving transport...");
+                            final res = await _apiService.post<dynamic>(
+                              "/TripTransports",
+                              data: model.toJson(),
+                              fromJson: (d) => d,
+                            );
+
+                            if (res is Success) {
+                              AppToast.success("Transport added!");
+                              _fetchTransports();
+                            } else {
+                              AppToast.error("Failed to add transport");
+                            }
+                          },
+                          child: Text(
+                            "Save",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15.sp,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    TextField(
-                      controller: toController,
-                      decoration: const InputDecoration(
-                        labelText: "Arrival Location",
-                      ),
-                    ),
-                    TextField(
-                      controller: costController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: "Cost (\$)"),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-
-                    final model = TripTransportModel(
-                      tripId: widget.tripId,
-                      type: transportType,
-                      provider: providerController.text.trim(),
-                      departureLocation: fromController.text.trim(),
-                      arrivalLocation: toController.text.trim(),
-                      cost: double.tryParse(costController.text.trim()) ?? 0.0,
-                    );
-
-                    AppToast.success("Saving transport...");
-                    final res = await _apiService.post<dynamic>(
-                      "/TripTransports",
-                      data: model.toJson(),
-                      fromJson: (d) => d,
-                    );
-
-                    if (res is Success) {
-                      AppToast.success("Transport added!");
-                      _fetchTransports();
-                    } else {
-                      AppToast.error("Failed to add transport");
-                    }
-                  },
-                  child: const Text("Save"),
-                ),
-              ],
             );
           },
         );
@@ -361,72 +498,101 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Edit Accommodation"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: "Name"),
-              ),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(labelText: "Address"),
-              ),
-              TextField(
-                controller: costController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Cost (\$)"),
-              ),
-              TextField(
-                controller: notesController,
-                decoration: const InputDecoration(labelText: "Notes"),
-              ),
-            ],
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.r),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+          backgroundColor: context.surface,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(24.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Edit Accommodation",
+                        style: context.text.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18.sp,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  16.h.verticalSpace,
+
+                  _buildFormField(controller: nameController, label: "Name"),
+                  _buildFormField(controller: addressController, label: "Address"),
+                  _buildFormField(controller: costController, label: "Cost (\$)", keyboardType: TextInputType.number),
+                  _buildFormField(controller: notesController, label: "Notes", maxLines: 3),
+
+                  20.h.verticalSpace,
+
+                  SizedBox(
+                    height: 48.h,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24.r),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) return;
+                        Navigator.pop(context);
+
+                        final updated = AccommodationModel(
+                          id: model.id,
+                          tripId: model.tripId,
+                          name: name,
+                          address: addressController.text.trim(),
+                          cost: double.tryParse(costController.text.trim()) ?? 0.0,
+                          notes: notesController.text.trim(),
+                          type: model.type,
+                          bookingReference: model.bookingReference,
+                          bookingUrl: model.bookingUrl,
+                          confirmationDocumentUrl: model.confirmationDocumentUrl,
+                          phone: model.phone,
+                        );
+
+                        AppToast.success("Saving changes...");
+                        final res = await _apiService.put<dynamic>(
+                          "/Accomodation/${model.id}",
+                          data: updated.toJson(),
+                          fromJson: (d) => d,
+                        );
+
+                        if (res is Success) {
+                          AppToast.success("Accommodation updated!");
+                          _fetchAccommodations();
+                        } else {
+                          AppToast.error("Failed to update accommodation");
+                        }
+                      },
+                      child: Text(
+                        "Save",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isEmpty) return;
-                Navigator.pop(context);
-
-                final updated = AccommodationModel(
-                  id: model.id,
-                  tripId: model.tripId,
-                  name: name,
-                  address: addressController.text.trim(),
-                  cost: double.tryParse(costController.text.trim()) ?? 0.0,
-                  notes: notesController.text.trim(),
-                  type: model.type,
-                  bookingReference: model.bookingReference,
-                  bookingUrl: model.bookingUrl,
-                  confirmationDocumentUrl: model.confirmationDocumentUrl,
-                  phone: model.phone,
-                );
-
-                AppToast.success("Saving changes...");
-                final res = await _apiService.put<dynamic>(
-                  "/Accomodation/${model.id}",
-                  data: updated.toJson(),
-                  fromJson: (d) => d,
-                );
-
-                if (res is Success) {
-                  AppToast.success("Accommodation updated!");
-                  _fetchAccommodations();
-                } else {
-                  AppToast.error("Failed to update accommodation");
-                }
-              },
-              child: const Text("Save"),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -536,88 +702,121 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     );
     final costController = TextEditingController(text: model.cost.toString());
     final notesController = TextEditingController(text: model.notes);
+    String transportType = model.type;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Edit Transport"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: providerController,
-                  decoration: const InputDecoration(
-                    labelText: "Provider / Airline",
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              backgroundColor: context.surface,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(24.w),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Edit Transport",
+                            style: context.text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18.sp,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      16.h.verticalSpace,
+
+                      _buildDropdownField(
+                        value: transportType,
+                        items: ["Flight", "Train", "Bus", "Car", "Ferry"],
+                        label: "Transport Type",
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() => transportType = val);
+                          }
+                        },
+                      ),
+                      _buildFormField(controller: providerController, label: "Provider / Airline"),
+                      _buildFormField(controller: departureController, label: "Departure Location"),
+                      _buildFormField(controller: arrivalController, label: "Arrival Location"),
+                      _buildFormField(controller: costController, label: "Cost (\$)", keyboardType: TextInputType.number),
+                      _buildFormField(controller: notesController, label: "Notes", maxLines: 3),
+
+                      20.h.verticalSpace,
+
+                      SizedBox(
+                        height: 48.h,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: context.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24.r),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: () async {
+                            Navigator.pop(context);
+
+                            final updated = TripTransportModel(
+                              id: model.id,
+                              tripId: model.tripId,
+                              type: transportType,
+                              provider: providerController.text.trim(),
+                              departureLocation: departureController.text.trim(),
+                              arrivalLocation: arrivalController.text.trim(),
+                              cost: double.tryParse(costController.text.trim()) ?? 0.0,
+                              notes: notesController.text.trim(),
+                              currency: model.currency,
+                              seatOrCabin: model.seatOrCabin,
+                              departureDatetime: model.departureDatetime,
+                              arrivalDatetime: model.arrivalDatetime,
+                              bookingReference: model.bookingReference,
+                            );
+
+                            AppToast.success("Saving changes...");
+                            final res = await _apiService.put<dynamic>(
+                              "/TripTransports/${model.id}",
+                              data: updated.toJson(),
+                              fromJson: (d) => d,
+                            );
+
+                            if (res is Success) {
+                              AppToast.success("Transport updated!");
+                              _fetchTransports();
+                            } else {
+                              AppToast.error("Failed to update transport");
+                            }
+                          },
+                          child: Text(
+                            "Save",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15.sp,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                TextField(
-                  controller: departureController,
-                  decoration: const InputDecoration(
-                    labelText: "Departure Location",
-                  ),
-                ),
-                TextField(
-                  controller: arrivalController,
-                  decoration: const InputDecoration(
-                    labelText: "Arrival Location",
-                  ),
-                ),
-                TextField(
-                  controller: costController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: "Cost (\$)"),
-                ),
-                TextField(
-                  controller: notesController,
-                  decoration: const InputDecoration(labelText: "Notes"),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-
-                final updated = TripTransportModel(
-                  id: model.id,
-                  tripId: model.tripId,
-                  type: model.type,
-                  provider: providerController.text.trim(),
-                  departureLocation: departureController.text.trim(),
-                  arrivalLocation: arrivalController.text.trim(),
-                  cost: double.tryParse(costController.text.trim()) ?? 0.0,
-                  notes: notesController.text.trim(),
-                  currency: model.currency,
-                  seatOrCabin: model.seatOrCabin,
-                  departureDatetime: model.departureDatetime,
-                  arrivalDatetime: model.arrivalDatetime,
-                  bookingReference: model.bookingReference,
-                );
-
-                AppToast.success("Saving changes...");
-                final res = await _apiService.put<dynamic>(
-                  "/TripTransports/${model.id}",
-                  data: updated.toJson(),
-                  fromJson: (d) => d,
-                );
-
-                if (res is Success) {
-                  AppToast.success("Transport updated!");
-                  _fetchTransports();
-                } else {
-                  AppToast.error("Failed to update transport");
-                }
-              },
-              child: const Text("Save"),
-            ),
-          ],
+              ),
+            );
+          },
         );
       },
     );

@@ -21,6 +21,31 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wonder_souls/src/features/trips/model/trip_activity_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/edit_itinerary_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/widgets/trip_bookings_sheet.dart';
+import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
+
+const Map<String, Map<String, double>> _cityCoordinatesFallback = {
+  'tokyo': {'lat': 35.6762, 'lng': 139.6503},
+  'osaka': {'lat': 34.6937, 'lng': 135.5023},
+  'japan': {'lat': 35.6762, 'lng': 139.6503},
+  'paris': {'lat': 48.8566, 'lng': 2.3522},
+  'nice': {'lat': 43.7102, 'lng': 7.2620},
+  'france': {'lat': 48.8566, 'lng': 2.3522},
+  'london': {'lat': 51.5074, 'lng': -0.1278},
+  'uk': {'lat': 51.5074, 'lng': -0.1278},
+  'united kingdom': {'lat': 51.5074, 'lng': -0.1278},
+  'rome': {'lat': 41.9028, 'lng': 12.4964},
+  'milan': {'lat': 45.4642, 'lng': 9.1900},
+  'italy': {'lat': 41.9028, 'lng': 12.4964},
+  'new york': {'lat': 40.7128, 'lng': -74.0060},
+  'usa': {'lat': 40.7128, 'lng': -74.0060},
+  'united states': {'lat': 40.7128, 'lng': -74.0060},
+  'sydney': {'lat': -33.8688, 'lng': 151.2093},
+  'australia': {'lat': -33.8688, 'lng': 151.2093},
+  'delhi': {'lat': 28.6139, 'lng': 77.2090},
+  'mumbai': {'lat': 19.0760, 'lng': 72.8777},
+  'kolkata': {'lat': 22.5726, 'lng': 88.3639},
+  'india': {'lat': 28.6139, 'lng': 77.2090},
+};
 
 class TripDetailsScreen extends StatefulWidget {
   final TripData trip;
@@ -39,6 +64,11 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   bool _loadingActivities = false;
   OverlayEntry? _notificationOverlay;
   bool _hasTriggeredScheduledNotification = false;
+
+  double? _destinationLat;
+  double? _destinationLng;
+  String? _destinationPlaceId;
+  final Map<String, Map<String, double>> _resolvedActivityCoords = {};
 
   // Search & suggestions
   final TextEditingController _searchController = TextEditingController();
@@ -63,6 +93,127 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     _fetchAiSuggestions();
     _loadAttachments();
     _searchController.addListener(_onSearchChanged);
+    _fetchDestinationCoordinates();
+    _resolveDayActivityCoordinates();
+  }
+
+  Future<void> _resolveDestinationPlaceId(String city) async {
+    try {
+      final googlePlacesService = GooglePlacesNewService();
+      final placeIdResult = await googlePlacesService.searchPlaceId(city);
+      if (placeIdResult != null && mounted) {
+        setState(() {
+          _destinationPlaceId = placeIdResult;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error resolving destination place ID: $e");
+    }
+  }
+
+  Future<void> _fetchDestinationCoordinates() async {
+    final city = _tripState.mainDestination.trim().toLowerCase();
+    if (city.isEmpty) {
+      AppToast.error("Destination name is empty!");
+      return;
+    }
+
+    // 1. Try local fallback first
+    for (final entry in _cityCoordinatesFallback.entries) {
+      if (city.contains(entry.key)) {
+        AppToast.success("Location matched fallback: ${entry.key}");
+        if (mounted) {
+          setState(() {
+            _destinationLat = entry.value['lat'];
+            _destinationLng = entry.value['lng'];
+          });
+        }
+        _resolveDestinationPlaceId(city);
+        return;
+      }
+    }
+
+    // 2. Query backend Locations API
+    try {
+      final apiService = sl<ApiService>();
+      final result = await apiService.getLocations(1, 5, _tripState.mainDestination);
+      bool resolved = false;
+      result.fold(
+        (failure) => debugPrint("Failed to fetch location from backend: ${failure.message}"),
+        (places) {
+          if (places.isNotEmpty) {
+            for (final p in places) {
+              if (p.latitude != null && p.longitude != null) {
+                AppToast.success("Resolved from backend: ${p.name}");
+                if (mounted) {
+                  setState(() {
+                    _destinationLat = p.latitude;
+                    _destinationLng = p.longitude;
+                    _destinationPlaceId = p.placeId;
+                  });
+                }
+                resolved = true;
+                break;
+              }
+            }
+          }
+        },
+      );
+      if (resolved) return;
+    } catch (e) {
+      debugPrint("Error fetching destination from backend API: $e");
+    }
+
+    // 3. Query Google Maps Geocoding API if not found in fallback or backend API
+    try {
+      final mapsService = sl<GoogleMapsApiService>();
+      final result = await mapsService.getLatLngFromAddress(_tripState.mainDestination);
+      result.fold(
+        (failure) => AppToast.error("Resolve failed: ${failure.message}"),
+        (coords) {
+          AppToast.success("Resolved via Google: ${coords['lat']}, ${coords['lng']}");
+          if (mounted) {
+            setState(() {
+              _destinationLat = coords['lat'];
+              _destinationLng = coords['lng'];
+            });
+          }
+          _resolveDestinationPlaceId(_tripState.mainDestination);
+        },
+      );
+    } catch (e) {
+      AppToast.error("Error geocoding: $e");
+    }
+  }
+
+  Future<void> _resolveDayActivityCoordinates() async {
+    final dayActivities = _activities
+        .where((act) => act.dayId == "${_selectedDayIndex + 1}")
+        .toList();
+
+    final mapsService = sl<GoogleMapsApiService>();
+
+    for (final act in dayActivities) {
+      if (_resolvedActivityCoords.containsKey(act.id)) continue;
+
+      final query = "${act.name}, ${_tripState.mainDestination}";
+
+      try {
+        final result = await mapsService.getLatLngFromAddress(query);
+        result.fold(
+          (failure) => debugPrint("Failed to resolve activity '${act.name}': ${failure.message}"),
+          (coords) {
+            if (mounted) {
+              setState(() {
+                _resolvedActivityCoords[act.id] = coords;
+              });
+            }
+          },
+        );
+      } catch (e) {
+        debugPrint("Error resolving activity: $e");
+      }
+    }
   }
 
   Future<void> _loadAttachments() async {
@@ -143,14 +294,114 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         "/Trips/${_tripState.id}",
         fromJson: (data) => data,
       );
-      if (res is Success && res.data != null && res.data["data"] != null) {
+      if (res is Success && res.data != null) {
+        final Map<String, dynamic> dataMap;
+        if (res.data is Map<String, dynamic> && res.data.containsKey("data")) {
+          dataMap = res.data["data"] as Map<String, dynamic>;
+        } else if (res.data is Map<String, dynamic>) {
+          dataMap = res.data as Map<String, dynamic>;
+        } else {
+          return;
+        }
+
         setState(() {
-          _tripState = TripData.fromJson(res.data["data"]);
+          _tripState = TripData.fromJson(dataMap);
         });
+        _fetchDestinationCoordinates();
       }
     } catch (e) {
       debugPrint("Error fetching trip details: $e");
     }
+  }
+
+  Widget _buildFormField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: context.text.bodySmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: context.onSurface.withAlpha(200),
+          ),
+        ),
+        8.h.verticalSpace,
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          style: context.text.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: context.mutedBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
+          ),
+        ),
+        12.h.verticalSpace,
+      ],
+    );
+  }
+
+  void _confirmDeleteTrip(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text("Delete Trip"),
+        content: const Text(
+          "Are you sure you want to delete this trip? This action cannot be undone.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogCtx); // close confirm dialog
+              Navigator.pop(context); // close edit dialog
+
+              AppToast.success("Deleting trip...");
+              try {
+                final apiService = sl<ApiService>();
+                final res = await apiService.delete<dynamic>(
+                  "/Trips/${_tripState.id}",
+                  fromJson: (d) => d,
+                );
+                if (res is Success) {
+                  AppToast.success("Trip deleted successfully!");
+                  if (context.mounted) {
+                    Navigator.pop(context); // return to My Trips screen
+                  }
+                } else {
+                  AppToast.error("Failed to delete trip");
+                }
+              } catch (e) {
+                AppToast.error("Error deleting trip: $e");
+              }
+            },
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showEditTripDialog() {
@@ -165,112 +416,193 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text("Edit Trip Details"),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: "Trip Name"),
-                    ),
-                    TextField(
-                      controller: descController,
-                      decoration: const InputDecoration(
-                        labelText: "Description",
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              backgroundColor: context.surface,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(24.w),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Edit Trip Details",
+                            style: context.text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18.sp,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
                       ),
-                    ),
-                    16.h.verticalSpace,
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
+                      16.h.verticalSpace,
+
+                      _buildFormField(controller: nameController, label: "Trip Name"),
+                      _buildFormField(controller: descController, label: "Description", maxLines: 3),
+
+                      Text(
+                        "Trip Dates",
+                        style: context.text.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: context.onSurface.withAlpha(200),
+                        ),
+                      ),
+                      8.h.verticalSpace,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: context.borderColor.withAlpha(40)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                              ),
+                              onPressed: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: start,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  setStateDialog(() => start = picked);
+                                }
+                              },
+                              child: Text(
+                                "Start: ${start.day}/${start.month}",
+                                style: context.text.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: context.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          8.w.horizontalSpace,
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: context.borderColor.withAlpha(40)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                              ),
+                              onPressed: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: end,
+                                  firstDate: start,
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  setStateDialog(() => end = picked);
+                                }
+                              },
+                              child: Text(
+                                "End: ${end.day}/${end.month}",
+                                style: context.text.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: context.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      24.h.verticalSpace,
+
+                      // Actions Row (Delete & Save)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.redAccent,
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                            ),
+                            onPressed: () => _confirmDeleteTrip(context),
+                            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                            label: const Text(
+                              "Delete",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: context.primary,
+                              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.r),
+                              ),
+                              elevation: 0,
+                            ),
                             onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: start,
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-                              if (picked != null) {
-                                setStateDialog(() => start = picked);
+                              final name = nameController.text.trim();
+                              if (name.isEmpty) return;
+                              Navigator.pop(context);
+
+                              AppToast.success("Updating trip...");
+                              try {
+                                final apiService = sl<ApiService>();
+                                final payload = {
+                                  "name": name,
+                                  "description": descController.text.trim(),
+                                  "startDate": start.toUtc().toIso8601String(),
+                                  "endDate": end.toUtc().toIso8601String(),
+                                  "mainDestination": _tripState.mainDestination,
+                                  "whoIsGoing": _tripState.tripType,
+                                  "isPublic": false,
+                                  "travelTastes": _tripState.travelTastes,
+                                  "budget": {
+                                    "budgetType": _tripState.category,
+                                    "totalEstimated": 2000,
+                                    "currency": "USD",
+                                  },
+                                };
+
+                                final res = await apiService.put<dynamic>(
+                                  "/Trips/${_tripState.id}",
+                                  data: payload,
+                                  fromJson: (d) => d,
+                                );
+
+                                if (res is Success) {
+                                  AppToast.success("Trip updated successfully!");
+                                  _fetchTripDetails();
+                                } else {
+                                  AppToast.error("Failed to update trip details");
+                                }
+                              } catch (e) {
+                                AppToast.error("Error updating trip: $e");
                               }
                             },
-                            child: Text("Start: ${start.day}/${start.month}"),
+                            child: Text(
+                              "Save",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14.sp,
+                              ),
+                            ),
                           ),
-                        ),
-                        8.w.horizontalSpace,
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: end,
-                                firstDate: start,
-                                lastDate: DateTime(2100),
-                              );
-                              if (picked != null) {
-                                setStateDialog(() => end = picked);
-                              }
-                            },
-                            child: Text("End: ${end.day}/${end.month}"),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final name = nameController.text.trim();
-                    if (name.isEmpty) return;
-                    Navigator.pop(context);
-
-                    AppToast.success("Updating trip...");
-                    try {
-                      final apiService = sl<ApiService>();
-                      final payload = {
-                        "name": name,
-                        "description": descController.text.trim(),
-                        "startDate": start.toUtc().toIso8601String(),
-                        "endDate": end.toUtc().toIso8601String(),
-                        "mainDestination": _tripState.mainDestination,
-                        "whoIsGoing": _tripState.tripType,
-                        "isPublic": false,
-                        "travelTastes": _tripState.travelTastes,
-                        "budget": {
-                          "budgetType": _tripState.category,
-                          "totalEstimated": 2000,
-                          "currency": "USD",
-                        },
-                      };
-
-                      final res = await apiService.put<dynamic>(
-                        "/Trips/${_tripState.id}",
-                        data: payload,
-                        fromJson: (d) => d,
-                      );
-
-                      if (res is Success) {
-                        AppToast.success("Trip updated successfully!");
-                        _fetchTripDetails();
-                      } else {
-                        AppToast.error("Failed to update trip details");
-                      }
-                    } catch (e) {
-                      AppToast.error("Error updating trip: $e");
-                    }
-                  },
-                  child: const Text("Save"),
-                ),
-              ],
             );
           },
         );
@@ -488,6 +820,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           );
           _loadingActivities = false;
         });
+        _resolveDayActivityCoordinates();
 
         // Trigger scheduled morning reminder notification automatically on load
         if (!_hasTriggeredScheduledNotification && _activities.isNotEmpty) {
@@ -1013,22 +1346,58 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
     // Map activities to MarkerData for the Google Map
     final List<MarkerData> markers = [];
-    // To generate coordinates, we use dummy offsets or fallbacks since rating/address details are stored,
-    // but in case lat/lng is not stored in activity details we can use the main destination lat/lng as base.
-    // For locations suggestion API, the rating/lat/lng is populated. Let's map coordinates:
-    for (var act in dayActivities) {
-      // Typically activities from suggest locations have coordinates. Let's assume a default center if null.
-      markers.add(
-        MarkerData(
-          id: act.id,
-          title: act.name,
-          lat:
-              22.5726 +
-              (markers.length *
-                  0.01), // dummy offset so they don't overlap if not provided
-          lng: 88.3639 + (markers.length * 0.01),
-        ),
-      );
+    final double baseLat = _destinationLat ?? 22.5726;
+    final double baseLng = _destinationLng ?? 88.3639;
+
+    // Highlight the main destination with a location marker
+    markers.add(
+      MarkerData(
+        id: "destination_${_tripState.id}",
+        title: _tripState.mainDestination,
+        lat: baseLat,
+        lng: baseLng,
+      ),
+    );
+
+    // Check if any event has a placeId different from the destination's placeId
+    bool hasDifferentPlaceId = false;
+    if (_destinationPlaceId != null && _destinationPlaceId!.isNotEmpty) {
+      final normalizedDestPlaceId = convertToMongoObjectId(_destinationPlaceId!);
+      for (var act in dayActivities) {
+        if (act.placeId.isNotEmpty) {
+          final normalizedActPlaceId = convertToMongoObjectId(act.placeId);
+          if (normalizedActPlaceId != normalizedDestPlaceId) {
+            hasDifferentPlaceId = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!hasDifferentPlaceId) {
+      // Add activity markers resolved dynamically or fallback offset
+      for (var act in dayActivities) {
+        if (_resolvedActivityCoords.containsKey(act.id)) {
+          final coords = _resolvedActivityCoords[act.id]!;
+          markers.add(
+            MarkerData(
+              id: act.id,
+              title: act.name,
+              lat: coords['lat']!,
+              lng: coords['lng']!,
+            ),
+          );
+        } else {
+          markers.add(
+            MarkerData(
+              id: act.id,
+              title: act.name,
+              lat: baseLat + (markers.length * 0.005),
+              lng: baseLng + (markers.length * 0.005),
+            ),
+          );
+        }
+      }
     }
 
     return Scaffold(
@@ -1408,7 +1777,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 final formattedDate = "${date.day}/${date.month}";
 
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedDayIndex = index),
+                  onTap: () {
+                    setState(() => _selectedDayIndex = index);
+                    _resolveDayActivityCoordinates();
+                  },
                   child: Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: 16.w,
@@ -1787,25 +2159,49 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Image Section
-                    ClipRRect(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                      child: CachedNetworkImage(
-                        imageUrl: (activity.imageUrl != null && activity.imageUrl!.isNotEmpty)
-                            ? activity.imageUrl!
-                            : "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600",
-                        height: 150.h,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Container(
-                          height: 150.h,
-                          color: context.shimmerBase,
-                          child: Icon(
-                            Icons.image_rounded,
-                            size: 48.sp,
-                            color: context.onSurfaceVariant.withAlpha(60),
+                    // Image Section with delete overlay
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                          child: CachedNetworkImage(
+                            imageUrl: (activity.imageUrl != null && activity.imageUrl!.isNotEmpty)
+                                ? activity.imageUrl!
+                                : "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600",
+                            height: 150.h,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) => Container(
+                              height: 150.h,
+                              color: context.shimmerBase,
+                              child: Icon(
+                                Icons.image_rounded,
+                                size: 48.sp,
+                                color: context.onSurfaceVariant.withAlpha(60),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        Positioned(
+                          top: 8.h,
+                          right: 8.w,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(120),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.all(6.w),
+                              icon: Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.white,
+                                size: 18.sp,
+                              ),
+                              onPressed: () => _confirmDelete(context, activity),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     // Details Section
                     Padding(
@@ -1814,8 +2210,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
                                 child: Text(
@@ -1825,16 +2219,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                     fontSize: 14.sp,
                                   ),
                                 ),
-                              ),
-                              IconButton(
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
-                                icon: Icon(
-                                  Icons.delete_outline,
-                                  color: context.colors.error,
-                                  size: 18.sp,
-                                ),
-                                onPressed: () => _confirmDelete(context, activity),
                               ),
                             ],
                           ),

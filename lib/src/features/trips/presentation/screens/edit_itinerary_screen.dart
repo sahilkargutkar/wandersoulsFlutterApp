@@ -544,22 +544,8 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                             key: ValueKey(
                               "${act.name}_${activityIndex}_$dayIndex",
                             ),
-                            margin: EdgeInsets.only(bottom: 10.h),
-                            padding: EdgeInsets.all(10.w),
-                            decoration: BoxDecoration(
-                              color: context.surface,
-                              borderRadius: BorderRadius.circular(16.r),
-                              border: Border.all(
-                                color: context.borderColor.withAlpha(20),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: context.softShadow,
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
+                            margin: EdgeInsets.only(bottom: 12.h),
+                            color: Colors.transparent,
                             child: Row(
                               children: [
                                 Icon(
@@ -568,51 +554,74 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                                   size: 20.sp,
                                 ),
                                 8.w.horizontalSpace,
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  child: CachedNetworkImage(
-                                    imageUrl: _getImageUrl(act),
-                                    width: 48.w,
-                                    height: 48.h,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) => Container(
-                                      width: 48.w,
-                                      height: 48.h,
-                                      color: context.shimmerBase,
-                                      child: Icon(
-                                        Icons.place,
-                                        size: 20.sp,
-                                        color: context.primary,
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.all(10.w),
+                                    decoration: BoxDecoration(
+                                      color: context.surface,
+                                      borderRadius: BorderRadius.circular(16.r),
+                                      border: Border.all(
+                                        color: context.borderColor.withAlpha(20),
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: context.softShadow,
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12.r),
+                                          child: CachedNetworkImage(
+                                            imageUrl: _getImageUrl(act),
+                                            width: 48.w,
+                                            height: 48.h,
+                                            fit: BoxFit.cover,
+                                            errorWidget: (_, __, ___) => Container(
+                                              width: 48.w,
+                                              height: 48.h,
+                                              color: context.shimmerBase,
+                                              child: Icon(
+                                                Icons.place,
+                                                size: 20.sp,
+                                                color: context.primary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        12.w.horizontalSpace,
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                act.name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: context.text.bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                              ),
+                                              4.h.verticalSpace,
+                                              Text(
+                                                _getCategoryName(act.category),
+                                                style: context.text.bodySmall?.copyWith(
+                                                  color: context.onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                                12.w.horizontalSpace,
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        act.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: context.text.bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                      4.h.verticalSpace,
-                                      Text(
-                                        _getCategoryName(act.category),
-                                        style: context.text.bodySmall?.copyWith(
-                                          color: context.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                8.w.horizontalSpace,
+                                6.w.horizontalSpace,
                                 IconButton(
                                   icon: Icon(
                                     Icons.delete_outline_rounded,
@@ -634,12 +643,9 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                     // Add More Events Button
                     12.h.verticalSpace,
                     Center(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
                           backgroundColor: context.primary.withAlpha(15),
-                          side: BorderSide(
-                            color: context.primary.withAlpha(40),
-                          ),
                           padding: EdgeInsets.symmetric(
                             horizontal: 20.w,
                             vertical: 10.h,

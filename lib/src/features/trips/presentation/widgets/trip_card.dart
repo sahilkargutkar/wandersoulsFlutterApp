@@ -11,73 +11,73 @@ class TripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
+      margin: EdgeInsets.only(bottom: 20.h),
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: context.borderColor.withAlpha(20), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: context.softShadow,
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image with gradient overlay
-          Stack(
-            children: [
-              AspectRatio(
-                aspectRatio: 20 / 9,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(20.r),
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: trip.imageUrl,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => Container(
-                      color: context.shimmerBase,
-                      child: Icon(
-                        Icons.image_rounded,
-                        size: 40,
-                        color: context.onSurfaceVariant.withAlpha(60),
+          // Image container with border & shadow
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.r),
+              border: Border.all(
+                color: context.borderColor.withAlpha(20),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: context.softShadow,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(19.r),
+              child: Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 20 / 9,
+                    child: CachedNetworkImage(
+                      imageUrl: trip.imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => Container(
+                        color: context.shimmerBase,
+                        child: Icon(
+                          Icons.image_rounded,
+                          size: 40,
+                          color: context.onSurfaceVariant.withAlpha(60),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              // Gradient overlay
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(20.r),
-                  ),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withAlpha(30),
-                        ],
+                  // Gradient overlay
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withAlpha(30),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
 
-          // Trip details
+          // Trip details (outside the card border)
           Padding(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 12.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -102,20 +102,20 @@ class TripCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.all(4.w),
+                      padding: EdgeInsets.all(6.w),
                       decoration: BoxDecoration(
                         color: context.mutedBackground,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Icon(
-                        Icons.more_horiz_rounded,
+                        Icons.more_vert_rounded,
                         color: context.onSurfaceVariant,
                         size: 20.sp,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 6.h),
                 Text(
                   '${trip.dateRange} · ${trip.tripType} · ${trip.category}',
                   style: context.text.bodySmall?.copyWith(

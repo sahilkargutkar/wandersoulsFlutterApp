@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
-import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/circular_icon.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
@@ -106,64 +105,23 @@ class _AddEventScreenState extends State<AddEventScreen> {
       setState(() => _isLoading = true);
 
       try {
-        final apiService = sl<ApiService>();
-        final locationsResult = await apiService.getLocations(1, 15, query);
-
-        locationsResult.fold(
-          (failure) async {
-            // Fallback to Google Maps API if locations endpoint has no results
-            final googleMapsService = sl<GoogleMapsApiService>();
-            final gResult = await googleMapsService.searchPlaces(query);
-            gResult.fold(
-              (_) => setState(() {
-                _searchResults = [];
-                _isLoading = false;
-              }),
-              (places) => setState(() {
-                _searchResults = places;
-                _isLoading = false;
-              }),
-            );
-          },
-          (places) {
-            if (places.isNotEmpty) {
-              setState(() {
-                _searchResults = places;
-                _isLoading = false;
-              });
-            } else {
-              _fallbackGoogleMaps(query);
-            }
-          },
+        final googleMapsService = sl<GoogleMapsApiService>();
+        final gResult = await googleMapsService.searchPlaces(query);
+        gResult.fold(
+          (_) => setState(() {
+            _searchResults = [];
+            _isLoading = false;
+          }),
+          (places) => setState(() {
+            _searchResults = places;
+            _isLoading = false;
+          }),
         );
       } catch (e) {
         debugPrint("Failed to search locations: $e");
         setState(() => _isLoading = false);
       }
     });
-  }
-
-  Future<void> _fallbackGoogleMaps(String query) async {
-    try {
-      final googleMapsService = sl<GoogleMapsApiService>();
-      final gResult = await googleMapsService.searchPlaces(query);
-      gResult.fold(
-        (_) => setState(() {
-          _searchResults = [];
-          _isLoading = false;
-        }),
-        (places) => setState(() {
-          _searchResults = places;
-          _isLoading = false;
-        }),
-      );
-    } catch (e) {
-      debugPrint("Failed to search via Google Maps: $e");
-      setState(() {
-        _searchResults = [];
-        _isLoading = false;
-      });
-    }
   }
 
   String _getImageUrlForPlace(PlaceModel place) {

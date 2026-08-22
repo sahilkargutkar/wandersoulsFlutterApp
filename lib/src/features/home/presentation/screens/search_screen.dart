@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
+import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
 
 import 'package:wonder_souls/src/config/utils/common_widgets/app_search_bar.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/staggered_fade_slide.dart';
@@ -24,6 +25,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final ApiService service = sl<ApiService>();
+  final GoogleMapsApiService mapsService = sl<GoogleMapsApiService>();
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -55,7 +57,7 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
 
-      final result = await service.getLocations(1, 10, value);
+      final result = await mapsService.searchPlaces(value);
       if (!mounted) return;
 
       result.fold(

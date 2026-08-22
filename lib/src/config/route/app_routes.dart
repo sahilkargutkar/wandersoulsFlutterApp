@@ -15,6 +15,8 @@ import 'package:wonder_souls/src/features/home/presentation/screens/search_scree
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
+import 'package:wonder_souls/src/features/trips/model/blog_model.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/blog_detail_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_details_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_wizard/trip_wizard_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/destination_details.dart';
@@ -47,7 +49,7 @@ GoRouter buildRouter({
     redirect: (context, state) {
       final authState = authCubit.state;
       final location = state.uri.toString();
-      final isPublic = _publicRoutes.any((r) => location.startsWith(r));
+      final isPublic = _publicRoutes.any((r) => r == '/' ? location == '/' : location.startsWith(r));
 
       debugPrint("GoRouter Redirect: location=$location, authState=${authState.runtimeType}, isPublic=$isPublic");
 
@@ -127,6 +129,26 @@ GoRouter buildRouter({
       GoRoute(
         path: ListArticle.routeName,
         builder: (context, state) => const ListArticle(),
+      ),
+      GoRoute(
+        path: BlogDetailScreen.routeName,
+        builder: (context, state) {
+          final BlogModel blog;
+          final extra = state.extra;
+          if (extra is BlogModel) {
+            blog = extra;
+          } else if (extra is Map<String, dynamic>) {
+            blog = BlogModel.fromJson(extra);
+          } else {
+            debugPrint("GoRouter Error: Blog data not found for BlogDetailScreen");
+            return const Scaffold(
+              body: Center(
+                child: Text("Error: Blog detail could not be loaded."),
+              ),
+            );
+          }
+          return BlogDetailScreen(blog: blog);
+        },
       ),
       GoRoute(
         path: TripWizardScreen.routeName,

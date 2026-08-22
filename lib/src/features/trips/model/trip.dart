@@ -144,7 +144,11 @@ class TripData {
     final budgetLevel = _capitalize(
       jsonMap["budget"]?["budgetType"] ?? "flexible",
     );
-    final imageUrl = _getTripImage(mainDest);
+    final imageUrl = (jsonMap["imageUrl"] as String?)?.isNotEmpty == true
+        ? jsonMap["imageUrl"]!
+        : ((jsonMap["image"] as String?)?.isNotEmpty == true
+            ? jsonMap["image"]!
+            : _getTripImage(mainDest));
 
     List<String> travelTastes = [];
     if (jsonMap["travelTastes"] != null) {

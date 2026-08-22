@@ -13,7 +13,9 @@ import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
 class MyTripsScreen extends StatefulWidget {
-  const MyTripsScreen({super.key});
+  final ValueNotifier<String>? searchNotifier;
+
+  const MyTripsScreen({super.key, this.searchNotifier});
 
   @override
   State<MyTripsScreen> createState() => _MyTripsScreenState();
@@ -170,13 +172,36 @@ class _MyTripsScreenState extends State<MyTripsScreen>
                       ),
                     ),
                   )
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildTripsList(_activeTrips),
-                      _buildTripsList(_passedTrips),
-                    ],
-                  ),
+                : widget.searchNotifier != null
+                    ? ValueListenableBuilder<String>(
+                        valueListenable: widget.searchNotifier!,
+                        builder: (context, query, child) {
+                          final filteredActive = _activeTrips.where((t) {
+                            final nameMatch = t.name.toLowerCase().contains(query.toLowerCase());
+                            final destMatch = t.mainDestination.toLowerCase().contains(query.toLowerCase());
+                            return nameMatch || destMatch;
+                          }).toList();
+                          final filteredPassed = _passedTrips.where((t) {
+                            final nameMatch = t.name.toLowerCase().contains(query.toLowerCase());
+                            final destMatch = t.mainDestination.toLowerCase().contains(query.toLowerCase());
+                            return nameMatch || destMatch;
+                          }).toList();
+                          return TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _buildTripsList(filteredActive),
+                              _buildTripsList(filteredPassed),
+                            ],
+                          );
+                        },
+                      )
+                    : TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildTripsList(_activeTrips),
+                          _buildTripsList(_passedTrips),
+                        ],
+                      ),
           ),
         ],
       ),
@@ -192,7 +217,12 @@ class _MyTripsScreenState extends State<MyTripsScreen>
       onRefresh: _fetchTrips,
       color: context.primary,
       child: ListView.builder(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.only(
+          left: 16.w,
+          right: 16.w,
+          top: 16.h,
+          bottom: 88.h,
+        ),
         itemCount: trips.length,
         itemBuilder: (context, index) {
           return GestureDetector(
