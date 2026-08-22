@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:wonder_souls/src/config/utils/api_constant.dart';
+ 
 class GooglePlacesNewService {
   final Dio _dio;
-  final String apiKey = "AIzaSyAIIwW7RHjCYTkVT_AoMJoox8W5awjzZRs";
+  String get apiKey => ApiConstants.googleMapApiKey;
 
   GooglePlacesNewService()
     : _dio = Dio(

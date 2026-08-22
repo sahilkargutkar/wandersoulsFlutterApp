@@ -51,7 +51,9 @@ class _CollaboratorsStepState extends State<CollaboratorsStep> {
       } catch (e) {
         debugPrint("Error fetching users: $e");
       } finally {
-        setState(() => _isLoadingUsers = false);
+        if (mounted) {
+          setState(() => _isLoadingUsers = false);
+        }
       }
     }
 

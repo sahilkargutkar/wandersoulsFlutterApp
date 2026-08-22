@@ -50,6 +50,8 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         fromJson: (json) => json as List<dynamic>,
       );
 
+      if (!mounted) return;
+
       if (result is Success<List<dynamic>>) {
         final List<TripData> fetchedTrips = result.data
             .map((item) => TripData.fromJson(item as Map<String, dynamic>))

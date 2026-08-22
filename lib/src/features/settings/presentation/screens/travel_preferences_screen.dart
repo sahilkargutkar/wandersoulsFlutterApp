@@ -88,31 +88,37 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
       final res = await _authRemoteDataSource.getPreferences();
       if (res is Success<TravelPreferenceModel>) {
         final pref = res.data;
-        setState(() {
-          _preference = pref;
-          _isNew = pref.id == null || pref.id!.isEmpty;
-          _selectedStyle = pref.travelStyle ?? "Explorer";
-          _selectedBudget = pref.budgetPreference ?? "Moderate";
-          _selectedAcc = pref.accommodationPreference ?? "Hotel";
-          _selectedCategories.clear();
-          _selectedCategories.addAll(pref.preferredCategories);
-          _selectedDietaries.clear();
-          _selectedDietaries.addAll(pref.dietaryRestrictions);
-          _loading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _preference = pref;
+            _isNew = pref.id == null || pref.id!.isEmpty;
+            _selectedStyle = pref.travelStyle ?? "Explorer";
+            _selectedBudget = pref.budgetPreference ?? "Moderate";
+            _selectedAcc = pref.accommodationPreference ?? "Hotel";
+            _selectedCategories.clear();
+            _selectedCategories.addAll(pref.preferredCategories);
+            _selectedDietaries.clear();
+            _selectedDietaries.addAll(pref.dietaryRestrictions);
+            _loading = false;
+          });
+        }
       } else {
         // Preferences do not exist yet
+        if (mounted) {
+          setState(() {
+            _isNew = true;
+            _loading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to load preferences: $e");
+      if (mounted) {
         setState(() {
           _isNew = true;
           _loading = false;
         });
       }
-    } catch (e) {
-      debugPrint("Failed to load preferences: $e");
-      setState(() {
-        _isNew = true;
-        _loading = false;
-      });
     }
   }
 

@@ -102,11 +102,15 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
 
     _debounce = Timer(const Duration(milliseconds: 400), () async {
-      setState(() => _isLoading = true);
+      if (mounted) {
+        setState(() => _isLoading = true);
+      }
 
       try {
         final googleMapsService = sl<GoogleMapsApiService>();
         final gResult = await googleMapsService.searchPlaces(query);
+        if (!mounted) return;
+
         gResult.fold(
           (_) => setState(() {
             _searchResults = [];

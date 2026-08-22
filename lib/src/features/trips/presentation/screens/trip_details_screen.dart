@@ -219,7 +219,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   Future<void> _loadAttachments() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList("attachments_${_tripState.id}");
-    if (list != null) {
+    if (list != null && mounted) {
       setState(() {
         _attachments = list;
       });
@@ -249,18 +249,24 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       final result = await apiService.uploadFile(pickedFile.path, blobPath);
 
       if (result is Success<String>) {
-        setState(() {
-          _attachments.add(blobPath);
-          _uploadingAttachment = false;
-        });
+        if (mounted) {
+          setState(() {
+            _attachments.add(blobPath);
+            _uploadingAttachment = false;
+          });
+        }
         await _saveAttachments();
         AppToast.success("Attachment uploaded successfully!");
       } else {
-        setState(() => _uploadingAttachment = false);
+        if (mounted) {
+          setState(() => _uploadingAttachment = false);
+        }
         AppToast.error("Failed to upload attachment");
       }
     } catch (e) {
-      setState(() => _uploadingAttachment = false);
+      if (mounted) {
+        setState(() => _uploadingAttachment = false);
+      }
       AppToast.error("Error uploading file: $e");
     }
   }
@@ -632,10 +638,12 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   }
 
   Future<void> _fetchAiSuggestions() async {
-    setState(() {
-      _loadingAiSuggestions = true;
-      _aiSuggestionsError = null;
-    });
+    if (mounted) {
+      setState(() {
+        _loadingAiSuggestions = true;
+        _aiSuggestionsError = null;
+      });
+    }
 
     final start = _tripState.startDate ?? DateTime.now();
     final end =
@@ -680,21 +688,27 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           suggestions.addAll(acts);
         }
 
-        setState(() {
-          _aiSuggestions = suggestions;
-          _loadingAiSuggestions = false;
-        });
+        if (mounted) {
+          setState(() {
+            _aiSuggestions = suggestions;
+            _loadingAiSuggestions = false;
+          });
+        }
       } else if (aiResult is Failure<Map<String, dynamic>>) {
+        if (mounted) {
+          setState(() {
+            _aiSuggestionsError = "Failed to load AI suggestions";
+            _loadingAiSuggestions = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _aiSuggestionsError = "Failed to load AI suggestions";
+          _aiSuggestionsError = "AI Service offline";
           _loadingAiSuggestions = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _aiSuggestionsError = "AI Service offline";
-        _loadingAiSuggestions = false;
-      });
     }
   }
 
@@ -810,18 +824,20 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             )
             .toList();
 
-        setState(() {
-          // Filter locally by tripId and sort by startDatetime
-          _activities = all
-              .where((act) => act.tripId == _tripState.id)
-              .toList();
-          _activities.sort(
-            (a, b) => a.startDatetime.compareTo(b.startDatetime),
-          );
-          _loadingActivities = false;
-        });
+        if (mounted) {
+          setState(() {
+            // Filter locally by tripId and sort by startDatetime
+            _activities = all
+                .where((act) => act.tripId == _tripState.id)
+                .toList();
+            _activities.sort(
+              (a, b) => a.startDatetime.compareTo(b.startDatetime),
+            );
+            _loadingActivities = false;
+          });
+        }
         _resolveDayActivityCoordinates();
-
+ 
         // Trigger scheduled morning reminder notification automatically on load
         if (!_hasTriggeredScheduledNotification && _activities.isNotEmpty) {
           _hasTriggeredScheduledNotification = true;
@@ -842,11 +858,15 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           });
         }
       } else {
-        setState(() => _loadingActivities = false);
+        if (mounted) {
+          setState(() => _loadingActivities = false);
+        }
       }
     } catch (e) {
       debugPrint("Error fetching activities: $e");
-      setState(() => _loadingActivities = false);
+      if (mounted) {
+        setState(() => _loadingActivities = false);
+      }
     }
   }
 
@@ -864,10 +884,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     final mapApiService = sl<GoogleMapsApiService>();
     final result = await mapApiService.searchPlaces(query);
 
-    result.fold((failure) => setState(() => _searchingLocations = false), (
+    result.fold((failure) {
+      if (mounted) {
+        setState(() => _searchingLocations = false);
+      }
+    }, (
       places,
     ) {
-      if (_searchController.text.trim().isNotEmpty) {
+      if (_searchController.text.trim().isNotEmpty && mounted) {
         setState(() {
           _suggestions = places;
           _searchingLocations = false;

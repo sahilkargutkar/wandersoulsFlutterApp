@@ -142,10 +142,12 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("user_plan", _plans[_selectedPlan]["name"]);
 
-    setState(() {
-      _processing = false;
-      _success = true;
-    });
+    if (mounted) {
+      setState(() {
+        _processing = false;
+        _success = true;
+      });
+    }
   }
 
   @override
