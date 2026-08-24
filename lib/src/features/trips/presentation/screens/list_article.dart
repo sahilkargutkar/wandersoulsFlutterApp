@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:wonder_souls/src/features/trips/model/static_data.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/article_card.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:wonder_souls/src/config/utils/rss_feed_parser.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
 import 'package:wonder_souls/src/features/home/presentation/screens/search_screen.dart';
 
 class ListArticle extends StatefulWidget {
@@ -20,38 +18,27 @@ class ListArticle extends StatefulWidget {
 }
 
 class _ListArticleState extends State<ListArticle> {
-  List<Map<String, String>> _dynamicArticles = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchArticles();
-  }
-
-  Future<void> fetchArticles() async {
-    setState(() => _loading = true);
+  String _formatDate(String isoString) {
     try {
-      final dio = Dio();
-      final response = await dio.get('https://www.wanderingsouls.in/feed/');
-      if (response.statusCode == 200 && response.data != null) {
-        final feedContent = response.data.toString();
-        final parsed = RssFeedParser.parse(feedContent);
-        if (parsed.isNotEmpty) {
-          setState(() {
-            _dynamicArticles = parsed;
-            _loading = false;
-          });
-          return;
-        }
-      }
+      final dateTime = DateTime.parse(isoString);
+      final months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ];
+      return "${dateTime.day} ${months[dateTime.month - 1]}, ${dateTime.year}";
     } catch (e) {
-      debugPrint("Failed to fetch articles: $e");
+      return isoString;
     }
-    setState(() {
-      _dynamicArticles = articles; // Fallback
-      _loading = false;
-    });
   }
 
   @override
@@ -113,37 +100,69 @@ class _ListArticleState extends State<ListArticle> {
         ],
       ),
 
-      body: _loading
-          ? Center(child: CircularProgressIndicator(color: context.primary))
-          : ListView.builder(
+      body: BlocBuilder<BlogsCubit, BlogsState>(
+        builder: (context, state) {
+          if (state is BlogsLoading) {
+            return Center(
+              child: CircularProgressIndicator(color: context.primary),
+            );
+          }
+
+          if (state is BlogsError) {
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.all(24.w),
+                child: Text(
+                  state.message,
+                  textAlign: TextAlign.center,
+                  style: context.text.bodyMedium,
+                ),
+              ),
+            );
+          }
+
+          if (state is BlogsLoaded) {
+            final blogs = state.blogs;
+            if (blogs.isEmpty) {
+              return Center(
+                child: Text(
+                  "No articles found",
+                  style: context.text.bodyMedium?.copyWith(
+                    color: context.onSurfaceVariant,
+                  ),
+                ),
+              );
+            }
+
+            return ListView.builder(
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-              itemCount: _dynamicArticles.length,
+              itemCount: blogs.length,
               itemBuilder: (_, index) {
-                final article = _dynamicArticles[index];
+                final blog = blogs[index];
                 return Padding(
                   padding: EdgeInsets.only(bottom: 24.h),
                   child: InkWell(
                     onTap: () {
-                      final link = article['link'] ?? '';
-                      if (link.isNotEmpty) {
-                        launchUrl(
-                          Uri.parse(link),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
+                      context.push('/BlogDetail', extra: blog);
                     },
                     borderRadius: BorderRadius.circular(16.r),
                     child: ArticleCard(
-                      imageUrl: article['imageUrl']!,
-                      title: article['title']!,
-                      date: article['date']!,
+                      imageUrl: blog.image,
+                      title: blog.title,
+                      date: _formatDate(blog.createdAt),
                       ratio: 16 / 9,
                       cardWidth: MediaQuery.of(context).size.width - 40.w,
+                      readTime: blog.readTime,
                     ),
                   ),
                 );
               },
-            ),
+            );
+          }
+
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }

@@ -15,7 +15,6 @@ import 'package:wonder_souls/src/features/settings/presentation/screens/billing_
 import 'package:wonder_souls/src/features/settings/presentation/screens/upgrade_plan_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/payment_methods_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/account_security_screen.dart';
-import 'package:wonder_souls/src/features/settings/presentation/screens/help_support_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -146,11 +145,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   context.push(PaymentMethodsScreen.routeName);
                 },
               ),
-              SettingsMenuItem(
-                icon: Icons.swap_vert_rounded,
-                title: 'Linked Accounts',
-                onTap: () {},
-              ),
             ]),
             20.h.height,
 
@@ -183,13 +177,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.show_chart_rounded,
                 title: 'Data & Analytics',
                 onTap: () {},
-              ),
-              SettingsMenuItem(
-                icon: Icons.help_outline_rounded,
-                title: 'Help & Support',
-                onTap: () {
-                  context.push(HelpSupportScreen.routeName);
-                },
               ),
               SettingsMenuItem(
                 icon: Icons.description_outlined,

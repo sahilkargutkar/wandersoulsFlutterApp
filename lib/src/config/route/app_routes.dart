@@ -28,6 +28,8 @@ import 'package:wonder_souls/src/features/settings/presentation/screens/payment_
 import 'package:wonder_souls/src/features/settings/presentation/screens/account_security_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/help_support_screen.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/add_booking_form_screen.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/budget_expenses_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -231,6 +233,23 @@ GoRouter buildRouter({
       GoRoute(
         path: HelpSupportScreen.routeName,
         builder: (context, state) => const HelpSupportScreen(),
+      ),
+      GoRoute(
+        path: AddBookingFormScreen.routeName,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return AddBookingFormScreen(
+            tripId: extra['tripId'] as String,
+            bookingType: extra['bookingType'] as String,
+          );
+        },
+      ),
+      GoRoute(
+        path: BudgetExpensesScreen.routeName,
+        builder: (context, state) {
+          final trip = state.extra as TripData;
+          return BudgetExpensesScreen(trip: trip);
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

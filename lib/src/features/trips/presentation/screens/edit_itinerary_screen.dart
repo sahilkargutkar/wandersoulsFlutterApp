@@ -503,7 +503,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
         children: [
           Expanded(
             child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
               itemCount: _totalDays,
               itemBuilder: (context, dayIndex) {
                 final dayTitle = _formatDayTitle(dayIndex);
@@ -513,7 +513,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      padding: EdgeInsets.symmetric(vertical: 6.h),
                       child: Text(
                         dayTitle,
                         style: context.text.titleSmall?.copyWith(
@@ -544,7 +544,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                             key: ValueKey(
                               "${act.name}_${activityIndex}_$dayIndex",
                             ),
-                            margin: EdgeInsets.only(bottom: 12.h),
+                            margin: EdgeInsets.only(bottom: 6.h),
                             color: Colors.transparent,
                             child: Row(
                               children: [
@@ -553,10 +553,10 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                                   color: context.onSurfaceVariant,
                                   size: 20.sp,
                                 ),
-                                8.w.horizontalSpace,
+                                4.w.horizontalSpace,
                                 Expanded(
                                   child: Container(
-                                    padding: EdgeInsets.all(10.w),
+                                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
                                     decoration: BoxDecoration(
                                       color: context.surface,
                                       borderRadius: BorderRadius.circular(16.r),
@@ -592,7 +592,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                                             ),
                                           ),
                                         ),
-                                        12.w.horizontalSpace,
+                                        8.w.horizontalSpace,
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
@@ -621,7 +621,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                                     ),
                                   ),
                                 ),
-                                6.w.horizontalSpace,
+                                2.w.horizontalSpace,
                                 IconButton(
                                   icon: Icon(
                                     Icons.delete_outline_rounded,

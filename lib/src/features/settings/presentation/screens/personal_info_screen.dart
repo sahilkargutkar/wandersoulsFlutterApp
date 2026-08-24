@@ -67,7 +67,10 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     try {
       final res = await _apiService.get<UserModel>(
         "/User/$userId",
-        fromJson: (json) => UserModel.fromJson(json),
+        fromJson: (json) {
+          final data = json is Map<String, dynamic> ? (json["data"] ?? json) : json;
+          return UserModel.fromJson(data);
+        },
       );
 
       if (res is Success<UserModel>) {
@@ -99,17 +102,19 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
     setState(() => _saving = true);
 
-    final updatedData = {
-      "name": _nameController.text.trim(),
-      "userName": _usernameController.text.trim(),
-      "defaultCurrency": _selectedCurrency,
-      "email": _emailController.text.trim(),
-    };
+    final updatedUser = _user?.copyWith(
+      name: _nameController.text.trim(),
+      userName: _usernameController.text.trim(),
+      defaultCurrency: _selectedCurrency,
+      email: _emailController.text.trim(),
+    );
+
+    if (updatedUser == null) return;
 
     try {
       final res = await _apiService.put<dynamic>(
         "/User/$userId",
-        data: updatedData,
+        data: updatedUser.toJson(),
         fromJson: (d) => d,
       );
 

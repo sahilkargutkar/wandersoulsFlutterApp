@@ -18,6 +18,10 @@ import 'package:go_router/go_router.dart';
 
 import '../cubit/password/password_cubit.dart';
 import 'package:wonder_souls/src/features/auth/presentation/screens/signup_screen.dart';
+import 'package:wonder_souls/src/config/core/injector/injector.dart';
+import 'package:wonder_souls/src/config/core/services/api_services.dart';
+import 'package:wonder_souls/src/config/model/success.dart';
+import 'package:wonder_souls/src/features/auth/data/datasource/auth_remote_data_source.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -197,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: _showForgotPasswordDialog,
                                   child: Text(
                                     'Forgot Password?',
                                     style: context.text.bodySmall?.copyWith(
@@ -378,6 +382,186 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController();
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              title: Text(
+                "Reset Password",
+                style: context.text.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18.sp,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "To reset your password, please enter your email, current/temporary password, and the new password.",
+                      style: context.text.bodySmall?.copyWith(
+                        color: context.onSurfaceVariant,
+                      ),
+                    ),
+                    16.h.verticalSpace,
+                    TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: "Email Address",
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                    ),
+                    12.h.verticalSpace,
+                    TextField(
+                      controller: currentPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "Current / Temp Password",
+                        prefixIcon: Icon(Icons.lock_open_outlined),
+                      ),
+                    ),
+                    12.h.verticalSpace,
+                    TextField(
+                      controller: newPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "New Password",
+                        prefixIcon: Icon(Icons.lock_outline),
+                      ),
+                    ),
+                    12.h.verticalSpace,
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "Confirm New Password",
+                        prefixIcon: Icon(Icons.lock_outline),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                  ),
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final email = emailController.text.trim();
+                          final currentPass = currentPasswordController.text.trim();
+                          final newPass = newPasswordController.text.trim();
+                          final confirmPass = confirmPasswordController.text.trim();
+
+                          if (email.isEmpty ||
+                              currentPass.isEmpty ||
+                              newPass.isEmpty ||
+                              confirmPass.isEmpty) {
+                            AppToast.error("Please fill in all fields");
+                            return;
+                          }
+
+                          if (newPass != confirmPass) {
+                            AppToast.error("New passwords do not match");
+                            return;
+                          }
+
+                          setStateDialog(() => isLoading = true);
+
+                          try {
+                            final apiService = sl<ApiService>();
+                            final usersRes = await apiService.get<dynamic>(
+                              "/User",
+                              fromJson: (d) => d,
+                            );
+
+                            String? userId;
+                            if (usersRes is Success &&
+                                usersRes.data != null &&
+                                usersRes.data["data"] is List) {
+                              final List users = usersRes.data["data"];
+                              final user = users.firstWhere(
+                                (u) => (u["email"] as String? ?? "")
+                                    .toLowerCase() ==
+                                    email.toLowerCase(),
+                                orElse: () => null,
+                              );
+                              if (user != null) {
+                                userId = user["id"] ?? user["_id"];
+                              }
+                            }
+
+                            if (userId == null) {
+                              AppToast.error("User with this email not found");
+                              setStateDialog(() => isLoading = false);
+                              return;
+                            }
+
+                            final authDataSource = sl<AuthRemoteDataSource>();
+                            final resetRes = await authDataSource.updatePassword(
+                              userId: userId,
+                              existingPassword: currentPass,
+                              newPassword: newPass,
+                              confirmPassword: confirmPass,
+                            );
+
+                            if (resetRes is Success) {
+                              AppToast.success("Password reset successfully!");
+                              if (dialogCtx.mounted) {
+                                Navigator.pop(dialogCtx);
+                              }
+                            } else {
+                              AppToast.error("Failed to reset password. Please check fields.");
+                            }
+                          } catch (e) {
+                            AppToast.error("An error occurred: $e");
+                          } finally {
+                            setStateDialog(() => isLoading = false);
+                          }
+                        },
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20.w,
+                          height: 20.h,
+                          child: const CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Submit",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_remote_data_source.dart';
+import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 import 'package:wonder_souls/src/features/auth/data/model1/travel_preference_model.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
@@ -22,6 +23,7 @@ class TravelPreferencesScreen extends StatefulWidget {
 
 class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
   final AuthRemoteDataSource _authRemoteDataSource = sl<AuthRemoteDataSource>();
+  final AuthLocalDataSource _localDataSource = sl<AuthLocalDataSource>();
 
   bool _loading = true;
   bool _saving = false;
@@ -125,9 +127,10 @@ class _TravelPreferencesScreenState extends State<TravelPreferencesScreen> {
   Future<void> _savePreferences() async {
     setState(() => _saving = true);
 
+    final cachedUser = _localDataSource.getUser();
     final prefModel = TravelPreferenceModel(
       id: _preference?.id,
-      userId: _preference?.userId,
+      userId: _preference?.userId ?? cachedUser?.id,
       travelStyle: _selectedStyle,
       preferredCategories: _selectedCategories,
       budgetPreference: _selectedBudget,

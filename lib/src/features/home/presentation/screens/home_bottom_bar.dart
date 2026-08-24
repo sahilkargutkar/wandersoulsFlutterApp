@@ -6,6 +6,7 @@ import 'package:wonder_souls/src/features/settings/presentation/screens/settings
 import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/saved_trips_screen.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
+import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/app_search_bar.dart';
 
 import '../../../../config/core/assets/assets.dart';
@@ -85,14 +86,33 @@ class _HomeBottomBarState extends State<HomeBottomBar>
                   },
                 ),
               )
-            : Padding(
-                padding: EdgeInsets.only(left: 16.w),
-                child: Image.asset(
-                  Assets.logo,
-                  height: 36.h,
-                  fit: BoxFit.contain,
-                  alignment: Alignment.centerLeft,
-                ),
+            : AnimatedBuilder(
+                animation: _tabController,
+                builder: (context, _) {
+                  if (_tabController.index == 0) {
+                    return Padding(
+                      padding: EdgeInsets.only(left: 16.w),
+                      child: Image.asset(
+                        Assets.logo,
+                        height: 24.h,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.centerLeft,
+                      ),
+                    );
+                  }
+
+                  final titles = ["", "Saved Items", "My Trips", "Settings"];
+                  return Padding(
+                    padding: EdgeInsets.only(left: 16.w),
+                    child: Text(
+                      titles[_tabController.index],
+                      style: context.text.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18.sp,
+                      ),
+                    ),
+                  );
+                },
               ),
         actions: _isSearching
             ? [

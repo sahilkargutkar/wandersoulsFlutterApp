@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
@@ -1512,6 +1513,35 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   letterSpacing: -0.2,
                 ),
               ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _fetchAiSuggestions,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: context.primary.withAlpha(20),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.refresh_rounded,
+                        color: context.primary,
+                        size: 14.sp,
+                      ),
+                      4.w.horizontalSpace,
+                      Text(
+                        "Refresh",
+                        style: TextStyle(
+                          color: context.primary,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -1624,6 +1654,19 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           padding: EdgeInsets.only(right: 8.w),
           child: CircularIcon(
             icon: Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 20.sp,
+              color: context.onSurface,
+            ),
+            onTap: () {
+              context.push('/BudgetExpensesScreen', extra: _tripState);
+            },
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(right: 8.w),
+          child: CircularIcon(
+            icon: Icon(
               Icons.edit_note_rounded,
               size: 22.sp,
               color: context.onSurface,
@@ -1711,17 +1754,35 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           color: context.primary,
                         ),
                         4.w.horizontalSpace,
-                        Text(
-                          _tripState.mainDestination,
-                          style: context.bodyMedium?.copyWith(
-                            color: context.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
+                        Expanded(
+                          child: Text(
+                            _tripState.mainDestination,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.bodyMedium?.copyWith(
+                              color: context.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        12.w.horizontalSpace,
+                        6.w.horizontalSpace,
                         Text(
                           _tripState.flag,
                           style: TextStyle(fontSize: 16.sp),
+                        ),
+                        12.w.horizontalSpace,
+                        Icon(
+                          Icons.calendar_month_outlined,
+                          size: 14.sp,
+                          color: context.onSurfaceVariant,
+                        ),
+                        4.w.horizontalSpace,
+                        Text(
+                          _tripState.dateRange,
+                          style: context.text.bodySmall?.copyWith(
+                            color: context.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -2177,7 +2238,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16.r),
-                  side: BorderSide(color: context.borderColor.withAlpha(30)),
+                  side: BorderSide(color: context.borderColor.withAlpha(100)),
                 ),
                 margin: EdgeInsets.only(bottom: 16.h),
                 child: Column(
@@ -2514,6 +2575,56 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   Text(model.bookingReference!),
                   12.h.verticalSpace,
                 ],
+                if (model.confirmationDocumentUrl != null &&
+                    model.confirmationDocumentUrl!.isNotEmpty) ...[
+                  Text(
+                    "Confirmation Document:",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                  4.h.verticalSpace,
+                  InkWell(
+                    onTap: () => _downloadAndOpenAttachment(model.confirmationDocumentUrl!),
+                    child: Row(
+                      children: [
+                        Icon(Icons.description, color: context.primary, size: 18.sp),
+                        8.w.horizontalSpace,
+                        Expanded(
+                          child: Text(
+                            model.confirmationDocumentUrl!.split('/').last,
+                            style: TextStyle(
+                              color: context.primary,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  12.h.verticalSpace,
+                ] else ...[
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.primary.withAlpha(20),
+                      foregroundColor: context.primary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await _uploadDocumentForActivity(model);
+                    },
+                    icon: Icon(Icons.upload_file_rounded, size: 18.sp),
+                    label: const Text("Upload Document"),
+                  ),
+                  12.h.verticalSpace,
+                ],
               ],
             ),
           ),
@@ -2526,6 +2637,43 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _uploadDocumentForActivity(TripActivityModel activity) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+
+    AppToast.success("Uploading document...");
+    final filename = pickedFile.path.split("/").last;
+    final extension = filename.split(".").last;
+    final blobPath =
+        "attachments/${_tripState.id}_activity_${activity.id}_${DateTime.now().millisecondsSinceEpoch}.$extension";
+
+    try {
+      final apiService = sl<ApiService>();
+      final uploadRes = await apiService.uploadFile(pickedFile.path, blobPath);
+
+      if (uploadRes is Success<String>) {
+        final updatedActivity = activity.copyWith(confirmationDocumentUrl: blobPath);
+        final updateRes = await apiService.put<dynamic>(
+          "/TripActivity/${activity.id}",
+          data: updatedActivity.toJson(),
+          fromJson: (d) => d,
+        );
+
+        if (updateRes is Success) {
+          AppToast.success("Document uploaded and saved successfully!");
+          _fetchActivities();
+        } else {
+          AppToast.error("Failed to update activity with document path");
+        }
+      } else {
+        AppToast.error("Failed to upload document file");
+      }
+    } catch (e) {
+      AppToast.error("Error uploading document: $e");
+    }
   }
 
   Widget _buildAttachmentsSection(BuildContext context) {

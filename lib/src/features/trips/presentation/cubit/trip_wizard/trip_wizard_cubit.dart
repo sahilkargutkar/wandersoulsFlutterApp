@@ -4,6 +4,8 @@ import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
+import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 import 'trip_wizard_state.dart';
 
@@ -113,6 +115,33 @@ class TripWizardCubit extends Cubit<TripWizardState> {
       ),
     );
 
+    String imageUrl = "";
+    final placeId = state.destination?.placeId;
+    if (placeId != null && placeId.isNotEmpty) {
+      try {
+        final googleMapsApiService = sl<GoogleMapsApiService>();
+        final detailsRes = await googleMapsApiService.getRequest(
+          "maps/api/place/details/json",
+          {
+            "place_id": placeId,
+            "fields": "photos",
+            "key": googleMapsApiService.apiKey,
+          },
+        );
+        if (detailsRes != null && detailsRes["status"] == "OK" && detailsRes["result"] != null) {
+          final photos = detailsRes["result"]["photos"] as List?;
+          if (photos != null && photos.isNotEmpty) {
+            final photoRef = photos.first["photo_reference"];
+            if (photoRef != null) {
+              imageUrl = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=$photoRef&key=${googleMapsApiService.apiKey}";
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("Failed to fetch Google Place image: $e");
+      }
+    }
+
     final payload = {
       "name":
           state.name ?? "Trip to ${state.destination?.name ?? 'Destination'}",
@@ -127,6 +156,8 @@ class TripWizardCubit extends Cubit<TripWizardState> {
       "isPublic": state.isPublic,
       "whoIsGoing": state.partyType ?? "solo",
       "travelTastes": state.interests,
+      "imageUrl": imageUrl,
+      "image": imageUrl,
       "budget": {
         "budgetType": state.budgetLevel ?? "flexible",
         "totalEstimated": state.totalEstimated,

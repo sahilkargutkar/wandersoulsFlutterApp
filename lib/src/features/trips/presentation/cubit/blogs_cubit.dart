@@ -27,7 +27,18 @@ class BlogsCubit extends Cubit<BlogsState> {
       final dio = Dio();
       final response = await dio.get('https://www.wandersouls.in/api/blogs');
       if (response.statusCode == 200 && response.data != null) {
-        final List<dynamic> dataList = response.data;
+        final rawData = response.data;
+        final List<dynamic> dataList;
+        if (rawData is List) {
+          dataList = rawData;
+        } else if (rawData is Map<String, dynamic> && rawData["data"] is List) {
+          dataList = rawData["data"];
+        } else if (rawData is Map<String, dynamic> && rawData["blogs"] is List) {
+          dataList = rawData["blogs"];
+        } else {
+          dataList = [];
+        }
+
         final List<BlogModel> blogs = dataList
             .map((e) => BlogModel.fromJson(e as Map<String, dynamic>))
             .toList();

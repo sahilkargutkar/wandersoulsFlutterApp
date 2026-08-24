@@ -102,7 +102,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           // Fetch user
           final userResult = await apiService.get<UserModel>(
             ApiConstants.userById(loginData.userId),
-            fromJson: (json) => UserModel.fromJson(json),
+            fromJson: (json) {
+              final data = json is Map<String, dynamic> ? (json["data"] ?? json) : json;
+              return UserModel.fromJson(data);
+            },
           );
 
           if (userResult is Success<UserModel>) {
@@ -195,7 +198,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<ApiResult<TravelPreferenceModel>> getPreferences() {
     return apiService.get<TravelPreferenceModel>(
       ApiConstants.getPreference,
-      fromJson: (json) => TravelPreferenceModel.fromJson(json),
+      fromJson: (json) {
+        final data = json is Map<String, dynamic> ? (json["data"] ?? json) : json;
+        if (data is List && data.isNotEmpty) {
+          return TravelPreferenceModel.fromJson(data.first);
+        } else if (data is Map<String, dynamic>) {
+          return TravelPreferenceModel.fromJson(data);
+        }
+        return TravelPreferenceModel.fromJson(json);
+      },
     );
   }
 

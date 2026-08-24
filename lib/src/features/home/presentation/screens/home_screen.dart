@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:wonder_souls/src/features/trips/model/static_data.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/destination_details.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:wonder_souls/src/config/utils/rss_feed_parser.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
 
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
@@ -35,43 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiService service = sl<ApiService>();
 
   List<PlaceModel> destinations = [];
-  List<Map<String, String>> _dynamicArticles = [];
   bool isLoading = true;
-  bool _loadingArticles = true;
   String? _destinationsError;
 
   @override
   void initState() {
     super.initState();
     fetchPopularDestinations();
-    fetchArticles();
-  }
-
-  Future<void> fetchArticles() async {
-    setState(() => _loadingArticles = true);
-    try {
-      final dio = Dio();
-      final response = await dio.get('https://www.wanderingsouls.in/feed/');
-      if (response.statusCode == 200 && response.data != null) {
-        final feedContent = response.data.toString();
-        final parsed = RssFeedParser.parse(feedContent);
-        if (parsed.isNotEmpty && mounted) {
-          setState(() {
-            _dynamicArticles = parsed;
-            _loadingArticles = false;
-          });
-          return;
-        }
-      }
-    } catch (e) {
-      debugPrint("Failed to fetch articles: $e");
-    }
-    if (mounted) {
-      setState(() {
-        _dynamicArticles = articles; // Fallback to static articles
-        _loadingArticles = false;
-      });
-    }
   }
 
   Future<void> fetchPopularDestinations() async {
@@ -296,59 +264,99 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPopularArticles() {
-    if (_loadingArticles) {
-      return SizedBox(
-        height: 120.h,
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    }
+    return BlocBuilder<BlogsCubit, BlogsState>(
+      builder: (context, state) {
+        if (state is BlogsLoading) {
+          return SizedBox(
+            height: 120.h,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    if (_dynamicArticles.isEmpty) {
-      return SizedBox(
-        height: 50.h,
-        child: const Center(child: Text("No articles found")),
-      );
-    }
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final articleHeight = screenWidth < 360
-        ? 230.h
-        : screenWidth < 400
-        ? 240.h
-        : 260.h;
-
-    return SizedBox(
-      height: articleHeight,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _dynamicArticles.length,
-        separatorBuilder: (_, __) => 16.w.width,
-        itemBuilder: (context, index) {
-          final article = _dynamicArticles[index];
-
-          return StaggeredFadeSlide(
-            index: index,
-            child: InkWell(
-              onTap: () {
-                final link = article['link'] ?? '';
-                if (link.isNotEmpty) {
-                  launchUrl(
-                    Uri.parse(link),
-                    mode: LaunchMode.externalApplication,
-                  );
-                }
-              },
-              borderRadius: BorderRadius.circular(16.r),
-              child: ArticleCard(
-                imageUrl: article['imageUrl']!,
-                title: article['title']!,
-                date: article['date']!,
+        if (state is BlogsError) {
+          return SizedBox(
+            height: 50.h,
+            child: Center(
+              child: Text(
+                state.message,
+                textAlign: TextAlign.center,
+                style: context.text.bodySmall,
               ),
             ),
           );
-        },
-      ),
+        }
+
+        if (state is BlogsLoaded) {
+          final blogs = state.blogs;
+          if (blogs.isEmpty) {
+            return SizedBox(
+              height: 50.h,
+              child: const Center(child: Text("No articles found")),
+            );
+          }
+
+          final screenWidth = MediaQuery.of(context).size.width;
+          final articleHeight = screenWidth < 360
+              ? 230.h
+              : screenWidth < 400
+                  ? 240.h
+                  : 260.h;
+
+          return SizedBox(
+            height: articleHeight,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: blogs.length,
+              separatorBuilder: (_, __) => 16.w.width,
+              itemBuilder: (context, index) {
+                final blog = blogs[index];
+
+                return StaggeredFadeSlide(
+                  index: index,
+                  child: InkWell(
+                    onTap: () {
+                      context.push('/BlogDetail', extra: blog);
+                    },
+                    borderRadius: BorderRadius.circular(16.r),
+                    child: ArticleCard(
+                      imageUrl: blog.image,
+                      title: blog.title,
+                      date: _formatDate(blog.createdAt),
+                      readTime: blog.readTime,
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
+  }
+
+  String _formatDate(String isoString) {
+    try {
+      final dateTime = DateTime.parse(isoString);
+      final months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ];
+      return "${dateTime.day} ${months[dateTime.month - 1]}, ${dateTime.year}";
+    } catch (e) {
+      return isoString;
+    }
   }
 
   @override
@@ -356,7 +364,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return RefreshIndicator(
       color: context.primary,
 
-      onRefresh: fetchPopularDestinations,
+      onRefresh: () async {
+        await fetchPopularDestinations();
+        if (mounted) {
+          context.read<BlogsCubit>().fetchBlogs();
+        }
+      },
 
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),

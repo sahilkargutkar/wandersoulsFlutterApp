@@ -105,6 +105,12 @@ class TripData {
   final DateTime? endDate;
   final String mainDestination;
   final List<String> travelTastes;
+  final double totalBudget;
+  final String currency;
+  final double transportBudget;
+  final double accommodationBudget;
+  final double foodBudget;
+  final double activitiesBudget;
 
   TripData({
     required this.id,
@@ -119,6 +125,12 @@ class TripData {
     this.endDate,
     required this.mainDestination,
     required this.travelTastes,
+    required this.totalBudget,
+    required this.currency,
+    required this.transportBudget,
+    required this.accommodationBudget,
+    required this.foodBudget,
+    required this.activitiesBudget,
   });
 
   factory TripData.fromJson(Map<String, dynamic> jsonMap) {
@@ -155,6 +167,14 @@ class TripData {
       travelTastes = List<String>.from(jsonMap["travelTastes"]);
     }
 
+    final totalBudget = (jsonMap["budget"]?["totalEstimated"] as num?)?.toDouble() ?? 0.0;
+    final currency = jsonMap["budget"]?["currency"] ?? "USD";
+    final byCategory = jsonMap["budget"]?["byCategory"] ?? {};
+    final transportBudget = (byCategory["transportation"] as num?)?.toDouble() ?? 0.0;
+    final accommodationBudget = (byCategory["accommodation"] as num?)?.toDouble() ?? 0.0;
+    final foodBudget = (byCategory["food"] as num?)?.toDouble() ?? 0.0;
+    final activitiesBudget = (byCategory["activities"] as num?)?.toDouble() ?? 0.0;
+
     return TripData(
       id: id,
       name: name,
@@ -168,6 +188,12 @@ class TripData {
       endDate: end,
       mainDestination: mainDest,
       travelTastes: travelTastes,
+      totalBudget: totalBudget,
+      currency: currency,
+      transportBudget: transportBudget,
+      accommodationBudget: accommodationBudget,
+      foodBudget: foodBudget,
+      activitiesBudget: activitiesBudget,
     );
   }
 
@@ -204,7 +230,8 @@ class TripData {
         lower.contains("uk") ||
         lower.contains("united kingdom"))
       return "🇬🇧";
-    if (lower.contains("rome") ||
+    if (lower.contains("rose") ||
+        lower.contains("rome") ||
         lower.contains("italy") ||
         lower.contains("milan"))
       return "🇮🇹";

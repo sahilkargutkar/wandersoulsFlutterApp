@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
@@ -188,224 +189,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     );
   }
 
-  void _showAddAccommodationDialog() {
-    final nameController = TextEditingController();
-    final addressController = TextEditingController();
-    final costController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.r),
-          ),
-          backgroundColor: context.surface,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(24.w),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Add Accommodation",
-                        style: context.text.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 18.sp,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  16.h.verticalSpace,
-
-                  // Fields
-                  _buildFormField(controller: nameController, label: "Hotel / Place Name"),
-                  _buildFormField(controller: addressController, label: "Address"),
-                  _buildFormField(controller: costController, label: "Cost (\$)", keyboardType: TextInputType.number),
-
-                  20.h.verticalSpace,
-
-                  // Save button
-                  SizedBox(
-                    height: 48.h,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24.r),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: () async {
-                        final name = nameController.text.trim();
-                        if (name.isEmpty) return;
-                        Navigator.pop(context);
-
-                        final model = AccommodationModel(
-                          tripId: widget.tripId,
-                          name: name,
-                          address: addressController.text.trim(),
-                          cost: double.tryParse(costController.text.trim()) ?? 0.0,
-                        );
-
-                        AppToast.success("Saving accommodation...");
-                        final res = await _apiService.post<dynamic>(
-                          "/Accomodation",
-                          data: model.toJson(),
-                          fromJson: (d) => d,
-                        );
-
-                        if (res is Success) {
-                          AppToast.success("Accommodation added!");
-                          _fetchAccommodations();
-                        } else {
-                          AppToast.error("Failed to add accommodation");
-                        }
-                      },
-                      child: Text(
-                        "Save",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showAddTransportDialog() {
-    final providerController = TextEditingController();
-    final fromController = TextEditingController();
-    final toController = TextEditingController();
-    final costController = TextEditingController();
-    String transportType = "Flight";
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24.r),
-              ),
-              backgroundColor: context.surface,
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.all(24.w),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Header
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Add Transport",
-                            style: context.text.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18.sp,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
-                      ),
-                      16.h.verticalSpace,
-
-                      _buildDropdownField(
-                        value: transportType,
-                        items: ["Flight", "Train", "Bus", "Car", "Ferry"],
-                        label: "Transport Type",
-                        onChanged: (val) {
-                          if (val != null) {
-                            setDialogState(() => transportType = val);
-                          }
-                        },
-                      ),
-                      _buildFormField(controller: providerController, label: "Provider / Airline"),
-                      _buildFormField(controller: fromController, label: "Departure Location"),
-                      _buildFormField(controller: toController, label: "Arrival Location"),
-                      _buildFormField(controller: costController, label: "Cost (\$)", keyboardType: TextInputType.number),
-
-                      20.h.verticalSpace,
-
-                      SizedBox(
-                        height: 48.h,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: context.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24.r),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () async {
-                            Navigator.pop(context);
-
-                            final model = TripTransportModel(
-                              tripId: widget.tripId,
-                              type: transportType,
-                              provider: providerController.text.trim(),
-                              departureLocation: fromController.text.trim(),
-                              arrivalLocation: toController.text.trim(),
-                              cost: double.tryParse(costController.text.trim()) ?? 0.0,
-                            );
-
-                            AppToast.success("Saving transport...");
-                            final res = await _apiService.post<dynamic>(
-                              "/TripTransports",
-                              data: model.toJson(),
-                              fromJson: (d) => d,
-                            );
-
-                            if (res is Success) {
-                              AppToast.success("Transport added!");
-                              _fetchTransports();
-                            } else {
-                              AppToast.error("Failed to add transport");
-                            }
-                          },
-                          child: Text(
-                            "Save",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   Future<void> _showAccommodationDetails(AccommodationModel baseModel) async {
     if (baseModel.id == null) return;
@@ -956,7 +740,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                                   borderRadius: BorderRadius.circular(24.r),
                                 ),
                               ),
-                              onPressed: _showAddAccommodationDialog,
+                              onPressed: () => _showAddBookingOptions(context, "accommodation"),
                               icon: const Icon(Icons.add, color: Colors.white),
                               label: const Text(
                                 "Add Accommodation",
@@ -1075,7 +859,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                                   borderRadius: BorderRadius.circular(24.r),
                                 ),
                               ),
-                              onPressed: _showAddTransportDialog,
+                              onPressed: () => _showAddBookingOptions(context, "transport"),
                               icon: const Icon(Icons.add, color: Colors.white),
                               label: const Text(
                                 "Add Transport",
@@ -1093,6 +877,231 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
           ),
         ],
       ),
+    );
+  }
+
+  void _showAddBookingOptions(BuildContext context, String type) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return Container(
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            color: context.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                "Add ${type == "accommodation" ? "Accommodation" : "Transport"}",
+                textAlign: TextAlign.center,
+                style: context.text.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18.sp,
+                ),
+              ),
+              20.h.verticalSpace,
+              // Email forward option card
+              InkWell(
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _showEmailForwardingInstructions(type);
+                },
+                borderRadius: BorderRadius.circular(16.r),
+                child: Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: context.mutedBackground,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: context.borderColor.withAlpha(20)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: context.primary.withAlpha(15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.email_outlined,
+                          color: context.primary,
+                          size: 24.sp,
+                        ),
+                      ),
+                      16.w.horizontalSpace,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Forward Confirmation Email",
+                              style: context.text.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            4.h.verticalSpace,
+                            Text(
+                              "Forward confirmation emails to bookings@wandersouls.com",
+                              style: context.text.bodySmall?.copyWith(
+                                color: context.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: context.onSurfaceVariant,
+                        size: 20.sp,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              12.h.verticalSpace,
+              // Manual entry option card
+              InkWell(
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  Navigator.pop(context);
+                  context.push(
+                    '/AddBookingFormScreen',
+                    extra: {
+                      'tripId': widget.tripId,
+                      'bookingType': type,
+                    },
+                  );
+                },
+                borderRadius: BorderRadius.circular(16.r),
+                child: Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: context.mutedBackground,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: context.borderColor.withAlpha(20)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withAlpha(15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.edit_note_rounded,
+                          color: Colors.green,
+                          size: 24.sp,
+                        ),
+                      ),
+                      16.w.horizontalSpace,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Add Manually",
+                              style: context.text.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            4.h.verticalSpace,
+                            Text(
+                              "Enter details and upload tickets manually",
+                              style: context.text.bodySmall?.copyWith(
+                                color: context.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: context.onSurfaceVariant,
+                        size: 20.sp,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              16.h.verticalSpace,
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEmailForwardingInstructions(String type) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          title: Text(
+            "Auto Import Bookings",
+            style: context.text.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 18.sp,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                "Simply forward your booking confirmation email (from airlines, Booking.com, Airbnb, Expedia, etc.) to:",
+                style: context.text.bodyMedium,
+              ),
+              16.h.verticalSpace,
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: context.primary.withAlpha(15),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.copy_rounded,
+                      color: context.primary,
+                      size: 16.sp,
+                    ),
+                    8.w.horizontalSpace,
+                    Text(
+                      "bookings@wandersouls.com",
+                      style: context.text.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: context.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              16.h.verticalSpace,
+              Text(
+                "We will automatically parse the booking details, add it to your itinerary and sync it to your app in a few minutes!",
+                style: context.text.bodySmall?.copyWith(
+                  color: context.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text("Got It!"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

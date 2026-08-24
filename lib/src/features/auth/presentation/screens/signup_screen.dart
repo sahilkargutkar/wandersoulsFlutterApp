@@ -190,8 +190,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       controller: _pageController,
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        _buildStep2TravelPreferences(),
                         _buildStep3PersonalInfo(state),
+                        _buildStep2TravelPreferences(state),
                         _buildStep4Success(),
                       ],
                     ),
@@ -205,7 +205,7 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildStep2TravelPreferences() {
+  Widget _buildStep2TravelPreferences(SignUpState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -297,8 +297,9 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
         SizedBox(height: 12.h),
         CommonButton(
-          title: "Continue",
-          onPressed: _selectedPreferences.isNotEmpty ? _nextStep : null,
+          title: "Create Account",
+          isLoading: state is SignUpLoading,
+          onPressed: _selectedPreferences.isNotEmpty ? _submitRegistration : null,
         ),
         SizedBox(height: 20.h),
       ],
@@ -627,9 +628,12 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             SizedBox(height: 28.h),
             CommonButton(
-              title: "Create Account",
-              isLoading: state is SignUpLoading,
-              onPressed: _submitRegistration,
+              title: "Continue",
+              onPressed: () {
+                if (_formKey.currentState?.validate() == true) {
+                  _nextStep();
+                }
+              },
             ),
             SizedBox(height: 24.h),
           ],
@@ -933,7 +937,7 @@ class _SignupScreenState extends State<SignupScreen> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Text(
-            "Welcome to the WonderSolus community! Your personalized travel experiences await.",
+            "Welcome to the WonderSouls community! Your personalized travel experiences await.",
             textAlign: TextAlign.center,
             style: context.text.bodyLarge?.copyWith(
               color: context.onSurfaceVariant,

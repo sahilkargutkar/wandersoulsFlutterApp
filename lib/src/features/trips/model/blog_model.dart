@@ -25,10 +25,10 @@ class BlogModel {
 
   factory BlogModel.fromJson(Map<String, dynamic> json) {
     return BlogModel(
-      id: json['_id'] as String? ?? '',
+      id: json['_id'] as String? ?? json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
-      desc: json['desc'] as String? ?? '',
-      image: json['image'] as String? ?? '',
+      desc: json['desc'] as String? ?? json['description'] as String? ?? '',
+      image: json['image'] as String? ?? json['imageUrl'] as String? ?? '',
       category: json['category'] as String? ?? '',
       readTime: json['readTime'] as String? ?? '',
       author: json['author'] as String? ?? '',
