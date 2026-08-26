@@ -143,12 +143,36 @@ class ApiService {
 
   Failure<T> _handleError<T>(DioException e) {
     final responseData = e.response?.data;
-    final message = responseData is Map<String, dynamic>
-        ? responseData["message"]?.toString()
-        : responseData?.toString();
+    String? message;
+
+    if (responseData is Map<String, dynamic>) {
+      if (responseData["message"] != null &&
+          responseData["message"].toString().isNotEmpty) {
+        message = responseData["message"].toString();
+      } else if (responseData["errors"] is Map<String, dynamic>) {
+        final errorsMap = responseData["errors"] as Map<String, dynamic>;
+        final errorList = <String>[];
+        errorsMap.forEach((key, val) {
+          if (val is List) {
+            errorList.addAll(val.map((e) => e.toString()));
+          } else if (val != null) {
+            errorList.add(val.toString());
+          }
+        });
+        if (errorList.isNotEmpty) {
+          message = errorList.join(", ");
+        } else if (responseData["title"] != null) {
+          message = responseData["title"].toString();
+        }
+      } else if (responseData["title"] != null) {
+        message = responseData["title"].toString();
+      }
+    } else if (responseData != null) {
+      message = responseData.toString();
+    }
 
     return Failure<T>(
-      message: message == null || message.isEmpty ? "Server error" : message,
+      message: message == null || message.isEmpty ? (e.message ?? "Server error") : message,
       statusCode: e.response?.statusCode,
     );
   }

@@ -7,6 +7,7 @@ import 'package:wonder_souls/src/config/model/success.dart';
 import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
+import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 import 'trip_wizard_state.dart';
 
 class TripWizardCubit extends Cubit<TripWizardState> {
@@ -128,7 +129,7 @@ class TripWizardCubit extends Cubit<TripWizardState> {
             "key": googleMapsApiService.apiKey,
           },
         );
-        if (detailsRes != null && detailsRes["status"] == "OK" && detailsRes["result"] != null) {
+        if (detailsRes["status"] == "OK" && detailsRes["result"] != null) {
           final photos = detailsRes["result"]["photos"] as List?;
           if (photos != null && photos.isNotEmpty) {
             final photoRef = photos.first["photo_reference"];
@@ -142,7 +143,26 @@ class TripWizardCubit extends Cubit<TripWizardState> {
       }
     }
 
+    final user = sl<AuthLocalDataSource>().getUser();
+    final ownerId = user?.id ?? "";
+    final ownerName = user?.name ?? user?.userName ?? "";
+
+    if (ownerId.isEmpty) {
+      emit(
+        state.copyWith(
+          status: TripWizardStatus.failure,
+          errorMessage: "User session not found. Please log in again.",
+          currentStep: 6,
+        ),
+      );
+      return;
+    }
+
     final payload = {
+      "ownerId": ownerId,
+      "OwnerId": ownerId,
+      "ownerName": ownerName,
+      "OwnerName": ownerName,
       "name":
           state.name ?? "Trip to ${state.destination?.name ?? 'Destination'}",
       "description": state.description ?? "",
@@ -158,6 +178,7 @@ class TripWizardCubit extends Cubit<TripWizardState> {
       "travelTastes": state.interests,
       "imageUrl": imageUrl,
       "image": imageUrl,
+      "collaborators": state.collaborators.map((c) => c["email"] ?? c["name"] ?? "").toList(),
       "budget": {
         "budgetType": state.budgetLevel ?? "flexible",
         "totalEstimated": state.totalEstimated,

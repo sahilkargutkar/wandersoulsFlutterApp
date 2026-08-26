@@ -58,4 +58,7 @@ class ApiConstants {
   static const String getPreference = "/Preference";
   static const String savePreference = "/Preference/save";
   static const String updatePreference = "/Preference/update";
+
+  // Other / Legal
+  static const String otherService = "/OtherService";
 }

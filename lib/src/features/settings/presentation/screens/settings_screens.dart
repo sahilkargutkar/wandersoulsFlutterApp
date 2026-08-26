@@ -15,6 +15,7 @@ import 'package:wonder_souls/src/features/settings/presentation/screens/billing_
 import 'package:wonder_souls/src/features/settings/presentation/screens/upgrade_plan_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/payment_methods_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/account_security_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/terms_and_conditions_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -182,10 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.description_outlined,
                 title: 'Terms & Conditions',
                 onTap: () {
-                  launchUrl(
-                    Uri.parse("https://wanderingsouls.in/terms-and-conditions"),
-                    mode: LaunchMode.externalApplication,
-                  );
+                  context.push(TermsAndConditionsScreen.routeName);
                 },
               ),
               SettingsMenuItem(

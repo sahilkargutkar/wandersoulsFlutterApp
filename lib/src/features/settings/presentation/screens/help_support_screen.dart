@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
 import 'package:wonder_souls/src/config/utils/app_toast.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/terms_and_conditions_screen.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -171,13 +174,20 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   ListTile(
                     title: const Text("Privacy Policy"),
                     trailing: Icon(Icons.open_in_new_rounded, size: 14.sp),
-                    onTap: () {},
+                    onTap: () {
+                      launchUrl(
+                        Uri.parse("https://www.wanderingsouls.in/privacy-policy/"),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
                   ),
                   const Divider(height: 1),
                   ListTile(
                     title: const Text("Terms & Conditions"),
-                    trailing: Icon(Icons.open_in_new_rounded, size: 14.sp),
-                    onTap: () {},
+                    trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14.sp),
+                    onTap: () {
+                      context.push(TermsAndConditionsScreen.routeName);
+                    },
                   ),
                 ],
               ),

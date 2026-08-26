@@ -22,6 +22,7 @@ import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_remote_data_source.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/terms_and_conditions_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -329,11 +330,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             TextButton(
                               onPressed: () {
-                                launchUrl(
-                                  Uri.parse(
-                                    "https://wanderingsouls.in/terms-and-conditions",
-                                  ),
-                                  mode: LaunchMode.externalApplication,
+                                context.push(
+                                  TermsAndConditionsScreen.routeName,
                                 );
                               },
                               child: Text(

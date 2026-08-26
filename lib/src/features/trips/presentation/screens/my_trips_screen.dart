@@ -11,6 +11,7 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/trip_detail
 import 'package:wonder_souls/src/features/trips/presentation/widgets/trip_card.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 
 class MyTripsScreen extends StatefulWidget {
   final ValueNotifier<String>? searchNotifier;
@@ -45,17 +46,55 @@ class _MyTripsScreenState extends State<MyTripsScreen>
 
     try {
       final apiService = sl<ApiService>();
-      final result = await apiService.get<List<dynamic>>(
+      final result = await apiService.get<dynamic>(
         ApiConstants.getTrips,
-        fromJson: (json) => json as List<dynamic>,
+        fromJson: (json) => json,
       );
 
       if (!mounted) return;
 
-      if (result is Success<List<dynamic>>) {
-        final List<TripData> fetchedTrips = result.data
-            .map((item) => TripData.fromJson(item as Map<String, dynamic>))
-            .toList();
+      if (result is Success<dynamic>) {
+        final rawData = result.data;
+        List<dynamic> items = [];
+
+        if (rawData is List) {
+          items = rawData;
+        } else if (rawData is Map<String, dynamic>) {
+          if (rawData["data"] is List) {
+            items = rawData["data"] as List;
+          } else if (rawData["items"] is List) {
+            items = rawData["items"] as List;
+          } else if (rawData["trips"] is List) {
+            items = rawData["trips"] as List;
+          } else if (rawData["data"] is Map<String, dynamic>) {
+            final inner = rawData["data"] as Map<String, dynamic>;
+            if (inner["items"] is List) {
+              items = inner["items"] as List;
+            } else if (inner["trips"] is List) {
+              items = inner["trips"] as List;
+            } else if (inner["data"] is List) {
+              items = inner["data"] as List;
+            }
+          }
+        }
+
+        final currentUser = sl<AuthLocalDataSource>().getUser();
+        final currentUserId = currentUser?.id;
+
+        final List<TripData> fetchedTrips = [];
+        for (final item in items) {
+          if (item is Map<String, dynamic>) {
+            try {
+              final tripOwnerId = item["ownerId"]?.toString() ?? item["OwnerId"]?.toString();
+              if (currentUserId != null && currentUserId.isNotEmpty && tripOwnerId != null && tripOwnerId.isNotEmpty) {
+                if (tripOwnerId != currentUserId) continue;
+              }
+              fetchedTrips.add(TripData.fromJson(item));
+            } catch (e) {
+              debugPrint("Error parsing trip item: $e");
+            }
+          }
+        }
 
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
@@ -68,11 +107,20 @@ class _MyTripsScreenState extends State<MyTripsScreen>
               .toList();
           _isLoading = false;
         });
-      } else if (result is Failure<List<dynamic>>) {
-        setState(() {
-          _errorMessage = result.message;
-          _isLoading = false;
-        });
+      } else if (result is Failure<dynamic>) {
+        if (result.statusCode == 404) {
+          setState(() {
+            _activeTrips = [];
+            _passedTrips = [];
+            _isLoading = false;
+            _errorMessage = null;
+          });
+        } else {
+          setState(() {
+            _errorMessage = result.message;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -212,7 +260,11 @@ class _MyTripsScreenState extends State<MyTripsScreen>
 
   Widget _buildTripsList(List<TripData> trips) {
     if (trips.isEmpty) {
-      return _buildEmptyState();
+      return RefreshIndicator(
+        onRefresh: _fetchTrips,
+        color: context.primary,
+        child: _buildEmptyState(),
+      );
     }
 
     return RefreshIndicator(

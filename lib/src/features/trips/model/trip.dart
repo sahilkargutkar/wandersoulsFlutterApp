@@ -125,55 +125,103 @@ class TripData {
     this.endDate,
     required this.mainDestination,
     required this.travelTastes,
-    required this.totalBudget,
-    required this.currency,
-    required this.transportBudget,
-    required this.accommodationBudget,
-    required this.foodBudget,
-    required this.activitiesBudget,
+    this.totalBudget = 0.0,
+    this.currency = "USD",
+    this.transportBudget = 0.0,
+    this.accommodationBudget = 0.0,
+    this.foodBudget = 0.0,
+    this.activitiesBudget = 0.0,
   });
 
   factory TripData.fromJson(Map<String, dynamic> jsonMap) {
-    final id = _parseId(jsonMap["id"]);
-    final mainDest = jsonMap["mainDestination"] ?? "";
-    final name =
-        jsonMap["name"] ??
-        (mainDest.isNotEmpty ? "Trip to $mainDest" : "My Trip");
-    final description = jsonMap["description"] ?? "";
+    final id = _parseId(jsonMap["id"] ?? jsonMap["_id"] ?? jsonMap["tripId"]);
+    final mainDest = (jsonMap["mainDestination"] ??
+            jsonMap["destination"] ??
+            jsonMap["location"] ??
+            "")
+        .toString();
+    final rawName =
+        jsonMap["name"] ?? jsonMap["tripName"] ?? jsonMap["title"];
+    final name = (rawName != null && rawName.toString().isNotEmpty)
+        ? rawName.toString()
+        : (mainDest.isNotEmpty ? "Trip to $mainDest" : "My Trip");
+    final description =
+        (jsonMap["description"] ?? jsonMap["desc"] ?? "").toString();
     final flag = _getCountryFlag(mainDest);
 
     DateTime? start;
     DateTime? end;
     if (jsonMap["startDate"] != null) {
-      start = DateTime.tryParse(jsonMap["startDate"]);
+      start = DateTime.tryParse(jsonMap["startDate"].toString());
     }
     if (jsonMap["endDate"] != null) {
-      end = DateTime.tryParse(jsonMap["endDate"]);
+      end = DateTime.tryParse(jsonMap["endDate"].toString());
     }
 
     final dateRange = _formatDateRange(start, end);
-    final whoIsGoing = _capitalize(jsonMap["whoIsGoing"] ?? "solo");
-    final budgetLevel = _capitalize(
-      jsonMap["budget"]?["budgetType"] ?? "flexible",
-    );
-    final imageUrl = (jsonMap["imageUrl"] as String?)?.isNotEmpty == true
-        ? jsonMap["imageUrl"]!
-        : ((jsonMap["image"] as String?)?.isNotEmpty == true
-            ? jsonMap["image"]!
-            : _getTripImage(mainDest));
+    final whoIsGoing = _capitalize(
+        (jsonMap["whoIsGoing"] ?? jsonMap["partyType"] ?? "solo").toString());
 
-    List<String> travelTastes = [];
-    if (jsonMap["travelTastes"] != null) {
-      travelTastes = List<String>.from(jsonMap["travelTastes"]);
+    // Budget parsing
+    String budgetLevelStr = "flexible";
+    double totalEstimated = 0.0;
+    String currencyStr = "USD";
+    double transportBudget = 0.0;
+    double accommodationBudget = 0.0;
+    double foodBudget = 0.0;
+    double activitiesBudget = 0.0;
+
+    final rawBudget = jsonMap["budget"];
+    if (rawBudget is Map<String, dynamic>) {
+      budgetLevelStr = (rawBudget["budgetType"] ??
+              rawBudget["type"] ??
+              jsonMap["budgetType"] ??
+              "flexible")
+          .toString();
+      totalEstimated = (rawBudget["totalEstimated"] as num?)?.toDouble() ??
+          (rawBudget["total"] as num?)?.toDouble() ??
+          (jsonMap["totalBudget"] as num?)?.toDouble() ??
+          0.0;
+      currencyStr = (rawBudget["currency"] ?? jsonMap["currency"] ?? "USD")
+          .toString();
+
+      final byCat = rawBudget["byCategory"];
+      if (byCat is Map<String, dynamic>) {
+        transportBudget =
+            (byCat["transportation"] as num?)?.toDouble() ??
+            (byCat["transport"] as num?)?.toDouble() ??
+            0.0;
+        accommodationBudget =
+            (byCat["accommodation"] as num?)?.toDouble() ?? 0.0;
+        foodBudget = (byCat["food"] as num?)?.toDouble() ?? 0.0;
+        activitiesBudget =
+            (byCat["activities"] as num?)?.toDouble() ?? 0.0;
+      }
+    } else if (rawBudget is String) {
+      budgetLevelStr = rawBudget;
+    } else if (jsonMap["budgetType"] != null) {
+      budgetLevelStr = jsonMap["budgetType"].toString();
     }
 
-    final totalBudget = (jsonMap["budget"]?["totalEstimated"] as num?)?.toDouble() ?? 0.0;
-    final currency = jsonMap["budget"]?["currency"] ?? "USD";
-    final byCategory = jsonMap["budget"]?["byCategory"] ?? {};
-    final transportBudget = (byCategory["transportation"] as num?)?.toDouble() ?? 0.0;
-    final accommodationBudget = (byCategory["accommodation"] as num?)?.toDouble() ?? 0.0;
-    final foodBudget = (byCategory["food"] as num?)?.toDouble() ?? 0.0;
-    final activitiesBudget = (byCategory["activities"] as num?)?.toDouble() ?? 0.0;
+    final budgetLevel = _capitalize(budgetLevelStr);
+
+    final rawImageUrl = jsonMap["imageUrl"] ??
+        jsonMap["image"] ??
+        jsonMap["coverImage"] ??
+        jsonMap["thumbnailUrl"];
+    final imageUrl = (rawImageUrl is String && rawImageUrl.isNotEmpty)
+        ? rawImageUrl
+        : _getTripImage(mainDest);
+
+    List<String> travelTastes = [];
+    final rawTastes = jsonMap["travelTastes"] ??
+        jsonMap["interests"] ??
+        jsonMap["tastes"];
+    if (rawTastes is List) {
+      travelTastes = rawTastes.map((e) => e.toString()).toList();
+    } else if (rawTastes is String && rawTastes.isNotEmpty) {
+      travelTastes = rawTastes.split(',').map((e) => e.trim()).toList();
+    }
 
     return TripData(
       id: id,
@@ -188,8 +236,8 @@ class TripData {
       endDate: end,
       mainDestination: mainDest,
       travelTastes: travelTastes,
-      totalBudget: totalBudget,
-      currency: currency,
+      totalBudget: totalEstimated,
+      currency: currencyStr,
       transportBudget: transportBudget,
       accommodationBudget: accommodationBudget,
       foodBudget: foodBudget,
@@ -280,11 +328,15 @@ class TripData {
 }
 
 String _parseId(dynamic jsonVal) {
-  if (jsonVal is String) {
-    return jsonVal;
-  }
+  if (jsonVal == null) return "";
+  if (jsonVal is String) return jsonVal;
   if (jsonVal is Map<String, dynamic>) {
-    return (jsonVal["\$oid"] ?? jsonVal["oid"] ?? "").toString();
+    return (jsonVal["\$oid"] ??
+            jsonVal["oid"] ??
+            jsonVal["id"] ??
+            jsonVal["_id"] ??
+            "")
+        .toString();
   }
-  return (jsonVal ?? "").toString();
+  return jsonVal.toString();
 }

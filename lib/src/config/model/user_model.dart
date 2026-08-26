@@ -8,6 +8,8 @@ class UserModel {
   final String? name;
   final String? profilePicture;
   final String? defaultCurrency;
+  final String? country;
+  final String? phoneNumber;
   final UserPreferencesModel? preferences;
   final String? createdBy;
   final DateTime? createdAt;
@@ -23,6 +25,8 @@ class UserModel {
     this.name,
     this.profilePicture,
     this.defaultCurrency,
+    this.country,
+    this.phoneNumber,
     this.preferences,
     this.createdBy,
     this.createdAt,
@@ -41,8 +45,17 @@ class UserModel {
       name: json['name'] as String?,
       profilePicture: json['profilePicture'] as String?,
       defaultCurrency: json['defaultCurrency'] as String?,
+      country: json['country'] as String? ??
+          (json['preferences'] is Map<String, dynamic>
+              ? json['preferences']['country'] as String?
+              : null),
+      phoneNumber: json['phoneNumber'] as String?,
       preferences: json['preferences'] != null
-          ? UserPreferencesModel.fromJson(json['preferences'])
+          ? UserPreferencesModel.fromJson(
+              json['preferences'] is Map<String, dynamic>
+                  ? json['preferences']
+                  : {},
+            )
           : null,
       createdBy: json['createdBy'] as String?,
       createdAt: json['createdAt'] != null
@@ -66,6 +79,8 @@ class UserModel {
       'name': name,
       'profilePicture': profilePicture,
       'defaultCurrency': defaultCurrency,
+      if (country != null) 'country': country,
+      if (phoneNumber != null) 'phoneNumber': phoneNumber,
       'preferences': preferences?.toJson(),
       'createdBy': createdBy,
       'createdAt': createdAt?.toIso8601String(),
@@ -84,6 +99,8 @@ class UserModel {
     String? name,
     String? profilePicture,
     String? defaultCurrency,
+    String? country,
+    String? phoneNumber,
     UserPreferencesModel? preferences,
     String? createdBy,
     DateTime? createdAt,
@@ -99,6 +116,8 @@ class UserModel {
       name: name ?? this.name,
       profilePicture: profilePicture ?? this.profilePicture,
       defaultCurrency: defaultCurrency ?? this.defaultCurrency,
+      country: country ?? this.country,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       preferences: preferences ?? this.preferences,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,

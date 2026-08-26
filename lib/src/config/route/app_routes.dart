@@ -27,6 +27,7 @@ import 'package:wonder_souls/src/features/settings/presentation/screens/upgrade_
 import 'package:wonder_souls/src/features/settings/presentation/screens/payment_methods_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/account_security_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/help_support_screen.dart';
+import 'package:wonder_souls/src/features/settings/presentation/screens/terms_and_conditions_screen.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/add_booking_form_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/budget_expenses_screen.dart';
@@ -38,6 +39,7 @@ List<String> _publicRoutes = [
   LoginScreen.routeName,
   SignupScreen.routeName,
   BoardingScreens.routeName,
+  TermsAndConditionsScreen.routeName,
 ];
 
 GoRouter buildRouter({
@@ -233,6 +235,10 @@ GoRouter buildRouter({
       GoRoute(
         path: HelpSupportScreen.routeName,
         builder: (context, state) => const HelpSupportScreen(),
+      ),
+      GoRoute(
+        path: TermsAndConditionsScreen.routeName,
+        builder: (context, state) => const TermsAndConditionsScreen(),
       ),
       GoRoute(
         path: AddBookingFormScreen.routeName,
