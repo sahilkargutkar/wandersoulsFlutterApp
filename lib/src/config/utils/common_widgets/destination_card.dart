@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import 'package:wonder_souls/src/config/core/injector/injector.dart';
+import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/saved_icon.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
-
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
@@ -35,6 +35,8 @@ class _DestinationCardState extends State<DestinationCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  static final Map<String, String> _googlePlacesCache = {};
+  String? _resolvedImageUrl;
 
   @override
   void initState() {
@@ -47,6 +49,76 @@ class _DestinationCardState extends State<DestinationCard>
       begin: 1.0,
       end: 0.96,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _resolveImage();
+  }
+
+  @override
+  void didUpdateWidget(covariant DestinationCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageUrl != widget.imageUrl ||
+        oldWidget.place.placeId != widget.place.placeId ||
+        oldWidget.city != widget.city) {
+      _resolveImage();
+    }
+  }
+
+  void _resolveImage() {
+    final originalUrl = widget.imageUrl;
+    if (originalUrl.contains("places.googleapis.com") ||
+        originalUrl.contains("maps.googleapis.com")) {
+      _resolvedImageUrl = originalUrl;
+      return;
+    }
+
+    final key = widget.place.placeId.isNotEmpty
+        ? widget.place.placeId
+        : widget.city.toLowerCase();
+
+    if (_googlePlacesCache.containsKey(key)) {
+      _resolvedImageUrl = _googlePlacesCache[key];
+      return;
+    }
+
+    _resolvedImageUrl = originalUrl;
+    _fetchGooglePlacesPhoto();
+  }
+
+  Future<void> _fetchGooglePlacesPhoto() async {
+    try {
+      final placesService = sl.isRegistered<GooglePlacesNewService>()
+          ? sl<GooglePlacesNewService>()
+          : GooglePlacesNewService();
+
+      String? placeId = widget.place.placeId;
+      if (placeId.isEmpty) {
+        placeId = await placesService.searchPlaceId("${widget.city}, ${widget.country}");
+      }
+
+      if (placeId != null && placeId.isNotEmpty) {
+        final details = await placesService.getPlaceDetails(placeId);
+        final photos = details?["photos"] as List?;
+        if (photos != null && photos.isNotEmpty) {
+          final photoName = photos.first["name"];
+          if (photoName != null) {
+            final uri = await placesService.getPhotoUri(photoName);
+            if (uri != null && uri.isNotEmpty) {
+              final key = widget.place.placeId.isNotEmpty
+                  ? widget.place.placeId
+                  : widget.city.toLowerCase();
+              _googlePlacesCache[key] = uri;
+              if (mounted) {
+                setState(() {
+                  _resolvedImageUrl = uri;
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("DestinationCard: error resolving photo for ${widget.city}: $e");
+    }
   }
 
   @override
@@ -71,6 +143,8 @@ class _DestinationCardState extends State<DestinationCard>
             ? screenWidth * 0.68
             : 300.w);
 
+    final displayImageUrl = _resolvedImageUrl ?? widget.imageUrl;
+
     return Listener(
       onPointerDown: (_) => _controller.forward(),
       onPointerUp: (_) => _controller.reverse(),
@@ -90,7 +164,7 @@ class _DestinationCardState extends State<DestinationCard>
                 AspectRatio(
                   aspectRatio: 3 / 4,
                   child: CachedNetworkImage(
-                    imageUrl: widget.imageUrl,
+                    imageUrl: displayImageUrl,
                     fit: BoxFit.cover,
                     placeholder: (_, __) =>
                         Container(color: colors.onSurface.withAlpha(20)),

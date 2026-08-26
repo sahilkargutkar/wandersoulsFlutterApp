@@ -5,6 +5,7 @@ import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
 import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
+import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
@@ -117,9 +118,37 @@ class TripWizardCubit extends Cubit<TripWizardState> {
     );
 
     String imageUrl = "";
-    final placeId = state.destination?.placeId;
-    if (placeId != null && placeId.isNotEmpty) {
-      try {
+    final destinationName =
+        state.destination?.name ?? state.destination?.description ?? "";
+    String? placeId = state.destination?.placeId;
+
+    try {
+      final placesService = sl.isRegistered<GooglePlacesNewService>()
+          ? sl<GooglePlacesNewService>()
+          : GooglePlacesNewService();
+
+      if (placeId == null || placeId.isEmpty) {
+        if (destinationName.isNotEmpty) {
+          placeId = await placesService.searchPlaceId(destinationName);
+        }
+      }
+
+      if (placeId != null && placeId.isNotEmpty) {
+        final details = await placesService.getPlaceDetails(placeId);
+        final photos = details?["photos"] as List?;
+        if (photos != null && photos.isNotEmpty) {
+          final photoName = photos.first["name"];
+          if (photoName != null) {
+            final uri = await placesService.getPhotoUri(photoName);
+            if (uri != null && uri.isNotEmpty) {
+              imageUrl = uri;
+            }
+          }
+        }
+      }
+
+      // Legacy Google Maps Api fallback
+      if (imageUrl.isEmpty && placeId != null && placeId.isNotEmpty) {
         final googleMapsApiService = sl<GoogleMapsApiService>();
         final detailsRes = await googleMapsApiService.getRequest(
           "maps/api/place/details/json",
@@ -134,13 +163,14 @@ class TripWizardCubit extends Cubit<TripWizardState> {
           if (photos != null && photos.isNotEmpty) {
             final photoRef = photos.first["photo_reference"];
             if (photoRef != null) {
-              imageUrl = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=$photoRef&key=${googleMapsApiService.apiKey}";
+              imageUrl =
+                  "https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=$photoRef&key=${googleMapsApiService.apiKey}";
             }
           }
         }
-      } catch (e) {
-        debugPrint("Failed to fetch Google Place image: $e");
       }
+    } catch (e) {
+      debugPrint("Failed to fetch Google Place image: $e");
     }
 
     final user = sl<AuthLocalDataSource>().getUser();
@@ -178,7 +208,13 @@ class TripWizardCubit extends Cubit<TripWizardState> {
       "travelTastes": state.interests,
       "imageUrl": imageUrl,
       "image": imageUrl,
-      "collaborators": state.collaborators.map((c) => c["email"] ?? c["name"] ?? "").toList(),
+      "coverImage": imageUrl,
+      "thumbnailUrl": imageUrl,
+      "photoUrl": imageUrl,
+      "photo": imageUrl,
+      "collaborators": state.collaborators
+          .map((c) => c["email"] ?? c["name"] ?? "")
+          .toList(),
       "budget": {
         "budgetType": state.budgetLevel ?? "flexible",
         "totalEstimated": state.totalEstimated,

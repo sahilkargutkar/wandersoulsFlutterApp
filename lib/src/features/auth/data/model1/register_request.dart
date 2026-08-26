@@ -35,8 +35,10 @@ class RegisterRequest {
     return {
       "id": id,
       "userName": userName,
+      "username": userName,
       "email": email,
       "phoneNumber": phoneNumber,
+      "password": password,
       "passwordHash": password,
       "name": name,
       "profilePicture": profilePicture,

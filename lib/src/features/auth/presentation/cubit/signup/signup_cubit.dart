@@ -35,9 +35,14 @@ class SignUpCubit extends Cubit<SignUpState> {
     emit(SignUpLoading());
 
     final now = DateTime.now().toUtc().toIso8601String();
+    final cleanUsername = name.trim().replaceAll(' ', '').toLowerCase();
+    final resolvedUsername = cleanUsername.isNotEmpty
+        ? cleanUsername
+        : (email.contains('@') ? email.split('@').first : 'user');
+
     final request = RegisterRequest(
       id: const Uuid().v4(),
-      userName: name.replaceAll(' ', '').toLowerCase(),
+      userName: resolvedUsername,
       email: email,
       phoneNumber: phone,
       password: password,

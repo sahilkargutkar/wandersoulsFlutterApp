@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wonder_souls/src/config/core/local_storage/token_storage.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
+import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
 import 'package:wonder_souls/src/config/utils/api_constant.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_remote_data_source.dart';
@@ -39,6 +40,9 @@ Future<void> setupLocator() async {
       apiKey: ApiConstants.googleMapApiKey,
       baseURL: ApiConstants.mapURL,
     ),
+  );
+  sl.registerLazySingleton<GooglePlacesNewService>(
+    () => GooglePlacesNewService(),
   );
 
   final sharedPreferences = await SharedPreferences.getInstance();

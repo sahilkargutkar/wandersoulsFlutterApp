@@ -38,33 +38,55 @@ class UserModel {
   /// FROM JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String?,
-      userName: json['userName'] as String?,
-      email: json['email'] as String?,
-      passwordHash: json['passwordHash'] as String?,
-      name: json['name'] as String?,
-      profilePicture: json['profilePicture'] as String?,
-      defaultCurrency: json['defaultCurrency'] as String?,
-      country: json['country'] as String? ??
+      id: (json['id'] ?? json['userId'] ?? json['Id'] ?? json['UserId']) as String?,
+      userName: (json['userName'] ??
+          json['username'] ??
+          json['UserName'] ??
+          json['Username'] ??
+          json['user_name']) as String?,
+      email: (json['email'] ?? json['Email']) as String?,
+      passwordHash: (json['passwordHash'] ??
+          json['PasswordHash'] ??
+          json['password_hash']) as String?,
+      name: (json['name'] ??
+          json['Name'] ??
+          json['fullName'] ??
+          json['FullName'] ??
+          json['full_name']) as String?,
+      profilePicture: (json['profilePicture'] ??
+          json['ProfilePicture'] ??
+          json['profile_picture'] ??
+          json['avatar'] ??
+          json['avatarUrl']) as String?,
+      defaultCurrency: (json['defaultCurrency'] ??
+          json['DefaultCurrency'] ??
+          json['currency'] ??
+          json['Currency']) as String?,
+      country: (json['country'] ??
+          json['Country'] ??
           (json['preferences'] is Map<String, dynamic>
-              ? json['preferences']['country'] as String?
-              : null),
-      phoneNumber: json['phoneNumber'] as String?,
-      preferences: json['preferences'] != null
+              ? (json['preferences']['country'] ??
+                  json['preferences']['Country']) as String?
+              : null)) as String?,
+      phoneNumber: (json['phoneNumber'] ??
+          json['PhoneNumber'] ??
+          json['phone_number'] ??
+          json['phone']) as String?,
+      preferences: json['preferences'] != null || json['Preferences'] != null
           ? UserPreferencesModel.fromJson(
-              json['preferences'] is Map<String, dynamic>
-                  ? json['preferences']
+              (json['preferences'] ?? json['Preferences']) is Map<String, dynamic>
+                  ? (json['preferences'] ?? json['Preferences'])
                   : {},
             )
           : null,
-      createdBy: json['createdBy'] as String?,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
+      createdBy: (json['createdBy'] ?? json['CreatedBy']) as String?,
+      createdAt: (json['createdAt'] ?? json['CreatedAt']) != null
+          ? DateTime.tryParse(json['createdAt'] ?? json['CreatedAt'])
           : null,
-      isActive: json['isActive'] as bool?,
-      modifiedBy: json['modifiedBy'] as String?,
-      modifiedOn: json['modifiedOn'] != null
-          ? DateTime.tryParse(json['modifiedOn'])
+      isActive: (json['isActive'] ?? json['IsActive']) as bool?,
+      modifiedBy: (json['modifiedBy'] ?? json['ModifiedBy']) as String?,
+      modifiedOn: (json['modifiedOn'] ?? json['ModifiedOn']) != null
+          ? DateTime.tryParse(json['modifiedOn'] ?? json['ModifiedOn'])
           : null,
     );
   }

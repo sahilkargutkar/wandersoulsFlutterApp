@@ -100,20 +100,34 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _submitRegistration() {
-    if (_formKey.currentState?.validate() != true) return;
+    if (_nameController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      AppToast.error("Please fill in your name, email and password.");
+      setState(() => _currentStep = 0);
+      _pageController.animateToPage(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      return;
+    }
+
     if (!mounted) return;
     context.read<SignUpCubit>().registerUser(
-      name: _nameController.text,
-      email: _emailController.text,
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
       password: _passwordController.text,
-      country: _countryController.text,
-      phone: '+$_phoneCode${_phoneController.text}',
+      country: _countryController.text.trim(),
+      phone: _phoneController.text.trim().isNotEmpty
+          ? '+$_phoneCode${_phoneController.text.trim()}'
+          : '',
       preferences: _selectedPreferences,
       currency: _currencyController.text.isNotEmpty
-          ? _currencyController.text
+          ? _currencyController.text.trim()
           : 'USD',
       language: _languageController.text.isNotEmpty
-          ? _languageController.text
+          ? _languageController.text.trim()
           : 'English',
       profilePicturePath: _profileImage?.path,
     );

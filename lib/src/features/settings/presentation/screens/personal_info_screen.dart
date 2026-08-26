@@ -109,10 +109,19 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   }
 
   void _applyUserData(UserModel user) {
+    String resolvedUsername = user.userName ?? "";
+    if (resolvedUsername.isEmpty) {
+      if (user.email != null && user.email!.contains('@')) {
+        resolvedUsername = user.email!.split('@').first;
+      } else if (user.name != null && user.name!.isNotEmpty) {
+        resolvedUsername = user.name!.replaceAll(' ', '').toLowerCase();
+      }
+    }
+
     setState(() {
       _user = user;
       _nameController.text = user.name ?? "";
-      _usernameController.text = user.userName ?? "";
+      _usernameController.text = resolvedUsername;
       _emailController.text = user.email ?? "";
       _countryController.text =
           user.country ?? user.preferences?.country ?? "";
@@ -716,23 +725,23 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                   ),
                   18.h.verticalSpace,
 
-                  // Username
+                  // Username (read-only)
                   _buildFieldLabel("Username"),
                   8.h.verticalSpace,
                   CommonTextFormField(
                     controller: _usernameController,
+                    readOnly: true,
                     hintText: "Enter your username",
                     prefixIcon: Icon(
                       Icons.alternate_email_rounded,
                       size: 20.sp,
                       color: context.onSurfaceVariant,
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return "Username cannot be empty";
-                      }
-                      return null;
-                    },
+                    suffixIcon: Icon(
+                      Icons.lock_outline_rounded,
+                      size: 18.sp,
+                      color: context.onSurfaceVariant.withAlpha(140),
+                    ),
                   ),
                   18.h.verticalSpace,
 

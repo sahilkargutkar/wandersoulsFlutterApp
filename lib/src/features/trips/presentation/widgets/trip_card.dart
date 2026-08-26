@@ -1,15 +1,102 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:wonder_souls/src/config/core/injector/injector.dart';
+import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 
-class TripCard extends StatelessWidget {
+class TripCard extends StatefulWidget {
   const TripCard({super.key, required this.trip});
   final TripData trip;
+
+  @override
+  State<TripCard> createState() => _TripCardState();
+}
+
+class _TripCardState extends State<TripCard> {
+  static final Map<String, String> _googlePlacesCache = {};
+  String? _resolvedImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveImage();
+  }
+
+  @override
+  void didUpdateWidget(covariant TripCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.trip.id != widget.trip.id ||
+        oldWidget.trip.imageUrl != widget.trip.imageUrl ||
+        oldWidget.trip.mainDestination != widget.trip.mainDestination) {
+      _resolveImage();
+    }
+  }
+
+  void _resolveImage() {
+    final originalUrl = widget.trip.imageUrl;
+    // If already a Google Places URL, use it directly
+    if (originalUrl.contains("places.googleapis.com") ||
+        originalUrl.contains("maps.googleapis.com")) {
+      _resolvedImageUrl = originalUrl;
+      return;
+    }
+
+    final destKey = widget.trip.mainDestination.trim().isNotEmpty
+        ? widget.trip.mainDestination.trim()
+        : widget.trip.name.trim();
+
+    if (destKey.isEmpty) {
+      _resolvedImageUrl = originalUrl;
+      return;
+    }
+
+    final cacheKey = destKey.toLowerCase();
+    if (_googlePlacesCache.containsKey(cacheKey)) {
+      _resolvedImageUrl = _googlePlacesCache[cacheKey];
+      return;
+    }
+
+    _resolvedImageUrl = originalUrl;
+    _fetchGooglePlacesPhoto(destKey);
+  }
+
+  Future<void> _fetchGooglePlacesPhoto(String destination) async {
+    try {
+      final placesService = sl.isRegistered<GooglePlacesNewService>()
+          ? sl<GooglePlacesNewService>()
+          : GooglePlacesNewService();
+
+      final placeId = await placesService.searchPlaceId(destination);
+      if (placeId != null && placeId.isNotEmpty) {
+        final details = await placesService.getPlaceDetails(placeId);
+        final photos = details?["photos"] as List?;
+        if (photos != null && photos.isNotEmpty) {
+          final photoName = photos.first["name"];
+          if (photoName != null) {
+            final uri = await placesService.getPhotoUri(photoName);
+            if (uri != null && uri.isNotEmpty) {
+              _googlePlacesCache[destination.toLowerCase()] = uri;
+              if (mounted) {
+                setState(() {
+                  _resolvedImageUrl = uri;
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("TripCard: error resolving Google Places photo for $destination: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final displayImageUrl = _resolvedImageUrl ?? widget.trip.imageUrl;
+
     return Container(
       margin: EdgeInsets.only(bottom: 20.h),
       width: double.infinity,
@@ -42,9 +129,18 @@ class TripCard extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 20 / 9,
                     child: CachedNetworkImage(
-                      imageUrl: trip.imageUrl,
+                      imageUrl: displayImageUrl,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        color: context.shimmerBase,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: context.primary.withAlpha(100),
+                          ),
+                        ),
+                      ),
                       errorWidget: (_, __, ___) => Container(
                         color: context.shimmerBase,
                         child: Icon(
@@ -89,7 +185,7 @@ class TripCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              trip.name,
+                              widget.trip.name,
                               overflow: TextOverflow.ellipsis,
                               style: context.text.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
@@ -97,7 +193,7 @@ class TripCard extends StatelessWidget {
                             ),
                           ),
                           SizedBox(width: 6.w),
-                          Text(trip.flag, style: TextStyle(fontSize: 18.sp)),
+                          Text(widget.trip.flag, style: TextStyle(fontSize: 18.sp)),
                         ],
                       ),
                     ),
@@ -117,7 +213,7 @@ class TripCard extends StatelessWidget {
                 ),
                 SizedBox(height: 6.h),
                 Text(
-                  '${trip.dateRange} · ${trip.tripType} · ${trip.category}',
+                  '${widget.trip.dateRange} · ${widget.trip.tripType} · ${widget.trip.category}',
                   style: context.text.bodySmall?.copyWith(
                     color: context.onSurfaceVariant,
                   ),
