@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
+import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/config/utils/app_toast.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
@@ -46,16 +47,47 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
   Future<void> _fetchAccommodations() async {
     setState(() => _loadingAccommodations = true);
     try {
-      final result = await _apiService.get<List<dynamic>>(
+      final result = await _apiService.get<dynamic>(
         "/Accomodation",
-        fromJson: (json) => json as List<dynamic>,
+        fromJson: (json) => json,
       );
 
-      if (result is Success<List<dynamic>>) {
-        final List<AccommodationModel> items = result.data
-            .map((e) => AccommodationModel.fromJson(e as Map<String, dynamic>))
-            .where((acc) => acc.tripId == widget.tripId)
-            .toList();
+      if (result is Success<dynamic>) {
+        final rawData = result.data;
+        List<dynamic> itemsList = [];
+
+        if (rawData is List) {
+          itemsList = rawData;
+        } else if (rawData is Map<String, dynamic>) {
+          if (rawData["data"] is List) {
+            itemsList = rawData["data"] as List;
+          } else if (rawData["items"] is List) {
+            itemsList = rawData["items"] as List;
+          } else if (rawData["accommodations"] is List) {
+            itemsList = rawData["accommodations"] as List;
+          } else if (rawData["data"] is Map<String, dynamic>) {
+            final inner = rawData["data"] as Map<String, dynamic>;
+            if (inner["items"] is List) {
+              itemsList = inner["items"] as List;
+            } else if (inner["accommodations"] is List) {
+              itemsList = inner["accommodations"] as List;
+            }
+          }
+        }
+
+        final List<AccommodationModel> items = [];
+        for (final item in itemsList) {
+          if (item is Map<String, dynamic>) {
+            try {
+              final acc = AccommodationModel.fromJson(item);
+              if (acc.tripId == null || acc.tripId!.isEmpty || acc.tripId == widget.tripId) {
+                items.add(acc);
+              }
+            } catch (e) {
+              debugPrint("Error parsing accommodation item: $e");
+            }
+          }
+        }
 
         setState(() {
           _accommodations = items;
@@ -73,16 +105,47 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
   Future<void> _fetchTransports() async {
     setState(() => _loadingTransports = true);
     try {
-      final result = await _apiService.get<List<dynamic>>(
+      final result = await _apiService.get<dynamic>(
         "/TripTransports",
-        fromJson: (json) => json as List<dynamic>,
+        fromJson: (json) => json,
       );
 
-      if (result is Success<List<dynamic>>) {
-        final List<TripTransportModel> items = result.data
-            .map((e) => TripTransportModel.fromJson(e as Map<String, dynamic>))
-            .where((t) => t.tripId == widget.tripId)
-            .toList();
+      if (result is Success<dynamic>) {
+        final rawData = result.data;
+        List<dynamic> itemsList = [];
+
+        if (rawData is List) {
+          itemsList = rawData;
+        } else if (rawData is Map<String, dynamic>) {
+          if (rawData["data"] is List) {
+            itemsList = rawData["data"] as List;
+          } else if (rawData["items"] is List) {
+            itemsList = rawData["items"] as List;
+          } else if (rawData["transports"] is List) {
+            itemsList = rawData["transports"] as List;
+          } else if (rawData["data"] is Map<String, dynamic>) {
+            final inner = rawData["data"] as Map<String, dynamic>;
+            if (inner["items"] is List) {
+              itemsList = inner["items"] as List;
+            } else if (inner["transports"] is List) {
+              itemsList = inner["transports"] as List;
+            }
+          }
+        }
+
+        final List<TripTransportModel> items = [];
+        for (final item in itemsList) {
+          if (item is Map<String, dynamic>) {
+            try {
+              final t = TripTransportModel.fromJson(item);
+              if (t.tripId == null || t.tripId!.isEmpty || t.tripId == widget.tripId) {
+                items.add(t);
+              }
+            } catch (e) {
+              debugPrint("Error parsing transport item: $e");
+            }
+          }
+        }
 
         setState(() {
           _transports = items;
@@ -202,7 +265,13 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
         fromJson: (d) => d,
       );
       if (res is Success && res.data != null) {
-        latestModel = AccommodationModel.fromJson(res.data["data"] ?? res.data);
+        final raw = res.data;
+        final map = (raw is Map<String, dynamic> && raw["data"] is Map<String, dynamic>)
+            ? raw["data"] as Map<String, dynamic>
+            : (raw is Map<String, dynamic> ? raw : null);
+        if (map != null) {
+          latestModel = AccommodationModel.fromJson(map);
+        }
       }
     } catch (e) {
       debugPrint("Failed to load accommodation details: $e");
@@ -347,6 +416,11 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                           bookingUrl: model.bookingUrl,
                           confirmationDocumentUrl: model.confirmationDocumentUrl,
                           phone: model.phone,
+                          checkInDate: model.checkInDate,
+                          checkInInstructions: model.checkInInstructions,
+                          checkOutDate: model.checkOutDate,
+                          checkOutInstructions: model.checkOutInstructions,
+                          currency: model.currency,
                         );
 
                         AppToast.success("Saving changes...");
@@ -359,6 +433,8 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                         if (res is Success) {
                           AppToast.success("Accommodation updated!");
                           _fetchAccommodations();
+                        } else if (res is Failure) {
+                          AppToast.error(res.message);
                         } else {
                           AppToast.error("Failed to update accommodation");
                         }
@@ -393,10 +469,16 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
         fromJson: (d) => d,
       );
       if (res is Success && res.data != null) {
-        latestModel = TripTransportModel.fromJson(res.data["data"] ?? res.data);
+        final raw = res.data;
+        final map = (raw is Map<String, dynamic> && raw["data"] is Map<String, dynamic>)
+            ? raw["data"] as Map<String, dynamic>
+            : (raw is Map<String, dynamic> ? raw : null);
+        if (map != null) {
+          latestModel = TripTransportModel.fromJson(map);
+        }
       }
     } catch (e) {
-      debugPrint("Failed to load accommodation details: $e");
+      debugPrint("Failed to load transport details: $e");
     }
 
     final model = latestModel ?? baseModel;
@@ -581,6 +663,8 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                             if (res is Success) {
                               AppToast.success("Transport updated!");
                               _fetchTransports();
+                            } else if (res is Failure) {
+                              AppToast.error(res.message);
                             } else {
                               AppToast.error("Failed to update transport");
                             }

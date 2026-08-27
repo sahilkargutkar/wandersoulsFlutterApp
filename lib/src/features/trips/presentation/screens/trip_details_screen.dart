@@ -22,6 +22,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wonder_souls/src/features/trips/model/trip_activity_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/edit_itinerary_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/widgets/trip_bookings_sheet.dart';
+import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
 
 const Map<String, Map<String, double>> _cityCoordinatesFallback = {
@@ -563,19 +564,42 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                               AppToast.success("Updating trip...");
                               try {
                                 final apiService = sl<ApiService>();
+                                final currentUser = sl<AuthLocalDataSource>().getUser();
+                                final ownerId = currentUser?.id ?? "";
+                                final ownerName = currentUser?.name ?? "";
+
                                 final payload = {
+                                  if (_tripState.id.isNotEmpty) "id": _tripState.id,
+                                  if (_tripState.id.isNotEmpty) "tripId": _tripState.id,
+                                  if (ownerId.isNotEmpty) "ownerId": ownerId,
+                                  if (ownerId.isNotEmpty) "OwnerId": ownerId,
+                                  if (ownerName.isNotEmpty) "ownerName": ownerName,
+                                  if (ownerName.isNotEmpty) "OwnerName": ownerName,
                                   "name": name,
                                   "description": descController.text.trim(),
                                   "startDate": start.toUtc().toIso8601String(),
                                   "endDate": end.toUtc().toIso8601String(),
                                   "mainDestination": _tripState.mainDestination,
-                                  "whoIsGoing": _tripState.tripType,
+                                  "whoIsGoing": _tripState.tripType.toLowerCase(),
                                   "isPublic": false,
                                   "travelTastes": _tripState.travelTastes,
+                                  "imageUrl": _tripState.imageUrl,
+                                  "image": _tripState.imageUrl,
+                                  "coverImage": _tripState.imageUrl,
                                   "budget": {
-                                    "budgetType": _tripState.category,
-                                    "totalEstimated": 2000,
-                                    "currency": "USD",
+                                    "budgetType": _tripState.category.toLowerCase(),
+                                    "totalEstimated": _tripState.totalBudget > 0
+                                        ? _tripState.totalBudget
+                                        : 2000,
+                                    "currency": _tripState.currency.isNotEmpty
+                                        ? _tripState.currency
+                                        : "USD",
+                                    "byCategory": {
+                                      "transportation": _tripState.transportBudget,
+                                      "accommodation": _tripState.accommodationBudget,
+                                      "food": _tripState.foodBudget,
+                                      "activities": _tripState.activitiesBudget,
+                                    },
                                   },
                                 };
 
@@ -588,6 +612,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                 if (res is Success) {
                                   AppToast.success("Trip updated successfully!");
                                   _fetchTripDetails();
+                                } else if (res is Failure) {
+                                  AppToast.error(res.message);
                                 } else {
                                   AppToast.error("Failed to update trip details");
                                 }

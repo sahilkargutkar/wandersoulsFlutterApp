@@ -5,10 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:country_picker/country_picker.dart';
-import 'package:wonder_souls/src/config/core/injector/injector.dart';
-import 'package:wonder_souls/src/config/core/services/api_services.dart';
-import 'package:wonder_souls/src/config/utils/api_constant.dart';
-import 'package:wonder_souls/src/config/model/success.dart';
 import 'package:wonder_souls/src/config/utils/app_toast.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/app_search_bar.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
@@ -60,11 +56,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _currencyController = TextEditingController();
   final TextEditingController _languageController = TextEditingController();
-  final TextEditingController _tokenController = TextEditingController();
   String _phoneCode = '';
   File? _profileImage;
-  bool _isEmailVerified = false;
-  bool _isVerifyingEmail = false;
 
   @override
   void dispose() {
@@ -75,7 +68,6 @@ class _SignupScreenState extends State<SignupScreen> {
     _phoneController.dispose();
     _currencyController.dispose();
     _languageController.dispose();
-    _tokenController.dispose();
     super.dispose();
   }
 
@@ -806,168 +798,58 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Future<void> _verifyEmail(String token) async {
-    if (token.trim().isEmpty) {
-      AppToast.error("Please enter the verification code");
-      return;
-    }
-
-    setState(() => _isVerifyingEmail = true);
-
-    try {
-      final apiService = sl<ApiService>();
-      final result = await apiService.getWithParams<void>(
-        ApiConstants.verifyEmail,
-        queryParameters: {
-          "email": _emailController.text.trim(),
-          "token": token.trim(),
-        },
-        fromJson: (_) {},
-      );
-
-      if (result is Success<void>) {
-        setState(() {
-          _isEmailVerified = true;
-          _isVerifyingEmail = false;
-        });
-        AppToast.success("Email verified successfully!");
-      } else {
-        setState(() => _isVerifyingEmail = false);
-        AppToast.error("Verification failed. Please check the code.");
-      }
-    } catch (e) {
-      setState(() => _isVerifyingEmail = false);
-      AppToast.error("An error occurred: $e");
-    }
-  }
-
   Widget _buildStep4Success() {
-    if (!_isEmailVerified) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Spacer(),
-          Container(
-            width: 80.w,
-            height: 80.w,
-            decoration: BoxDecoration(
-              color: context.primary.withAlpha(20),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.mark_email_unread_rounded,
-              color: context.primary,
-              size: 40.sp,
-            ),
-          ),
-          SizedBox(height: 24.h),
-          Text(
-            "Verify Your Email ✉️",
-            style: context.text.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Text(
-              "Please enter the verification code/token to activate your account.",
-              textAlign: TextAlign.center,
-              style: context.text.bodyMedium?.copyWith(
-                color: context.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-          ),
-          SizedBox(height: 32.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: CommonTextFormField(
-              hintText: 'Enter Verification Code',
-              controller: _tokenController,
-              prefixIcon: Icon(
-                Icons.vpn_key_outlined,
-                size: 20.sp,
-                color: context.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const Spacer(),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: _isVerifyingEmail
-                ? const Center(child: CircularProgressIndicator())
-                : CommonButton(
-                    title: "Verify Account",
-                    icon: Icons.verified_user_rounded,
-                    onPressed: () => _verifyEmail(_tokenController.text),
-                  ),
-          ),
-          SizedBox(height: 24.h),
-        ],
-      );
-    }
-
+    final email = _emailController.text.trim();
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Spacer(),
-
-        // Animated checkmark
         Container(
-          width: 100.w,
-          height: 100.w,
+          width: 90.w,
+          height: 90.w,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [context.primary, context.primary.withAlpha(200)],
-            ),
+            color: context.primary.withAlpha(25),
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: context.primary.withAlpha(40),
-                blurRadius: 24,
-                spreadRadius: 4,
-              ),
-            ],
           ),
-          child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
+          child: Icon(
+            Icons.mark_email_read_rounded,
+            color: context.primary,
+            size: 46.sp,
+          ),
         ),
-
-        SizedBox(height: 28.h),
-
+        SizedBox(height: 24.h),
         Text(
-          "You're all set! 🎉",
+          "Verify Your Email ✉️",
+          textAlign: TextAlign.center,
           style: context.text.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
           ),
         ),
-
         SizedBox(height: 12.h),
-
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Text(
-            "Welcome to the WonderSouls community! Your personalized travel experiences await.",
+            email.isNotEmpty
+                ? "We have sent a verification link to $email.\n\nPlease check your inbox (and spam folder) and click the link to activate your account."
+                : "We have sent a verification link to your email address.\n\nPlease check your inbox and click the link to activate your account.",
             textAlign: TextAlign.center,
-            style: context.text.bodyLarge?.copyWith(
+            style: context.text.bodyMedium?.copyWith(
               color: context.onSurfaceVariant,
               height: 1.5,
             ),
           ),
         ),
-
         const Spacer(),
-
-        CommonButton(
-          title: "Start Exploring",
-          icon: Icons.arrow_forward_rounded,
-          onPressed: () {
-            context.go(LoginScreen.routeName);
-          },
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: CommonButton(
+            title: "Go to Login",
+            icon: Icons.login_rounded,
+            onPressed: () {
+              context.go(LoginScreen.routeName);
+            },
+          ),
         ),
         SizedBox(height: 24.h),
       ],

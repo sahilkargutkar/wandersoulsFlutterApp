@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
+import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/config/utils/app_toast.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
@@ -131,6 +132,8 @@ class _AddBookingFormScreenState extends State<AddBookingFormScreen> {
         if (res is Success) {
           AppToast.success("Accommodation added successfully!");
           if (mounted) context.pop();
+        } else if (res is Failure) {
+          AppToast.error(res.message);
         } else {
           AppToast.error("Failed to add accommodation");
         }
@@ -157,6 +160,8 @@ class _AddBookingFormScreenState extends State<AddBookingFormScreen> {
         if (res is Success) {
           AppToast.success("Transport added successfully!");
           if (mounted) context.pop();
+        } else if (res is Failure) {
+          AppToast.error(res.message);
         } else {
           AppToast.error("Failed to add transport");
         }
