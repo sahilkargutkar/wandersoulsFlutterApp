@@ -11,6 +11,7 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/trip_detail
 import 'package:wonder_souls/src/features/trips/presentation/widgets/trip_card.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:wonder_souls/src/config/utils/trip_image_helper.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 
 class MyTripsScreen extends StatefulWidget {
@@ -279,10 +280,14 @@ class _MyTripsScreenState extends State<MyTripsScreen>
         ),
         itemCount: trips.length,
         itemBuilder: (context, index) {
+          final trip = trips[index];
           return GestureDetector(
-            onTap: () =>
-                context.push(TripDetailsScreen.routeName, extra: trips[index]),
-            child: TripCard(trip: trips[index]),
+            onTap: () {
+              final resolvedImg = TripImageHelper.getDisplayImageUrl(trip);
+              final tripToPass = trip.copyWith(imageUrl: resolvedImg);
+              context.push(TripDetailsScreen.routeName, extra: tripToPass);
+            },
+            child: TripCard(trip: trip),
           );
         },
       ),

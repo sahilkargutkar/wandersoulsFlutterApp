@@ -115,10 +115,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
   }
 
   String _getImageUrl(TripActivityModel act) {
-    if (act.imageUrl != null && act.imageUrl!.isNotEmpty) {
-      return act.imageUrl!;
-    }
-    return "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400";
+    return act.displayImageUrl;
   }
 
   void _confirmDeleteEvent(
@@ -392,9 +389,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                 "ageRestriction": "None",
                 "cost": act.cost,
                 "tips": act.tips ?? "",
-                "imageUrl":
-                    act.imageUrl ??
-                    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400",
+                "imageUrl": act.displayImageUrl,
               },
               "notes": act.tips ?? "",
             };
@@ -439,9 +434,7 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
                   "ageRestriction": "None",
                   "cost": act.cost,
                   "tips": act.tips ?? "",
-                  "imageUrl":
-                      act.imageUrl ??
-                      "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400",
+                  "imageUrl": act.displayImageUrl,
                 },
                 "notes": act.notes ?? act.tips ?? "",
               };

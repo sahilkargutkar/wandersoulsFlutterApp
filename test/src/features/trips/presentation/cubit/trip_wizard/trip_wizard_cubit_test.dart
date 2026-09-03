@@ -3,7 +3,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
-import 'package:wonder_souls/src/config/model/api_result.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/trip_wizard/trip_wizard_cubit.dart';

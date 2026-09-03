@@ -191,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Privacy Policy',
                 onTap: () {
                   launchUrl(
-                    Uri.parse("https://www.wanderingsouls.in/privacy-policy/"),
+                    Uri.parse("https://www.wandersouls.in/privacy-policy/"),
                     mode: LaunchMode.externalApplication,
                   );
                 },

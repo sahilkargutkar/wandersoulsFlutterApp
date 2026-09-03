@@ -54,6 +54,11 @@ class ApiConstants {
   static const String tripActivities = "/TripActivity";
   static String tripActivityById(String id) => "/TripActivity/$id";
 
+  // TripBudget & Expenses
+  static const String tripBudgetGetAllExpenses = "/TripBudget/GetAllExpenses";
+  static const String tripBudgetExpenses = "/TripBudget/expenses";
+  static String tripBudgetExpenseById(String expenseId) => "/TripBudget/expenses/$expenseId";
+
   // Preference
   static const String getPreference = "/Preference";
   static const String savePreference = "/Preference/save";

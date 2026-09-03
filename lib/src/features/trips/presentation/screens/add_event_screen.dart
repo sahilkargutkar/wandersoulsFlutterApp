@@ -8,6 +8,7 @@ import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/circular_icon.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:wonder_souls/src/features/trips/model/trip_activity_model.dart';
 
 class AddEventScreen extends StatefulWidget {
   final String dayTitle;
@@ -133,26 +134,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
         place.googleMapsUrl!.startsWith('http')) {
       return place.googleMapsUrl!;
     }
-    final nameLower = place.name.toLowerCase();
-    if (nameLower.contains("ramen") ||
-        nameLower.contains("food") ||
-        nameLower.contains("restaurant") ||
-        nameLower.contains("afuri") ||
-        nameLower.contains("sushi")) {
-      return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400";
-    }
-    if (nameLower.contains("shrine") ||
-        nameLower.contains("temple") ||
-        nameLower.contains("jingu") ||
-        nameLower.contains("asakusa")) {
-      return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400";
-    }
-    if (nameLower.contains("park") ||
-        nameLower.contains("tower") ||
-        nameLower.contains("electric")) {
-      return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=400";
-    }
-    return "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400";
+    return TripActivityModel.getFallbackImage(0, place.name);
   }
 
   @override

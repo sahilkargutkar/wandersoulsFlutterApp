@@ -22,7 +22,7 @@ class SavedTripsScreen extends StatefulWidget {
 }
 
 class _SavedTripsScreenState extends State<SavedTripsScreen> {
-  int _selectedTab = 0; // 0: Places, 1: Blogs
+  int _selectedTab = 0; // 0: Blogs, 1: Places
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +42,15 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
                 Expanded(
                   child: _buildTabButton(
                     index: 0,
-                    title: "Saved Places",
-                    icon: Icons.bookmark_rounded,
+                    title: "Travel Blogs",
+                    icon: Icons.article_rounded,
                   ),
                 ),
                 Expanded(
                   child: _buildTabButton(
                     index: 1,
-                    title: "Travel Blogs",
-                    icon: Icons.article_rounded,
+                    title: "Saved Places",
+                    icon: Icons.bookmark_rounded,
                   ),
                 ),
               ],
@@ -68,13 +68,13 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
                     valueListenable: widget.searchNotifier!,
                     builder: (context, query, child) {
                       return _selectedTab == 0
-                          ? _buildSavedPlacesSection(context, query)
-                          : _buildBlogsSection(context, query);
+                          ? _buildBlogsSection(context, query)
+                          : _buildSavedPlacesSection(context, query);
                     },
                   )
                 : (_selectedTab == 0
-                    ? _buildSavedPlacesSection(context, "")
-                    : _buildBlogsSection(context, "")),
+                    ? _buildBlogsSection(context, "")
+                    : _buildSavedPlacesSection(context, "")),
           ),
         ),
       ],

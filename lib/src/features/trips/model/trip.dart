@@ -262,6 +262,48 @@ class TripData {
     );
   }
 
+  TripData copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? flag,
+    String? dateRange,
+    String? tripType,
+    String? category,
+    String? imageUrl,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? mainDestination,
+    List<String>? travelTastes,
+    double? totalBudget,
+    String? currency,
+    double? transportBudget,
+    double? accommodationBudget,
+    double? foodBudget,
+    double? activitiesBudget,
+  }) {
+    return TripData(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      flag: flag ?? this.flag,
+      dateRange: dateRange ?? this.dateRange,
+      tripType: tripType ?? this.tripType,
+      category: category ?? this.category,
+      imageUrl: imageUrl ?? this.imageUrl,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      mainDestination: mainDestination ?? this.mainDestination,
+      travelTastes: travelTastes ?? this.travelTastes,
+      totalBudget: totalBudget ?? this.totalBudget,
+      currency: currency ?? this.currency,
+      transportBudget: transportBudget ?? this.transportBudget,
+      accommodationBudget: accommodationBudget ?? this.accommodationBudget,
+      foodBudget: foodBudget ?? this.foodBudget,
+      activitiesBudget: activitiesBudget ?? this.activitiesBudget,
+    );
+  }
+
   static String _formatDateRange(DateTime? start, DateTime? end) {
     if (start == null || end == null) return "Dates Unknown";
     const months = [

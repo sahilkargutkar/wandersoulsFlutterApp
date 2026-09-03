@@ -279,7 +279,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
               child: InkWell(
                 onTap: () {
                   launchUrl(
-                    Uri.parse("https://wanderingsouls.in/terms-and-conditions"),
+                    Uri.parse("https://wandersouls.in/terms-and-conditions"),
                     mode: LaunchMode.externalApplication,
                   );
                 },

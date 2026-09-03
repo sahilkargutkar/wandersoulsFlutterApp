@@ -176,7 +176,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                     trailing: Icon(Icons.open_in_new_rounded, size: 14.sp),
                     onTap: () {
                       launchUrl(
-                        Uri.parse("https://www.wanderingsouls.in/privacy-policy/"),
+                        Uri.parse("https://www.wandersouls.in/privacy-policy/"),
                         mode: LaunchMode.externalApplication,
                       );
                     },

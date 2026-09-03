@@ -24,6 +24,7 @@ import 'package:wonder_souls/src/features/trips/presentation/screens/edit_itiner
 import 'package:wonder_souls/src/features/trips/presentation/widgets/trip_bookings_sheet.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
+import 'package:wonder_souls/src/config/utils/trip_image_helper.dart';
 
 const Map<String, Map<String, double>> _cityCoordinatesFallback = {
   'tokyo': {'lat': 35.6762, 'lng': 139.6503},
@@ -81,7 +82,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   // AI Suggestions
   List<dynamic> _aiSuggestions = [];
   bool _loadingAiSuggestions = false;
-  String? _aiSuggestionsError;
+  bool _showAiSuggestions = false;
 
   List<String> _attachments = [];
   bool _uploadingAttachment = false;
@@ -90,13 +91,41 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   void initState() {
     super.initState();
     _tripState = widget.trip;
+    _resolveTripCoverPhoto();
     _fetchTripDetails();
     _fetchActivities();
-    _fetchAiSuggestions();
     _loadAttachments();
     _searchController.addListener(_onSearchChanged);
     _fetchDestinationCoordinates();
     _resolveDayActivityCoordinates();
+  }
+
+  void _resolveTripCoverPhoto() {
+    final destKey = _tripState.mainDestination.trim().isNotEmpty
+        ? _tripState.mainDestination.trim()
+        : _tripState.name.trim();
+    if (destKey.isEmpty) return;
+
+    final cached = TripImageHelper.getCachedPhoto(destKey);
+    if (cached != null && cached != _tripState.imageUrl) {
+      if (mounted) {
+        setState(() {
+          _tripState = _tripState.copyWith(imageUrl: cached);
+        });
+      }
+      return;
+    }
+
+    if (!_tripState.imageUrl.contains("places.googleapis.com") &&
+        !_tripState.imageUrl.contains("maps.googleapis.com")) {
+      TripImageHelper.resolvePhoto(destKey).then((uri) {
+        if (uri != null && mounted) {
+          setState(() {
+            _tripState = _tripState.copyWith(imageUrl: uri);
+          });
+        }
+      });
+    }
   }
 
   Future<void> _resolveDestinationPlaceId(String city) async {
@@ -312,8 +341,21 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           return;
         }
 
+        final updatedTrip = TripData.fromJson(dataMap);
+        final destKey = updatedTrip.mainDestination.trim().isNotEmpty
+            ? updatedTrip.mainDestination.trim()
+            : updatedTrip.name.trim();
+        final cached = TripImageHelper.getCachedPhoto(destKey);
+
         setState(() {
-          _tripState = TripData.fromJson(dataMap);
+          if (cached != null) {
+            _tripState = updatedTrip.copyWith(imageUrl: cached);
+          } else if (_tripState.imageUrl.contains("places.googleapis.com") ||
+              _tripState.imageUrl.contains("maps.googleapis.com")) {
+            _tripState = updatedTrip.copyWith(imageUrl: _tripState.imageUrl);
+          } else {
+            _tripState = updatedTrip;
+          }
         });
         _fetchDestinationCoordinates();
       }
@@ -414,7 +456,13 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
   void _showEditTripDialog() {
     final nameController = TextEditingController(text: _tripState.name);
-    final descController = TextEditingController(text: _tripState.description);
+    final descController =
+        TextEditingController(text: _tripState.description);
+    final budgetController = TextEditingController(
+      text: _tripState.totalBudget > 0
+          ? _tripState.totalBudget.toStringAsFixed(0)
+          : "2000",
+    );
     DateTime start = _tripState.startDate ?? DateTime.now();
     DateTime end =
         _tripState.endDate ?? DateTime.now().add(const Duration(days: 3));
@@ -457,6 +505,11 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
                       _buildFormField(controller: nameController, label: "Trip Name"),
                       _buildFormField(controller: descController, label: "Description", maxLines: 3),
+                      _buildFormField(
+                        controller: budgetController,
+                        label: "Total Budget (${_tripState.currency.isNotEmpty ? _tripState.currency : 'USD'})",
+                        keyboardType: TextInputType.number,
+                      ),
 
                       Text(
                         "Trip Dates",
@@ -568,6 +621,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                 final ownerId = currentUser?.id ?? "";
                                 final ownerName = currentUser?.name ?? "";
 
+                                final enteredBudget = double.tryParse(budgetController.text.trim()) ?? _tripState.totalBudget;
+                                final totalBudgetVal = enteredBudget > 0 ? enteredBudget : 2000.0;
+
                                 final payload = {
                                   if (_tripState.id.isNotEmpty) "id": _tripState.id,
                                   if (_tripState.id.isNotEmpty) "tripId": _tripState.id,
@@ -588,17 +644,24 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                                   "coverImage": _tripState.imageUrl,
                                   "budget": {
                                     "budgetType": _tripState.category.toLowerCase(),
-                                    "totalEstimated": _tripState.totalBudget > 0
-                                        ? _tripState.totalBudget
-                                        : 2000,
+                                    "totalEstimated": totalBudgetVal,
                                     "currency": _tripState.currency.isNotEmpty
                                         ? _tripState.currency
                                         : "USD",
                                     "byCategory": {
-                                      "transportation": _tripState.transportBudget,
-                                      "accommodation": _tripState.accommodationBudget,
-                                      "food": _tripState.foodBudget,
-                                      "activities": _tripState.activitiesBudget,
+                                      "transportation": _tripState.transportBudget > 0
+                                          ? _tripState.transportBudget
+                                          : (totalBudgetVal * 0.25),
+                                      "accommodation": _tripState.accommodationBudget > 0
+                                          ? _tripState.accommodationBudget
+                                          : (totalBudgetVal * 0.35),
+                                      "food": _tripState.foodBudget > 0
+                                          ? _tripState.foodBudget
+                                          : (totalBudgetVal * 0.25),
+                                      "activities": _tripState.activitiesBudget > 0
+                                          ? _tripState.activitiesBudget
+                                          : (totalBudgetVal * 0.15),
+                                      "others": 0.0,
                                     },
                                   },
                                 };
@@ -664,11 +727,307 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return start.add(Duration(days: _selectedDayIndex));
   }
 
+  List<Map<String, dynamic>> _generateFallbackAiSuggestions(
+    String destination,
+    List<String> tastes,
+  ) {
+    final destLower = destination.trim().toLowerCase();
+
+    // 1. Oman / Muscat
+    if (destLower.contains("muscat") ||
+        destLower.contains("oman") ||
+        destLower.contains("salalah") ||
+        destLower.contains("nizwa")) {
+      return [
+        {
+          "name": "Sultan Qaboos Grand Mosque",
+          "category": "Culture",
+          "description":
+              "Marvel at stunning Islamic architecture, hand-woven Persian carpet, and Swarovski crystal chandelier.",
+          "estimatedCost": 0,
+          "duration": "2h",
+          "tips":
+              "Modest dress required (arms & legs covered, headscarf for women). Best visited before 11 AM.",
+        },
+        {
+          "name": "Mutrah Souq & Corniche",
+          "category": "Shopping",
+          "description":
+              "Wander vibrant alleyways filled with frankincense, silver jewelry, spices, and waterfront strolls.",
+          "estimatedCost": 0,
+          "duration": "2.5h",
+          "tips":
+              "Great for evening sunset walks and authentic Omani souvenirs.",
+        },
+        {
+          "name": "Bimmah Sinkhole & Wadi Shab",
+          "category": "Adventure",
+          "description":
+              "Swim in turquoise limestone sinkhole and hike through dramatic wadi canyons with hidden waterfalls.",
+          "estimatedCost": 15,
+          "duration": "4h",
+          "tips": "Bring sturdy water shoes and waterproof phone pouch.",
+        },
+        {
+          "name": "Royal Opera House Muscat",
+          "category": "Landmark",
+          "description":
+              "Experience breathtaking modern Omani marble architecture and world-class performances.",
+          "estimatedCost": 10,
+          "duration": "1.5h",
+          "tips":
+              "Check performance schedule in advance or take the morning architectural tour.",
+        },
+        {
+          "name": "Bait Al Zubair Museum",
+          "category": "Culture",
+          "description":
+              "Discover Omani history, weapons, khanjars (daggers), and traditional costumes.",
+          "estimatedCost": 8,
+          "duration": "1.5h",
+          "tips": "Located in Old Muscat near Al Alam Palace.",
+        },
+        {
+          "name": "Al Alam Palace & Portuguese Forts",
+          "category": "Landmark",
+          "description":
+              "Ceremonial palace of Sultan Haitham flanked by historic 16th-century Al Jalali & Al Mirani forts.",
+          "estimatedCost": 0,
+          "duration": "1h",
+          "tips": "Palace exterior is open for stunning photography.",
+        },
+      ];
+    }
+
+    // 2. Paris / France
+    if (destLower.contains("paris") || destLower.contains("france")) {
+      return [
+        {
+          "name": "Eiffel Tower & Champ de Mars",
+          "category": "Landmark",
+          "description":
+              "Iconic iron lattice tower with panoramic views over Paris and evening sparkling light show.",
+          "estimatedCost": 25,
+          "duration": "2.5h",
+          "tips": "Book summit tickets online in advance to skip long lines.",
+        },
+        {
+          "name": "Louvre Museum",
+          "category": "Culture",
+          "description":
+              "World's largest art museum housing the Mona Lisa, Venus de Milo, and Winged Victory.",
+          "estimatedCost": 20,
+          "duration": "3h",
+          "tips":
+              "Enter through Carrousel du Louvre entrance for shorter lines.",
+        },
+        {
+          "name": "Montmartre & Sacré-Cœur",
+          "category": "Culture",
+          "description":
+              "Bohemian hilltop neighborhood with cobbled alleys, artist cafes, and panoramic dome views.",
+          "estimatedCost": 0,
+          "duration": "2h",
+          "tips": "Visit Place du Tertre for live portrait artists.",
+        },
+        {
+          "name": "Seine River Sunset Cruise",
+          "category": "Relaxation",
+          "description":
+              "Glide past Notre-Dame, Musée d'Orsay, and historic illuminated bridges.",
+          "estimatedCost": 18,
+          "duration": "1h",
+          "tips": "Depart around twilight for sunset and city illuminations.",
+        },
+      ];
+    }
+
+    // 3. Tokyo / Japan
+    if (destLower.contains("tokyo") || destLower.contains("japan")) {
+      return [
+        {
+          "name": "Senso-ji Temple & Asakusa",
+          "category": "Culture",
+          "description":
+              "Tokyo's oldest Buddhist temple featuring Nakamise-dori traditional market street.",
+          "estimatedCost": 0,
+          "duration": "2h",
+          "tips":
+              "Try warm melon pan and dango sweets along Nakamise street.",
+        },
+        {
+          "name": "Shibuya Crossing & Hachiko Statue",
+          "category": "Landmark",
+          "description":
+              "The world's most famous scramble crossing surrounded by giant video screens.",
+          "estimatedCost": 0,
+          "duration": "1h",
+          "tips":
+              "View the crossing from Shibuya Sky or Starbucks above for great photos.",
+        },
+        {
+          "name": "Meiji Shrine & Yoyogi Park",
+          "category": "Nature",
+          "description":
+              "Peaceful evergreen forest shrine dedicated to Emperor Meiji in the heart of the city.",
+          "estimatedCost": 0,
+          "duration": "2h",
+          "tips": "Wash hands at the temizuya water pavilion before entering.",
+        },
+        {
+          "name": "teamLab Planets TOKYO",
+          "category": "Entertainment",
+          "description":
+              "Immersive digital art museum where you walk through water and infinite crystal universes.",
+          "estimatedCost": 32,
+          "duration": "2.5h",
+          "tips":
+              "Wear pants that can be rolled above knees as you walk in water.",
+        },
+      ];
+    }
+
+    // 4. Dubai / UAE
+    if (destLower.contains("dubai") || destLower.contains("uae")) {
+      return [
+        {
+          "name": "Burj Khalifa Observation Deck",
+          "category": "Landmark",
+          "description":
+              "Soar up to Level 124/125 for unmatched 360-degree views of Dubai's skyline and desert.",
+          "estimatedCost": 45,
+          "duration": "2h",
+          "tips":
+              "Sunset prime hours (5:00 PM - 6:30 PM) offer the best lighting.",
+        },
+        {
+          "name": "Dubai Mall & Fountain Show",
+          "category": "Entertainment",
+          "description":
+              "World's largest shopping destination with indoor aquarium and synchronized dancing fountain.",
+          "estimatedCost": 0,
+          "duration": "2.5h",
+          "tips": "Fountain shows start every 30 minutes in the evening.",
+        },
+        {
+          "name": "Desert Safari & Bedouin Camp",
+          "category": "Adventure",
+          "description":
+              "Exciting 4x4 dune bashing, sandboarding, camel rides, and BBQ dinner under stars.",
+          "estimatedCost": 55,
+          "duration": "5h",
+          "tips":
+              "Wear comfortable shoes and light layers for cooler desert night temperatures.",
+        },
+        {
+          "name": "Old Dubai & Gold Souk Abra Ride",
+          "category": "Culture",
+          "description":
+              "Traditional 1 AED wooden boat ride across Dubai Creek connecting Deira spice & gold souks.",
+          "estimatedCost": 5,
+          "duration": "2h",
+          "tips": "Carry cash for the traditional Abra boat crossing.",
+        },
+      ];
+    }
+
+    // 5. London / UK
+    if (destLower.contains("london") ||
+        destLower.contains("uk") ||
+        destLower.contains("england")) {
+      return [
+        {
+          "name": "British Museum & Rosetta Stone",
+          "category": "Culture",
+          "description":
+              "World-famous museum dedicated to human history, art, and ancient Egyptian artifacts.",
+          "estimatedCost": 0,
+          "duration": "3h",
+          "tips": "Admission is free! Pre-book timed entry ticket online.",
+        },
+        {
+          "name": "Tower Bridge & Tower of London",
+          "category": "Landmark",
+          "description":
+              "Historic royal fortress and castle housing the Crown Jewels with iconic bridge walk.",
+          "estimatedCost": 35,
+          "duration": "2.5h",
+          "tips": "Join a Yeoman Warder (Beefeater) tour included with ticket.",
+        },
+        {
+          "name": "Big Ben & Westminster Abbey",
+          "category": "Landmark",
+          "description":
+              "Iconic Elizabeth Tower clock and coronation church of British monarchs since 1066.",
+          "estimatedCost": 0,
+          "duration": "1.5h",
+          "tips": "Best photo angle is from across Westminster Bridge.",
+        },
+      ];
+    }
+
+    // 6. Generic / Any Destination
+    final capDest = destination.isNotEmpty
+        ? "${destination[0].toUpperCase()}${destination.substring(1)}"
+        : "Destination";
+
+    return [
+      {
+        "name": "$capDest Historic Old Town & Heritage Walk",
+        "category": "Culture",
+        "description":
+            "Explore historic plazas, ancient architecture, local artisan shops, and hidden courtyards.",
+        "estimatedCost": 0,
+        "duration": "2h",
+        "tips":
+            "Best explored on foot in the morning when streets are lively and quiet.",
+      },
+      {
+        "name": "Local Culinary & Street Food Tasting",
+        "category": "Food",
+        "description":
+            "Sample authentic regional delicacies, local specialty dishes, and street food markets.",
+        "estimatedCost": 20,
+        "duration": "2h",
+        "tips":
+            "Ask locals for their favorite neighborhood stalls for the most authentic flavor.",
+      },
+      {
+        "name": "$capDest Panoramic Viewpoint & Sunset Spot",
+        "category": "Nature",
+        "description":
+            "Catch panoramic sunset views overlooking $capDest and surrounding landscape.",
+        "estimatedCost": 0,
+        "duration": "1.5h",
+        "tips":
+            "Arrive 30 minutes before sunset for the best lighting and photography.",
+      },
+      {
+        "name": "$capDest Central Market & Crafts Fair",
+        "category": "Shopping",
+        "description":
+            "Browse authentic handicrafts, local spices, handmade souvenirs, and fresh regional produce.",
+        "estimatedCost": 0,
+        "duration": "2h",
+        "tips":
+            "Friendly bargaining is often customary at open-air market stalls.",
+      },
+      {
+        "name": "$capDest Cultural Museum & Art Gallery",
+        "category": "Culture",
+        "description":
+            "Immerse yourself in regional history, contemporary arts, and cultural exhibitions.",
+        "estimatedCost": 12,
+        "duration": "2h",
+        "tips": "Audio guides provide rich context for the key exhibits.",
+      },
+    ];
+  }
+
   Future<void> _fetchAiSuggestions() async {
     if (mounted) {
       setState(() {
         _loadingAiSuggestions = true;
-        _aiSuggestionsError = null;
       });
     }
 
@@ -697,6 +1056,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       "description": "",
     };
 
+    List<dynamic> suggestions = [];
+
     try {
       final apiService = sl<ApiService>();
       final aiResult = await apiService.aiPost(
@@ -709,33 +1070,28 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         final List<dynamic> days = data["itinerary"] ?? [];
 
         // Extract all activities across all days as suggestions
-        final List<dynamic> suggestions = [];
         for (var day in days) {
           final List<dynamic> acts = day["activities"] ?? [];
           suggestions.addAll(acts);
         }
-
-        if (mounted) {
-          setState(() {
-            _aiSuggestions = suggestions;
-            _loadingAiSuggestions = false;
-          });
-        }
-      } else if (aiResult is Failure<Map<String, dynamic>>) {
-        if (mounted) {
-          setState(() {
-            _aiSuggestionsError = "Failed to load AI suggestions";
-            _loadingAiSuggestions = false;
-          });
-        }
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _aiSuggestionsError = "AI Service offline";
-          _loadingAiSuggestions = false;
-        });
-      }
+      debugPrint("Live AI suggestion service not reachable: $e");
+    }
+
+    // If live AI suggestions were empty or service unavailable, seamlessly use curated destination suggestions!
+    if (suggestions.isEmpty) {
+      suggestions = _generateFallbackAiSuggestions(
+        _tripState.mainDestination,
+        _tripState.travelTastes,
+      );
+    }
+
+    if (mounted) {
+      setState(() {
+        _aiSuggestions = suggestions;
+        _loadingAiSuggestions = false;
+      });
     }
   }
 
@@ -928,22 +1284,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   }
 
   String _getPlaceImageUrl(int category, String name) {
-    switch (category) {
-      case 1: // Food
-        return "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
-      case 2: // Transport
-        return "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800";
-      case 3: // Accommodation
-        return "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800";
-      case 4: // Relaxation
-        return "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800";
-      case 5: // Shopping
-        return "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800";
-      case 0: // Sightseeing
-        return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800";
-      default:
-        return "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
-    }
+    return TripActivityModel.getFallbackImage(category, name);
   }
 
   int _getCategoryEnum(List<String> types) {
@@ -1456,7 +1797,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           await _fetchActivities();
-          await _fetchAiSuggestions();
+          if (_showAiSuggestions) {
+            await _fetchAiSuggestions();
+          }
         },
         color: context.primary,
         child: CustomScrollView(
@@ -1490,37 +1833,163 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   }
 
   Widget _buildAiSuggestionsList(BuildContext context) {
-    if (_loadingAiSuggestions) {
+    if (!_showAiSuggestions) {
       return Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.auto_awesome, color: context.primary, size: 18.sp),
-                8.w.horizontalSpace,
-                Text(
-                  "AI Suggestions Loading...",
-                  style: context.text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+        child: Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: context.primary.withAlpha(12),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: context.primary.withAlpha(30)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: context.primary.withAlpha(25),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
-            12.h.verticalSpace,
-            const LinearProgressIndicator(),
-          ],
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: context.primary,
+                  size: 20.sp,
+                ),
+              ),
+              12.w.horizontalSpace,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "AI Smart Suggestions",
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    2.h.verticalSpace,
+                    Text(
+                      "Get personalized recommendations for ${_tripState.mainDestination}",
+                      style: context.text.bodySmall?.copyWith(
+                        color: context.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              8.w.horizontalSpace,
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.primary,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _showAiSuggestions = true;
+                  });
+                  if (_aiSuggestions.isEmpty) {
+                    _fetchAiSuggestions();
+                  }
+                },
+                icon: Icon(Icons.auto_awesome, size: 14.sp),
+                label: Text(
+                  "Explore",
+                  style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    if (_aiSuggestionsError != null) {
-      return const SizedBox.shrink(); // Hide if failed to avoid visual clutter
+    if (_loadingAiSuggestions) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+        child: Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: context.mutedBackground,
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: context.primary, size: 18.sp),
+                      8.w.horizontalSpace,
+                      Text(
+                        "Generating AI recommendations...",
+                        style: context.text.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showAiSuggestions = false;
+                        _loadingAiSuggestions = false;
+                      });
+                    },
+                    child: Icon(Icons.close_rounded, size: 18.sp, color: context.onSurfaceVariant),
+                  ),
+                ],
+              ),
+              12.h.verticalSpace,
+              const LinearProgressIndicator(),
+            ],
+          ),
+        ),
+      );
     }
 
     if (_aiSuggestions.isEmpty) {
-      return const SizedBox.shrink();
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+        child: Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: context.mutedBackground,
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline_rounded, color: context.onSurfaceVariant, size: 20.sp),
+              12.w.horizontalSpace,
+              Expanded(
+                child: Text(
+                  "No suggestions available.",
+                  style: context.text.bodySmall?.copyWith(
+                    color: context.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: _fetchAiSuggestions,
+                child: const Text("Retry"),
+              ),
+              IconButton(
+                icon: Icon(Icons.close_rounded, size: 18.sp),
+                onPressed: () {
+                  setState(() => _showAiSuggestions = false);
+                },
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return Column(
@@ -1530,20 +1999,23 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
           child: Row(
             children: [
-              Icon(Icons.auto_awesome, color: context.primary, size: 18.sp),
+              Icon(Icons.auto_awesome_rounded, color: context.primary, size: 18.sp),
               8.w.horizontalSpace,
-              Text(
-                "🪄 AI Suggestions for ${_tripState.mainDestination}",
-                style: context.text.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.2,
+              Expanded(
+                child: Text(
+                  "AI Suggestions for ${_tripState.mainDestination}",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.2,
+                  ),
                 ),
               ),
-              const Spacer(),
               GestureDetector(
                 onTap: _fetchAiSuggestions,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                   decoration: BoxDecoration(
                     color: context.primary.withAlpha(20),
                     borderRadius: BorderRadius.circular(12.r),
@@ -1568,11 +2040,29 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   ),
                 ),
               ),
+              8.w.horizontalSpace,
+              GestureDetector(
+                onTap: () {
+                  setState(() => _showAiSuggestions = false);
+                },
+                child: Container(
+                  padding: EdgeInsets.all(4.w),
+                  decoration: BoxDecoration(
+                    color: context.onSurfaceVariant.withAlpha(20),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: context.onSurfaceVariant,
+                    size: 14.sp,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
         SizedBox(
-          height: 120.h,
+          height: 140.h,
           child: ListView.separated(
             padding: EdgeInsets.symmetric(horizontal: 20.w),
             scrollDirection: Axis.horizontal,
@@ -1582,12 +2072,15 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               final act = _aiSuggestions[index];
               final name = act["name"] ?? "Activity";
               final category = act["category"] ?? "Landmark";
-              final cost = act["estimatedCost"] != null
+              final description = act["description"] ?? "";
+              final cost = act["estimatedCost"] != null &&
+                      (act["estimatedCost"] as num) > 0
                   ? "\$${act["estimatedCost"]}"
                   : "Free";
+              final duration = act["duration"] ?? "1-2h";
 
               return Container(
-                width: 200.w,
+                width: 220.w,
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
                   color: context.mutedBackground,
@@ -1606,30 +2099,65 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: context.text.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontSize: 13.sp,
                             ),
                           ),
                         ),
+                        6.w.horizontalSpace,
                         GestureDetector(
                           onTap: () => _addAiSuggestionToItinerary(
                             act as Map<String, dynamic>,
                           ),
-                          child: Icon(
-                            Icons.add_circle,
-                            color: context.primary,
-                            size: 22.sp,
+                          child: Container(
+                            padding: EdgeInsets.all(4.w),
+                            decoration: BoxDecoration(
+                              color: context.primary.withAlpha(20),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: context.primary,
+                              size: 18.sp,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     4.h.verticalSpace,
-                    Text(
-                      category,
-                      style: context.text.bodySmall?.copyWith(
-                        color: context.primary,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.primary.withAlpha(15),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          color: context.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10.sp,
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    if (description.isNotEmpty) ...[
+                      4.h.verticalSpace,
+                      Expanded(
+                        child: Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.text.bodySmall?.copyWith(
+                            fontSize: 10.5.sp,
+                            color: context.onSurfaceVariant.withAlpha(180),
+                            height: 1.25,
+                          ),
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1637,15 +2165,27 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           cost,
                           style: context.text.bodySmall?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: 11.5.sp,
+                            color: cost == "Free" ? Colors.green : context.onSurface,
                           ),
                         ),
-                        if (act["duration"] != null)
-                          Text(
-                            act["duration"],
-                            style: context.text.bodySmall?.copyWith(
-                              color: context.onSurfaceVariant,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 11.sp,
+                              color: context.onSurfaceVariant.withAlpha(150),
                             ),
-                          ),
+                            3.w.horizontalSpace,
+                            Text(
+                              duration,
+                              style: context.text.bodySmall?.copyWith(
+                                fontSize: 10.5.sp,
+                                color: context.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ],
@@ -1654,7 +2194,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             },
           ),
         ),
-        16.h.verticalSpace,
+        12.h.verticalSpace,
       ],
     );
   }
@@ -1704,7 +2244,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           padding: EdgeInsets.only(right: 12.w),
           child: CircularIcon(
             icon: Icon(
-              Icons.hotel_outlined,
+              Icons.bed_rounded,
               size: 20.sp,
               color: context.onSurface,
             ),
@@ -1713,7 +2253,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
-                builder: (context) => TripBookingsSheet(tripId: _tripState.id),
+                builder: (context) => TripBookingsSheet(
+                  tripId: _tripState.id,
+                  initialTabIndex: 0,
+                ),
               );
             },
           ),
@@ -1724,7 +2267,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           fit: StackFit.expand,
           children: [
             CachedNetworkImage(
-              imageUrl: _tripState.imageUrl,
+              imageUrl: TripImageHelper.getDisplayImageUrl(_tripState),
               fit: BoxFit.cover,
               errorWidget: (_, __, ___) => Container(
                 color: context.shimmerBase,
@@ -2276,9 +2819,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                         ClipRRect(
                           borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
                           child: CachedNetworkImage(
-                            imageUrl: (activity.imageUrl != null && activity.imageUrl!.isNotEmpty)
-                                ? activity.imageUrl!
-                                : "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600",
+                            imageUrl: activity.displayImageUrl,
                             height: 150.h,
                             fit: BoxFit.cover,
                             errorWidget: (_, __, ___) => Container(

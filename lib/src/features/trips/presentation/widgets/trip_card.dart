@@ -1,8 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:wonder_souls/src/config/core/injector/injector.dart';
-import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
+import 'package:wonder_souls/src/config/utils/trip_image_helper.dart';
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
@@ -16,7 +15,6 @@ class TripCard extends StatefulWidget {
 }
 
 class _TripCardState extends State<TripCard> {
-  static final Map<String, String> _googlePlacesCache = {};
   String? _resolvedImageUrl;
 
   @override
@@ -53,44 +51,20 @@ class _TripCardState extends State<TripCard> {
       return;
     }
 
-    final cacheKey = destKey.toLowerCase();
-    if (_googlePlacesCache.containsKey(cacheKey)) {
-      _resolvedImageUrl = _googlePlacesCache[cacheKey];
+    final cached = TripImageHelper.getCachedPhoto(destKey);
+    if (cached != null) {
+      _resolvedImageUrl = cached;
       return;
     }
 
     _resolvedImageUrl = originalUrl;
-    _fetchGooglePlacesPhoto(destKey);
-  }
-
-  Future<void> _fetchGooglePlacesPhoto(String destination) async {
-    try {
-      final placesService = sl.isRegistered<GooglePlacesNewService>()
-          ? sl<GooglePlacesNewService>()
-          : GooglePlacesNewService();
-
-      final placeId = await placesService.searchPlaceId(destination);
-      if (placeId != null && placeId.isNotEmpty) {
-        final details = await placesService.getPlaceDetails(placeId);
-        final photos = details?["photos"] as List?;
-        if (photos != null && photos.isNotEmpty) {
-          final photoName = photos.first["name"];
-          if (photoName != null) {
-            final uri = await placesService.getPhotoUri(photoName);
-            if (uri != null && uri.isNotEmpty) {
-              _googlePlacesCache[destination.toLowerCase()] = uri;
-              if (mounted) {
-                setState(() {
-                  _resolvedImageUrl = uri;
-                });
-              }
-            }
-          }
-        }
+    TripImageHelper.resolvePhoto(destKey).then((uri) {
+      if (uri != null && mounted) {
+        setState(() {
+          _resolvedImageUrl = uri;
+        });
       }
-    } catch (e) {
-      debugPrint("TripCard: error resolving Google Places photo for $destination: $e");
-    }
+    });
   }
 
   @override

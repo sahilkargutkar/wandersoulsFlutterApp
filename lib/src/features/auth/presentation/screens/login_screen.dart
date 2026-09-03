@@ -308,7 +308,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: () {
                                 launchUrl(
                                   Uri.parse(
-                                    "https://www.wanderingsouls.in/privacy-policy/",
+                                    "https://www.wandersouls.in/privacy-policy/",
                                   ),
                                   mode: LaunchMode.externalApplication,
                                 );
