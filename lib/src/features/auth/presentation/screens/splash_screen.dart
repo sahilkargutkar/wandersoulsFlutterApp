@@ -61,6 +61,26 @@ class _SplashScreenState extends State<SplashScreen>
         _pulseController.repeat(reverse: true);
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cubit = context.read<IsLoginCubit>();
+      if (cubit.state is IsLoggedIn || cubit.state is IsLoggedOut) {
+        _navigateBasedOnState(cubit.state);
+      }
+    });
+  }
+
+  bool _hasNavigated = false;
+  void _navigateBasedOnState(IsLoginState state) async {
+    if (_hasNavigated) return;
+    _hasNavigated = true;
+    await Future.delayed(const Duration(milliseconds: 1600));
+    if (!mounted) return;
+    if (state is IsLoggedIn) {
+      context.go(HomeBottomBar.routeName);
+    } else if (state is IsLoggedOut) {
+      context.go(BoardingScreens.routeName);
+    }
   }
 
   @override
@@ -74,27 +94,24 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return BlocListener<IsLoginCubit, IsLoginState>(
       listener: (context, state) {
-        if (state is IsLoggedIn) {
-          context.go(HomeBottomBar.routeName);
-        }
-
-        if (state is IsLoggedOut) {
-          context.go(BoardingScreens.routeName);
+        if (state is IsLoggedIn || state is IsLoggedOut) {
+          _navigateBasedOnState(state);
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0D9F6E), Color(0xFF059669), Color(0xFF0D9488)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Color(0xFFF8FAFC)],
             ),
           ),
           child: SafeArea(
             child: Stack(
               children: [
-                // Pulsing Decorative circles
+                // Soft pulsing decorative ambient shapes
                 ScaleTransition(
                   scale: _pulse,
                   child: Stack(
@@ -103,11 +120,11 @@ class _SplashScreenState extends State<SplashScreen>
                         top: -80.h,
                         right: -60.w,
                         child: Container(
-                          width: 200.w,
-                          height: 200.w,
+                          width: 220.w,
+                          height: 220.w,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withAlpha(15),
+                            color: const Color(0xFF0D9F6E).withAlpha(12),
                           ),
                         ),
                       ),
@@ -115,11 +132,11 @@ class _SplashScreenState extends State<SplashScreen>
                         bottom: -100.h,
                         left: -80.w,
                         child: Container(
-                          width: 250.w,
-                          height: 250.w,
+                          width: 260.w,
+                          height: 260.w,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withAlpha(10),
+                            color: const Color(0xFF0D9488).withAlpha(10),
                           ),
                         ),
                       ),
@@ -127,7 +144,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
 
-                // Centered logo and app name
+                // Centered wide logo and tagline
                 Center(
                   child: AnimatedBuilder(
                     animation: _controller,
@@ -143,47 +160,24 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Logo with glow & breath pulsing
+                        // Wide prominent WanderSouls logo with gentle breath pulsing
                         ScaleTransition(
                           scale: _pulse,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.white.withAlpha(30),
-                                  blurRadius: 40,
-                                  spreadRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24.r),
-                              child: Image.asset(Assets.logo, width: 90.w),
-                            ),
+                          child: Image.asset(
+                            Assets.logo,
+                            width: 280.w,
+                            fit: BoxFit.contain,
                           ),
                         ),
 
-                        SizedBox(height: 24.h),
-
-                        Text(
-                          'Wandersouls',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 30.sp,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-
-                        SizedBox(height: 8.h),
+                        SizedBox(height: 18.h),
 
                         Text(
                           'Your journey begins here',
                           style: TextStyle(
-                            color: Colors.white.withAlpha(180),
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF64748B),
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -202,7 +196,7 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 28,
                       height: 28,
                       child: CircularProgressIndicator(
-                        color: Colors.white.withAlpha(180),
+                        color: const Color(0xFF0D9F6E),
                         strokeWidth: 2.5,
                       ),
                     ),
