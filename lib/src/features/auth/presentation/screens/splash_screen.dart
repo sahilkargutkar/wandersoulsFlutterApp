@@ -167,7 +167,7 @@ class _SplashScreenState extends State<SplashScreen>
                         SizedBox(height: 24.h),
 
                         Text(
-                          'WonderSouls',
+                          'Wandersouls',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 30.sp,

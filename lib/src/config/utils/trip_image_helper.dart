@@ -15,17 +15,19 @@ class TripImageHelper {
   }
 
   static String getDisplayImageUrl(TripData trip) {
-    if (trip.imageUrl.contains("places.googleapis.com") ||
-        trip.imageUrl.contains("maps.googleapis.com")) {
-      return trip.imageUrl;
-    }
     final destKey = trip.mainDestination.trim().isNotEmpty
         ? trip.mainDestination.trim().toLowerCase()
         : trip.name.trim().toLowerCase();
     if (destKey.isNotEmpty && _googlePlacesCache.containsKey(destKey)) {
       return _googlePlacesCache[destKey]!;
     }
-    return trip.imageUrl;
+    final rawUrl = trip.imageUrl.trim();
+    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+      return rawUrl;
+    }
+    return TripData.getTripImage(
+      trip.mainDestination.isNotEmpty ? trip.mainDestination : trip.name,
+    );
   }
 
   static Future<String?> resolvePhoto(String destination) async {

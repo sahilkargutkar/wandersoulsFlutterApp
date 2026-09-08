@@ -56,6 +56,23 @@ class TripActivityModel {
       categoryVal = 0;
     }
 
+    final rawImageUrl = details?['imageUrl'] ??
+        details?['image'] ??
+        details?['photoUrl'] ??
+        details?['photo'] ??
+        json['imageUrl'] ??
+        json['image'] ??
+        json['photoUrl'] ??
+        json['photo'];
+
+    String? parsedImageUrl;
+    if (rawImageUrl != null) {
+      final str = rawImageUrl.toString().trim();
+      if (str.startsWith('http://') || str.startsWith('https://')) {
+        parsedImageUrl = str;
+      }
+    }
+
     return TripActivityModel(
       id: _parseId(json['id']),
       tripId: _parseId(json['tripId']),
@@ -74,7 +91,7 @@ class TripActivityModel {
       category: categoryVal,
       cost: (details?['cost'] as num?)?.toDouble() ?? 0.0,
       tips: details?['tips'],
-      imageUrl: details?['imageUrl'],
+      imageUrl: parsedImageUrl,
     );
   }
 
@@ -140,7 +157,9 @@ class TripActivityModel {
   }
 
   String get displayImageUrl {
-    if (imageUrl != null && imageUrl!.trim().isNotEmpty && imageUrl!.startsWith('http')) {
+    if (imageUrl != null &&
+        imageUrl!.trim().isNotEmpty &&
+        (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://'))) {
       return imageUrl!;
     }
     return getFallbackImage(category, name);
@@ -149,16 +168,136 @@ class TripActivityModel {
   static String getFallbackImage(int category, [String? name]) {
     if (name != null && name.trim().isNotEmpty) {
       final nameLower = name.toLowerCase();
+      if (nameLower.contains("mosque") ||
+          nameLower.contains("qaboos") ||
+          nameLower.contains("masjid") ||
+          nameLower.contains("islamic")) {
+        return "https://images.unsplash.com/photo-1548013146-72479768bada?w=800";
+      }
+      if (nameLower.contains("souq") ||
+          nameLower.contains("souk") ||
+          nameLower.contains("mutrah") ||
+          nameLower.contains("bazaar") ||
+          nameLower.contains("market")) {
+        return "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800";
+      }
+      if (nameLower.contains("wadi") ||
+          nameLower.contains("sinkhole") ||
+          nameLower.contains("bimmah") ||
+          nameLower.contains("shab") ||
+          nameLower.contains("canyon") ||
+          nameLower.contains("gorge")) {
+        return "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800";
+      }
+      if (nameLower.contains("opera") ||
+          nameLower.contains("theater") ||
+          nameLower.contains("theatre") ||
+          nameLower.contains("concert")) {
+        return "https://images.unsplash.com/photo-1514306191717-452ec28c7814?w=800";
+      }
+      if (nameLower.contains("palace") ||
+          nameLower.contains("castle") ||
+          nameLower.contains("fort") ||
+          nameLower.contains("alam") ||
+          nameLower.contains("jalali") ||
+          nameLower.contains("mirani") ||
+          nameLower.contains("monument")) {
+        return "https://images.unsplash.com/photo-1590725140246-20acceedafe1?w=800";
+      }
+      if (nameLower.contains("eiffel") ||
+          nameLower.contains("tower") ||
+          nameLower.contains("burj") ||
+          nameLower.contains("khalifa") ||
+          nameLower.contains("skyscraper") ||
+          nameLower.contains("viewpoint") ||
+          nameLower.contains("observation") ||
+          nameLower.contains("sky")) {
+        return "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800";
+      }
+      if (nameLower.contains("louvre") ||
+          nameLower.contains("museum") ||
+          nameLower.contains("art") ||
+          nameLower.contains("gallery") ||
+          nameLower.contains("exhibition") ||
+          nameLower.contains("zubair")) {
+        return "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?w=800";
+      }
+      if (nameLower.contains("shrine") ||
+          nameLower.contains("temple") ||
+          nameLower.contains("senso") ||
+          nameLower.contains("asakusa") ||
+          nameLower.contains("meiji") ||
+          nameLower.contains("jingu") ||
+          nameLower.contains("pagoda") ||
+          nameLower.contains("sanctuary")) {
+        return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800";
+      }
+      if (nameLower.contains("shibuya") ||
+          nameLower.contains("crossing") ||
+          nameLower.contains("hachiko") ||
+          nameLower.contains("times square") ||
+          nameLower.contains("street") ||
+          nameLower.contains("city")) {
+        return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800";
+      }
+      if (nameLower.contains("safari") ||
+          nameLower.contains("desert") ||
+          nameLower.contains("dune") ||
+          nameLower.contains("camel") ||
+          nameLower.contains("bedouin") ||
+          nameLower.contains("camp")) {
+        return "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800";
+      }
+      if (nameLower.contains("cruise") ||
+          nameLower.contains("boat") ||
+          nameLower.contains("abra") ||
+          nameLower.contains("ferry") ||
+          nameLower.contains("seine") ||
+          nameLower.contains("river") ||
+          nameLower.contains("creek")) {
+        return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800";
+      }
+      if (nameLower.contains("beach") ||
+          nameLower.contains("coast") ||
+          nameLower.contains("sea") ||
+          nameLower.contains("ocean") ||
+          nameLower.contains("island") ||
+          nameLower.contains("corniche") ||
+          nameLower.contains("surf")) {
+        return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800";
+      }
+      if (nameLower.contains("park") ||
+          nameLower.contains("garden") ||
+          nameLower.contains("botanical") ||
+          nameLower.contains("yoyogi") ||
+          nameLower.contains("zoo") ||
+          nameLower.contains("nature")) {
+        return "https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800";
+      }
+      if (nameLower.contains("mountain") ||
+          nameLower.contains("hike") ||
+          nameLower.contains("hiking") ||
+          nameLower.contains("trek") ||
+          nameLower.contains("trail") ||
+          nameLower.contains("peak") ||
+          nameLower.contains("hill") ||
+          nameLower.contains("alps")) {
+        return "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800";
+      }
+      if (nameLower.contains("lake") ||
+          nameLower.contains("dam") ||
+          nameLower.contains("waterfall") ||
+          nameLower.contains("fountain") ||
+          nameLower.contains("kundala") ||
+          nameLower.contains("mattupetty")) {
+        return "https://images.unsplash.com/photo-1439853941329-a9f1a9a835b0?w=800";
+      }
       if (nameLower.contains("ramen") ||
           nameLower.contains("noodle") ||
           nameLower.contains("pasta") ||
-          nameLower.contains("afuri")) {
-        return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800";
-      }
-      if (nameLower.contains("sushi") ||
-          nameLower.contains("sashimi") ||
+          nameLower.contains("sushi") ||
           nameLower.contains("japanese")) {
-        return "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800";
+        return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800";
       }
       if (nameLower.contains("cafe") ||
           nameLower.contains("coffee") ||
@@ -171,68 +310,12 @@ class TripActivityModel {
           nameLower.contains("dining") ||
           nameLower.contains("dinner") ||
           nameLower.contains("food") ||
+          nameLower.contains("tasting") ||
           nameLower.contains("bistro") ||
           nameLower.contains("grill") ||
           nameLower.contains("bar") ||
           nameLower.contains("pub")) {
         return "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800";
-      }
-      if (nameLower.contains("shrine") ||
-          nameLower.contains("temple") ||
-          nameLower.contains("jingu") ||
-          nameLower.contains("asakusa") ||
-          nameLower.contains("pagoda") ||
-          nameLower.contains("sanctuary")) {
-        return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800";
-      }
-      if (nameLower.contains("museum") ||
-          nameLower.contains("art") ||
-          nameLower.contains("gallery") ||
-          nameLower.contains("exhibition")) {
-        return "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?w=800";
-      }
-      if (nameLower.contains("palace") ||
-          nameLower.contains("castle") ||
-          nameLower.contains("fort") ||
-          nameLower.contains("monument")) {
-        return "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=800";
-      }
-      if (nameLower.contains("tower") ||
-          nameLower.contains("sky") ||
-          nameLower.contains("skyscraper") ||
-          nameLower.contains("viewpoint") ||
-          nameLower.contains("observation")) {
-        return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800";
-      }
-      if (nameLower.contains("park") ||
-          nameLower.contains("garden") ||
-          nameLower.contains("botanical") ||
-          nameLower.contains("zoo")) {
-        return "https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800";
-      }
-      if (nameLower.contains("mountain") ||
-          nameLower.contains("trek") ||
-          nameLower.contains("hiking") ||
-          nameLower.contains("trail") ||
-          nameLower.contains("peak") ||
-          nameLower.contains("hill")) {
-        return "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800";
-      }
-      if (nameLower.contains("beach") ||
-          nameLower.contains("coast") ||
-          nameLower.contains("island") ||
-          nameLower.contains("sea") ||
-          nameLower.contains("ocean") ||
-          nameLower.contains("surf")) {
-        return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800";
-      }
-      if (nameLower.contains("lake") ||
-          nameLower.contains("dam") ||
-          nameLower.contains("river") ||
-          nameLower.contains("waterfall") ||
-          nameLower.contains("boat") ||
-          nameLower.contains("cruise")) {
-        return "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800";
       }
       if (nameLower.contains("hotel") ||
           nameLower.contains("resort") ||
@@ -246,13 +329,12 @@ class TripActivityModel {
           nameLower.contains("onsen") ||
           nameLower.contains("sauna") ||
           nameLower.contains("wellness") ||
-          nameLower.contains("massage")) {
+          nameLower.contains("massage") ||
+          nameLower.contains("relaxation")) {
         return "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800";
       }
       if (nameLower.contains("shopping") ||
           nameLower.contains("mall") ||
-          nameLower.contains("market") ||
-          nameLower.contains("bazaar") ||
           nameLower.contains("store") ||
           nameLower.contains("shop")) {
         return "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800";
@@ -278,7 +360,7 @@ class TripActivityModel {
         return "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800";
       case 5: // Shopping
         return "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800";
-      case 0: // Tourist Attraction
+      case 0: // Tourist Attraction / Landmark
         return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800";
       case 6: // General Activity
       default:

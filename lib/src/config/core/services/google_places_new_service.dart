@@ -11,7 +11,6 @@ class GooglePlacesNewService {
   GooglePlacesNewService()
     : _dio = Dio(
         BaseOptions(
-          baseUrl: "https://places.googleapis.com/v1",
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 15),
           headers: {
@@ -25,7 +24,7 @@ class GooglePlacesNewService {
   Future<String?> searchPlaceId(String query) async {
     try {
       final response = await _dio.post(
-        "/places:searchText",
+        "https://places.googleapis.com/v1/places:searchText",
         data: jsonEncode({"textQuery": query, "pageSize": 1}),
         options: Options(
           headers: {"X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "places.id"},
@@ -48,7 +47,7 @@ class GooglePlacesNewService {
   Future<Map<String, dynamic>?> getPlaceDetails(String placeId) async {
     try {
       final response = await _dio.get(
-        "/places/$placeId",
+        "https://places.googleapis.com/v1/places/$placeId",
         options: Options(
           headers: {
             "X-Goog-Api-Key": apiKey,
@@ -70,12 +69,14 @@ class GooglePlacesNewService {
   /// Resolve photo URI using photo resource name
   Future<String?> getPhotoUri(String photoName) async {
     try {
+      final cleanName = photoName.startsWith('/') ? photoName.substring(1) : photoName;
       final response = await _dio.get(
-        "/$photoName/media",
+        "https://places.googleapis.com/v1/$cleanName/media",
         queryParameters: {
           "maxWidthPx": 800,
           "maxHeightPx": 600,
           "skipHttpRedirect": true,
+          "key": apiKey,
         },
         options: Options(headers: {"X-Goog-Api-Key": apiKey}),
       );

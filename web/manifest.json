@@ -1,6 +1,6 @@
 {
-    "name": "wonder_souls_app",
-    "short_name": "wonder_souls_app",
+    "name": "Wandersouls",
+    "short_name": "Wandersouls",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

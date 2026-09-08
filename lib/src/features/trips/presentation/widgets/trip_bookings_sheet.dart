@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -57,6 +58,13 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
   }
 
   List<dynamic> _extractList(dynamic rawData, List<String> candidateKeys) {
+    if (rawData == null) return [];
+    if (rawData is String) {
+      try {
+        final decoded = jsonDecode(rawData);
+        return _extractList(decoded, candidateKeys);
+      } catch (_) {}
+    }
     if (rawData is List) return rawData;
     if (rawData is Map<String, dynamic>) {
       for (final key in candidateKeys) {
@@ -68,11 +76,17 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
           if (inner[key] is List) return inner[key] as List;
         }
       }
-      // If a single accommodation object was returned directly
+      if (rawData["data"] is List) return rawData["data"] as List;
+      if (rawData["items"] is List) return rawData["items"] as List;
+      if (rawData["value"] is List) return rawData["value"] as List;
+      if (rawData["results"] is List) return rawData["results"] as List;
+      // If a single accommodation or transport object was returned directly
       if (rawData.containsKey("id") ||
           rawData.containsKey("Id") ||
           rawData.containsKey("name") ||
-          rawData.containsKey("hotelName")) {
+          rawData.containsKey("type") ||
+          rawData.containsKey("hotelName") ||
+          rawData.containsKey("provider")) {
         return [rawData];
       }
     }
@@ -164,9 +178,15 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
         );
         if (result is Failure<dynamic>) {
           result = await _apiService.get<dynamic>(
-            "/TripTransports",
+            "/TripTransports/by-trip/${widget.tripId}",
             fromJson: (json) => json,
           );
+          if (result is Failure<dynamic>) {
+            result = await _apiService.get<dynamic>(
+              "/TripTransports",
+              fromJson: (json) => json,
+            );
+          }
         }
       }
 
@@ -246,7 +266,9 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     }
 
     if (start != null && end != null) {
-      return "${formatSingle(start)} — ${formatSingle(end)}";
+      final diff = end.difference(start).inDays;
+      final nightsText = diff > 0 ? " ($diff ${diff == 1 ? 'night' : 'nights'})" : "";
+      return "${formatSingle(start)} — ${formatSingle(end)}$nightsText";
     } else if (start != null) {
       return formatSingle(start);
     } else {
@@ -856,306 +878,706 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
       onTap: () => _showAccommodationDetails(acc),
       borderRadius: BorderRadius.circular(20.r),
       child: Container(
-      decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: context.borderColor.withAlpha(35)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(6),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Top row
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Purple Bed Icon Badge
-                Container(
-                  width: 42.w,
-                  height: 42.w,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEDE9FE),
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.bed_rounded,
-                      color: const Color(0xFF6D28D9),
-                      size: 22.sp,
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: context.borderColor.withAlpha(35)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(6),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top row
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Purple Bed Icon Badge
+                  Container(
+                    width: 42.w,
+                    height: 42.w,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDE9FE),
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.bed_rounded,
+                        color: const Color(0xFF6D28D9),
+                        size: 22.sp,
+                      ),
                     ),
                   ),
-                ),
-                12.w.horizontalSpace,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        acc.name.isNotEmpty ? acc.name : "Accommodation",
-                        style: context.text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15.sp,
-                          color: context.onSurface,
-                        ),
-                      ),
-                      4.h.verticalSpace,
-                      if (hasAddress)
-                        GestureDetector(
-                          onTap: () {
-                            Clipboard.setData(ClipboardData(text: acc.address!));
-                            AppToast.success("Address copied");
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  acc.address!,
-                                  style: context.text.bodySmall?.copyWith(
-                                    fontSize: 12.sp,
-                                    color: context.onSurfaceVariant,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              4.w.horizontalSpace,
-                              Icon(
-                                Icons.content_copy_rounded,
-                                size: 12.sp,
-                                color: context.onSurfaceVariant.withAlpha(180),
-                              ),
-                            ],
+                  12.w.horizontalSpace,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          acc.name.isNotEmpty ? acc.name : "Accommodation",
+                          style: context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15.sp,
+                            color: context.onSurface,
                           ),
                         ),
-                      4.h.verticalSpace,
-                      Text(
-                        _formatDateRange(acc.checkInDate, acc.checkOutDate),
-                        style: context.text.bodySmall?.copyWith(
-                          fontSize: 11.5.sp,
-                          color: context.onSurfaceVariant.withAlpha(190),
-                          fontWeight: FontWeight.w500,
+                        4.h.verticalSpace,
+                        if (hasAddress)
+                          GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: acc.address!));
+                              AppToast.success("Address copied");
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    acc.address!,
+                                    style: context.text.bodySmall?.copyWith(
+                                      fontSize: 12.sp,
+                                      color: context.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                4.w.horizontalSpace,
+                                Icon(
+                                  Icons.content_copy_rounded,
+                                  size: 12.sp,
+                                  color: context.onSurfaceVariant.withAlpha(180),
+                                ),
+                              ],
+                            ),
+                          ),
+                        4.h.verticalSpace,
+                        Text(
+                          _formatDateRange(acc.checkInDate, acc.checkOutDate),
+                          style: context.text.bodySmall?.copyWith(
+                            fontSize: 11.5.sp,
+                            color: context.onSurfaceVariant.withAlpha(190),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Action: attachment / edit / delete
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (acc.confirmationDocumentUrl != null &&
+                          acc.confirmationDocumentUrl!.isNotEmpty)
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.attach_file_rounded,
+                            size: 20.sp,
+                            color: context.onSurfaceVariant,
+                          ),
+                          onPressed: () async {
+                            final uri =
+                                Uri.tryParse(acc.confirmationDocumentUrl!);
+                            if (uri != null && await canLaunchUrl(uri)) {
+                              await launchUrl(uri);
+                            }
+                          },
+                        ),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: 18.sp,
+                          color: context.onSurfaceVariant,
+                        ),
+                        onPressed: () => _showEditAccommodationDialog(acc),
+                      ),
+                      if (acc.id != null && acc.id!.isNotEmpty)
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: () => _deleteAccommodation(acc.id!),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Import Confirmation Banner
+            if (hasConfirmation)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEDE9FE),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: const Color(0xFF4C1D95),
+                        size: 18.sp,
+                      ),
+                      8.w.horizontalSpace,
+                      Expanded(
+                        child: Text(
+                          "Successfully imported. Does everything look right?",
+                          style: TextStyle(
+                            fontSize: 11.5.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF312E81),
+                          ),
+                        ),
+                      ),
+                      8.w.horizontalSpace,
+                      Container(
+                        width: 28.w,
+                        height: 28.w,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.thumb_up_alt_outlined,
+                            size: 14.sp,
+                            color: const Color(0xFF312E81),
+                          ),
+                          onPressed: () => AppToast.success("Confirmed!"),
+                        ),
+                      ),
+                      6.w.horizontalSpace,
+                      Container(
+                        width: 28.w,
+                        height: 28.w,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.thumb_down_alt_outlined,
+                            size: 14.sp,
+                            color: const Color(0xFF312E81),
+                          ),
+                          onPressed: () => _showEditAccommodationDialog(acc),
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Action: attachment / edit
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (acc.confirmationDocumentUrl != null &&
-                        acc.confirmationDocumentUrl!.isNotEmpty)
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          Icons.attach_file_rounded,
-                          size: 20.sp,
-                          color: context.onSurfaceVariant,
-                        ),
-                        onPressed: () async {
-                          final uri =
-                              Uri.tryParse(acc.confirmationDocumentUrl!);
-                          if (uri != null && await canLaunchUrl(uri)) {
-                            await launchUrl(uri);
-                          }
-                        },
-                      ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        size: 18.sp,
-                        color: context.onSurfaceVariant,
-                      ),
-                      onPressed: () => _showEditAccommodationDialog(acc),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // Import Confirmation Banner
-          if (hasConfirmation)
+            // Data Points Section
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9FE),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle_rounded,
-                      color: const Color(0xFF4C1D95),
-                      size: 18.sp,
-                    ),
-                    8.w.horizontalSpace,
-                    Expanded(
-                      child: Text(
-                        "Successfully imported. Does everything look right?",
-                        style: TextStyle(
-                          fontSize: 11.5.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF312E81),
-                        ),
+              padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 16.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hasConfirmation) ...[
+                    Text(
+                      "CONFIRMATION #",
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: context.onSurfaceVariant.withAlpha(160),
                       ),
                     ),
-                    8.w.horizontalSpace,
-                    Container(
-                      width: 28.w,
-                      height: 28.w,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          Icons.thumb_up_alt_outlined,
-                          size: 14.sp,
-                          color: const Color(0xFF312E81),
-                        ),
-                        onPressed: () => AppToast.success("Confirmed!"),
+                    4.h.verticalSpace,
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(
+                          ClipboardData(text: acc.bookingReference!),
+                        );
+                        AppToast.success("Confirmation # copied");
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            acc.bookingReference!,
+                            style: context.text.bodyMedium?.copyWith(
+                              fontSize: 13.5.sp,
+                              fontWeight: FontWeight.w600,
+                              color: context.onSurface,
+                            ),
+                          ),
+                          6.w.horizontalSpace,
+                          Icon(
+                            Icons.content_copy_rounded,
+                            size: 13.sp,
+                            color: context.onSurfaceVariant.withAlpha(160),
+                          ),
+                        ],
                       ),
                     ),
-                    6.w.horizontalSpace,
-                    Container(
-                      width: 28.w,
-                      height: 28.w,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
+                    12.h.verticalSpace,
+                  ],
+
+                  if (acc.cost > 0) ...[
+                    Text(
+                      "COST",
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: context.onSurfaceVariant.withAlpha(160),
                       ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          Icons.thumb_down_alt_outlined,
-                          size: 14.sp,
-                          color: const Color(0xFF312E81),
-                        ),
-                        onPressed: () => _showEditAccommodationDialog(acc),
+                    ),
+                    4.h.verticalSpace,
+                    Text(
+                      "${acc.currency ?? 'USD'} ${acc.cost.toStringAsFixed(0)}",
+                      style: context.text.bodyMedium?.copyWith(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: context.onSurface,
+                      ),
+                    ),
+                    12.h.verticalSpace,
+                  ],
+
+                  if (hasNotes) ...[
+                    Text(
+                      "NOTES",
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: context.onSurfaceVariant.withAlpha(160),
+                      ),
+                    ),
+                    4.h.verticalSpace,
+                    Text(
+                      acc.notes!,
+                      style: context.text.bodySmall?.copyWith(
+                        fontSize: 11.5.sp,
+                        height: 1.45,
+                        color: context.onSurface.withAlpha(220),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // Data Points Section (Small uppercase labels, clean values)
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 16.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (hasConfirmation) ...[
-                  Text(
-                    "CONFIRMATION #",
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: context.onSurfaceVariant.withAlpha(160),
+  Color _getTransportColor(String type) {
+    final lower = type.toLowerCase();
+    if (lower.contains("flight") || lower.contains("plane")) return const Color(0xFF0284C7);
+    if (lower.contains("train") || lower.contains("rail")) return const Color(0xFF059669);
+    if (lower.contains("bus")) return const Color(0xFFD97706);
+    if (lower.contains("car") || lower.contains("rental") || lower.contains("drive")) return const Color(0xFF0D9488);
+    if (lower.contains("ferry") || lower.contains("boat") || lower.contains("ship")) return const Color(0xFF4F46E5);
+    return const Color(0xFF7C3AED);
+  }
+
+  IconData _getTransportIcon(String type) {
+    final lower = type.toLowerCase();
+    if (lower.contains("flight") || lower.contains("plane")) return Icons.flight_takeoff_rounded;
+    if (lower.contains("train") || lower.contains("rail")) return Icons.train_rounded;
+    if (lower.contains("bus")) return Icons.directions_bus_rounded;
+    if (lower.contains("car") || lower.contains("rental") || lower.contains("drive")) return Icons.directions_car_rounded;
+    if (lower.contains("ferry") || lower.contains("boat") || lower.contains("ship")) return Icons.directions_boat_rounded;
+    return Icons.commute_rounded;
+  }
+
+  String _formatTransportDateTime(DateTime? dt) {
+    if (dt == null) return "Time not set";
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    final hour = dt.hour;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? "PM" : "AM";
+    final formattedHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    return "${months[dt.month - 1]} ${dt.day}, $formattedHour:$minute $period";
+  }
+
+  Future<void> _deleteTransport(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Delete Transport"),
+        content: const Text("Are you sure you want to remove this transport booking?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Delete", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    AppToast.success("Deleting transport...");
+    final res = await _apiService.delete<dynamic>(
+      "/TripTransports/$id",
+      fromJson: (d) => d,
+    );
+
+    if (res is Success) {
+      AppToast.success("Transport deleted");
+      _fetchTransports();
+    } else if (res is Failure) {
+      AppToast.error(res.message);
+    } else {
+      AppToast.error("Failed to delete transport");
+    }
+  }
+
+  Widget _buildTransportCard(TripTransportModel t) {
+    final color = _getTransportColor(t.type);
+    final icon = _getTransportIcon(t.type);
+    final hasRoute = (t.departureLocation != null && t.departureLocation!.isNotEmpty) ||
+        (t.arrivalLocation != null && t.arrivalLocation!.isNotEmpty);
+    final hasConfirmation = t.bookingReference != null && t.bookingReference!.trim().isNotEmpty;
+    final hasSeat = t.seatOrCabin != null && t.seatOrCabin!.trim().isNotEmpty;
+    final hasProvider = t.provider != null && t.provider!.trim().isNotEmpty;
+    final hasNotes = t.notes != null && t.notes!.trim().isNotEmpty;
+
+    return InkWell(
+      onTap: () => _showTransportDetails(t),
+      borderRadius: BorderRadius.circular(20.r),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: context.borderColor.withAlpha(35)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(6),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Row: Icon Badge, Title/Route, and Action buttons
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Mode Icon Badge
+                  Container(
+                    width: 42.w,
+                    height: 42.w,
+                    decoration: BoxDecoration(
+                      color: color.withAlpha(25),
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: 22.sp,
+                      ),
                     ),
                   ),
-                  4.h.verticalSpace,
-                  GestureDetector(
-                    onTap: () {
-                      Clipboard.setData(
-                        ClipboardData(text: acc.bookingReference!),
-                      );
-                      AppToast.success("Confirmation # copied");
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                  12.w.horizontalSpace,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          acc.bookingReference!,
-                          style: context.text.bodyMedium?.copyWith(
-                            fontSize: 13.5.sp,
-                            fontWeight: FontWeight.w600,
-                            color: context.onSurface,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              t.type,
+                              style: context.text.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15.sp,
+                                color: context.onSurface,
+                              ),
+                            ),
+                            if (hasProvider) ...[
+                              6.w.horizontalSpace,
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: color.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Text(
+                                  t.provider!,
+                                  style: TextStyle(
+                                    color: color,
+                                    fontSize: 10.5.sp,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                        6.w.horizontalSpace,
-                        Icon(
-                          Icons.content_copy_rounded,
-                          size: 13.sp,
-                          color: context.onSurfaceVariant.withAlpha(160),
+                        4.h.verticalSpace,
+                        if (hasRoute)
+                          Text(
+                            "${t.departureLocation ?? 'Origin'} ➔ ${t.arrivalLocation ?? 'Destination'}",
+                            style: context.text.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.sp,
+                              color: context.onSurface,
+                            ),
+                          ),
+                        4.h.verticalSpace,
+                        Text(
+                          _formatTransportDateTime(t.departureDatetime),
+                          style: context.text.bodySmall?.copyWith(
+                            fontSize: 11.5.sp,
+                            color: context.onSurfaceVariant.withAlpha(190),
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  12.h.verticalSpace,
-                ],
-
-                if (acc.cost > 0) ...[
-                  Text(
-                    "COST",
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: context.onSurfaceVariant.withAlpha(160),
-                    ),
-                  ),
-                  4.h.verticalSpace,
-                  Text(
-                    "${acc.currency ?? 'USD'} ${acc.cost.toStringAsFixed(0)}",
-                    style: context.text.bodyMedium?.copyWith(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
-                      color: context.onSurface,
-                    ),
-                  ),
-                  12.h.verticalSpace,
-                ],
-
-                if (hasNotes) ...[
-                  Text(
-                    "NOTES",
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: context.onSurfaceVariant.withAlpha(160),
-                    ),
-                  ),
-                  4.h.verticalSpace,
-                  Text(
-                    acc.notes!,
-                    style: context.text.bodySmall?.copyWith(
-                      fontSize: 11.5.sp,
-                      height: 1.45,
-                      color: context.onSurface.withAlpha(220),
-                    ),
+                  // Actions: Edit and Delete
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: 18.sp,
+                          color: context.onSurfaceVariant,
+                        ),
+                        onPressed: () => _showEditTransportDialog(t),
+                      ),
+                      if (t.id != null && t.id!.isNotEmpty)
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: () => _deleteTransport(t.id!),
+                        ),
+                    ],
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+
+            // Route Schedule Card
+            if (t.departureDatetime != null || t.arrivalDatetime != null)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(12),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: color.withAlpha(25)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "DEPARTURE",
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: color,
+                            ),
+                          ),
+                          2.h.verticalSpace,
+                          Text(
+                            _formatTransportDateTime(t.departureDatetime),
+                            style: context.text.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(Icons.arrow_forward_rounded, color: color, size: 16.sp),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "ARRIVAL",
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: color,
+                            ),
+                          ),
+                          2.h.verticalSpace,
+                          Text(
+                            _formatTransportDateTime(t.arrivalDatetime),
+                            style: context.text.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Bottom details section: Booking reference, Seat, Cost, Notes
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (hasConfirmation) ...[
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: t.bookingReference!));
+                              AppToast.success("Booking reference copied!");
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                              decoration: BoxDecoration(
+                                color: context.mutedBackground,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.tag_rounded, size: 13.sp, color: context.onSurfaceVariant),
+                                  4.w.horizontalSpace,
+                                  Flexible(
+                                    child: Text(
+                                      t.bookingReference!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 11.5.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: context.onSurface,
+                                      ),
+                                    ),
+                                  ),
+                                  4.w.horizontalSpace,
+                                  Icon(Icons.copy_rounded, size: 11.sp, color: context.onSurfaceVariant),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        8.w.horizontalSpace,
+                      ],
+                      if (hasSeat) ...[
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: context.mutedBackground,
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.event_seat_rounded, size: 13.sp, color: context.onSurfaceVariant),
+                              4.w.horizontalSpace,
+                              Text(
+                                t.seatOrCabin!,
+                                style: TextStyle(
+                                  fontSize: 11.5.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        8.w.horizontalSpace,
+                      ],
+                      if (t.cost > 0)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: context.primary.withAlpha(15),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Text(
+                            "${t.currency ?? 'USD'} ${t.cost.toStringAsFixed(0)}",
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w800,
+                              color: context.primary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  if (hasNotes) ...[
+                    10.h.verticalSpace,
+                    Text(
+                      t.notes!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodySmall?.copyWith(
+                        fontSize: 11.5.sp,
+                        color: context.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Future<void> _showTransportDetails(TripTransportModel baseModel) async {
-    if (baseModel.id == null) return;
+    if (baseModel.id == null) {
+      _showEditTransportDialog(baseModel);
+      return;
+    }
 
     AppToast.success("Loading details...");
     TripTransportModel? latestModel;
@@ -1179,79 +1601,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
 
     final model = latestModel ?? baseModel;
     if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("${model.type} Details"),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (model.provider != null && model.provider!.isNotEmpty) ...[
-                  Text(
-                    "Provider / Airline:",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                  Text(model.provider!),
-                  12.h.verticalSpace,
-                ],
-                if (model.departureLocation != null &&
-                    model.arrivalLocation != null) ...[
-                  Text(
-                    "Route:",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                  Text("${model.departureLocation} ➔ ${model.arrivalLocation}"),
-                  12.h.verticalSpace,
-                ],
-                Text(
-                  "Cost:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.sp,
-                  ),
-                ),
-                Text("\$${model.cost}"),
-                12.h.verticalSpace,
-                if (model.notes != null && model.notes!.isNotEmpty) ...[
-                  Text(
-                    "Notes:",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                  Text(model.notes!),
-                  12.h.verticalSpace,
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showEditTransportDialog(model);
-              },
-              child: const Text("Edit"),
-            ),
-          ],
-        );
-      },
-    );
+    _showEditTransportDialog(model);
   }
 
   void _showEditTransportDialog(TripTransportModel model) {
@@ -1262,9 +1612,19 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     final arrivalController = TextEditingController(
       text: model.arrivalLocation,
     );
-    final costController = TextEditingController(text: model.cost.toString());
+    final costController = TextEditingController(
+      text: model.cost > 0 ? model.cost.toStringAsFixed(0) : "",
+    );
+    final bookingRefController = TextEditingController(
+      text: model.bookingReference,
+    );
+    final seatController = TextEditingController(
+      text: model.seatOrCabin,
+    );
     final notesController = TextEditingController(text: model.notes);
     String transportType = model.type;
+    DateTime departureTime = model.departureDatetime ?? DateTime.now();
+    DateTime arrivalTime = model.arrivalDatetime ?? DateTime.now().add(const Duration(hours: 2));
 
     showDialog(
       context: context,
@@ -1278,7 +1638,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
               backgroundColor: context.surface,
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: EdgeInsets.all(24.w),
+                  padding: EdgeInsets.all(20.w),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1287,14 +1647,25 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Edit Transport",
-                            style: context.text.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18.sp,
-                            ),
+                          Row(
+                            children: [
+                              Icon(
+                                _getTransportIcon(transportType),
+                                color: _getTransportColor(transportType),
+                                size: 22.sp,
+                              ),
+                              8.w.horizontalSpace,
+                              Text(
+                                "Edit Transport",
+                                style: context.text.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 17.sp,
+                                ),
+                              ),
+                            ],
                           ),
                           IconButton(
+                            visualDensity: VisualDensity.compact,
                             icon: const Icon(Icons.close_rounded),
                             onPressed: () => Navigator.pop(context),
                           ),
@@ -1304,7 +1675,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
 
                       _buildDropdownField(
                         value: transportType,
-                        items: ["Flight", "Train", "Bus", "Car", "Ferry"],
+                        items: ["Flight", "Train", "Bus", "Car", "Ferry", "Other"],
                         label: "Transport Type",
                         onChanged: (val) {
                           if (val != null) {
@@ -1315,8 +1686,10 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                       _buildFormField(controller: providerController, label: "Provider / Airline"),
                       _buildFormField(controller: departureController, label: "Departure Location"),
                       _buildFormField(controller: arrivalController, label: "Arrival Location"),
-                      _buildFormField(controller: costController, label: "Cost (\$)", keyboardType: TextInputType.number),
-                      _buildFormField(controller: notesController, label: "Notes", maxLines: 3),
+                      _buildFormField(controller: bookingRefController, label: "Booking Reference #"),
+                      _buildFormField(controller: seatController, label: "Seat / Cabin #"),
+                      _buildFormField(controller: costController, label: "Cost (${model.currency ?? 'USD'})", keyboardType: TextInputType.number),
+                      _buildFormField(controller: notesController, label: "Notes", maxLines: 2),
 
                       20.h.verticalSpace,
 
@@ -1326,7 +1699,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: context.primary,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24.r),
+                              borderRadius: BorderRadius.circular(14.r),
                             ),
                             elevation: 0,
                           ),
@@ -1343,10 +1716,10 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                               cost: double.tryParse(costController.text.trim()) ?? 0.0,
                               notes: notesController.text.trim(),
                               currency: model.currency,
-                              seatOrCabin: model.seatOrCabin,
-                              departureDatetime: model.departureDatetime,
-                              arrivalDatetime: model.arrivalDatetime,
-                              bookingReference: model.bookingReference,
+                              seatOrCabin: seatController.text.trim(),
+                              departureDatetime: departureTime,
+                              arrivalDatetime: arrivalTime,
+                              bookingReference: bookingRefController.text.trim(),
                             );
 
                             AppToast.success("Saving changes...");
@@ -1366,7 +1739,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                             }
                           },
                           child: Text(
-                            "Save",
+                            "Save Changes",
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -1389,7 +1762,7 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 0.75.sh,
+      height: 0.78.sh,
       decoration: BoxDecoration(
         color: context.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
@@ -1515,110 +1888,78 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                           Expanded(
                             child: _transports.isEmpty
                                 ? Center(
-                                    child: Text(
-                                      "No transports added yet",
-                                      style: context.text.bodyMedium?.copyWith(
-                                        color: context.onSurfaceVariant,
-                                      ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.flight_takeoff_rounded,
+                                          size: 48.sp,
+                                          color: context.onSurfaceVariant
+                                              .withAlpha(80),
+                                        ),
+                                        12.h.verticalSpace,
+                                        Text(
+                                          "No transports added yet",
+                                          style: context.text.bodyMedium
+                                              ?.copyWith(
+                                                color: context.onSurfaceVariant,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                        ),
+                                      ],
                                     ),
                                   )
                                 : ListView.separated(
                                     padding: EdgeInsets.all(16.w),
                                     itemCount: _transports.length,
                                     separatorBuilder: (_, __) =>
-                                        12.h.verticalSpace,
+                                        14.h.verticalSpace,
                                     itemBuilder: (context, index) {
                                       final t = _transports[index];
-                                      return InkWell(
-                                        onTap: () => _showTransportDetails(t),
-                                        borderRadius: BorderRadius.circular(
-                                          16.r,
-                                        ),
-                                        child: Container(
-                                          padding: EdgeInsets.all(14.w),
-                                          decoration: BoxDecoration(
-                                            color: context.mutedBackground,
-                                            borderRadius: BorderRadius.circular(
-                                              16.r,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                t.type == "Flight"
-                                                    ? Icons
-                                                          .flight_takeoff_rounded
-                                                    : Icons
-                                                          .directions_transit_rounded,
-                                                color: context.primary,
-                                                size: 28.sp,
-                                              ),
-                                              12.w.horizontalSpace,
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "${t.type}${t.provider != null && t.provider!.isNotEmpty ? " • ${t.provider}" : ""}",
-                                                      style: context
-                                                          .text
-                                                          .bodyMedium
-                                                          ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                    ),
-                                                    if (t.departureLocation !=
-                                                            null &&
-                                                        t.arrivalLocation !=
-                                                            null)
-                                                      Text(
-                                                        "${t.departureLocation} ➔ ${t.arrivalLocation}",
-                                                        style: context
-                                                            .text
-                                                            .bodySmall
-                                                            ?.copyWith(
-                                                              color: context
-                                                                  .onSurfaceVariant,
-                                                            ),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Text(
-                                                "\$${t.cost}",
-                                                style: context.text.bodyMedium
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: context.primary,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
+                                      return _buildTransportCard(t);
                                     },
                                   ),
                           ),
+                          // "+ Add transport" button
                           Padding(
-                            padding: EdgeInsets.all(16.w),
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: context.primary,
-                                minimumSize: Size(double.infinity, 48.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24.r),
-                                ),
+                            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 16.h),
+                            child: InkWell(
+                              onTap: () => _showAddBookingOptions(
+                                context,
+                                "transport",
                               ),
-                              onPressed: () => _showAddBookingOptions(context, "transport"),
-                              icon: const Icon(Icons.add, color: Colors.white),
-                              label: const Text(
-                                "Add Transport",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                              borderRadius: BorderRadius.circular(16.r),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 14.h,
+                                  horizontal: 16.w,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.mutedBackground,
+                                  borderRadius: BorderRadius.circular(16.r),
+                                  border: Border.all(
+                                    color: context.borderColor.withAlpha(20),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_rounded,
+                                      size: 20.sp,
+                                      color: context.onSurface,
+                                    ),
+                                    8.w.horizontalSpace,
+                                    Text(
+                                      "Add transport",
+                                      style: context.text.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14.sp,
+                                        color: context.onSurface,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

@@ -27,14 +27,17 @@ import 'package:wonder_souls/src/config/core/services/google_places_new_service.
 import 'package:wonder_souls/src/config/utils/trip_image_helper.dart';
 
 const Map<String, Map<String, double>> _cityCoordinatesFallback = {
+  'phuket': {'lat': 7.8804, 'lng': 98.3923},
+  'bangkok': {'lat': 13.7563, 'lng': 100.5018},
+  'thailand': {'lat': 13.7563, 'lng': 100.5018},
   'tokyo': {'lat': 35.6762, 'lng': 139.6503},
   'osaka': {'lat': 34.6937, 'lng': 135.5023},
+  'kyoto': {'lat': 35.0116, 'lng': 135.7681},
   'japan': {'lat': 35.6762, 'lng': 139.6503},
   'paris': {'lat': 48.8566, 'lng': 2.3522},
   'nice': {'lat': 43.7102, 'lng': 7.2620},
   'france': {'lat': 48.8566, 'lng': 2.3522},
   'london': {'lat': 51.5074, 'lng': -0.1278},
-  'uk': {'lat': 51.5074, 'lng': -0.1278},
   'united kingdom': {'lat': 51.5074, 'lng': -0.1278},
   'rome': {'lat': 41.9028, 'lng': 12.4964},
   'milan': {'lat': 45.4642, 'lng': 9.1900},
@@ -48,6 +51,11 @@ const Map<String, Map<String, double>> _cityCoordinatesFallback = {
   'mumbai': {'lat': 19.0760, 'lng': 72.8777},
   'kolkata': {'lat': 22.5726, 'lng': 88.3639},
   'india': {'lat': 28.6139, 'lng': 77.2090},
+  'dubai': {'lat': 25.2048, 'lng': 55.2708},
+  'muscat': {'lat': 23.5880, 'lng': 58.3829},
+  'oman': {'lat': 23.5880, 'lng': 58.3829},
+  'singapore': {'lat': 1.3521, 'lng': 103.8198},
+  'bali': {'lat': -8.4095, 'lng': 115.1889},
 };
 
 class TripDetailsScreen extends StatefulWidget {
@@ -116,16 +124,13 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       return;
     }
 
-    if (!_tripState.imageUrl.contains("places.googleapis.com") &&
-        !_tripState.imageUrl.contains("maps.googleapis.com")) {
-      TripImageHelper.resolvePhoto(destKey).then((uri) {
-        if (uri != null && mounted) {
-          setState(() {
-            _tripState = _tripState.copyWith(imageUrl: uri);
-          });
-        }
-      });
-    }
+    TripImageHelper.resolvePhoto(destKey).then((uri) {
+      if (uri != null && uri.isNotEmpty && mounted) {
+        setState(() {
+          _tripState = _tripState.copyWith(imageUrl: uri);
+        });
+      }
+    });
   }
 
   Future<void> _resolveDestinationPlaceId(String city) async {
@@ -151,7 +156,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
     // 1. Try local fallback first
     for (final entry in _cityCoordinatesFallback.entries) {
-      if (city.contains(entry.key)) {
+      final key = entry.key;
+      final bool matches;
+      if (key.length <= 3) {
+        matches = RegExp(r'\b' + RegExp.escape(key) + r'\b').hasMatch(city);
+      } else {
+        matches = city.contains(key);
+      }
+      if (matches) {
         AppToast.success("Location matched fallback: ${entry.key}");
         if (mounted) {
           setState(() {
@@ -350,8 +362,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         setState(() {
           if (cached != null) {
             _tripState = updatedTrip.copyWith(imageUrl: cached);
-          } else if (_tripState.imageUrl.contains("places.googleapis.com") ||
-              _tripState.imageUrl.contains("maps.googleapis.com")) {
+          } else if (_tripState.imageUrl.startsWith("http") &&
+              !_tripState.imageUrl.contains("images.unsplash.com/photo-1488646953014-85cb44e25828")) {
             _tripState = updatedTrip.copyWith(imageUrl: _tripState.imageUrl);
           } else {
             _tripState = updatedTrip;
@@ -931,10 +943,57 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       ];
     }
 
-    // 5. London / UK
+    // 5. Phuket / Thailand
+    if (destLower.contains("phuket") ||
+        destLower.contains("bangkok") ||
+        destLower.contains("thailand") ||
+        destLower.contains("krabi") ||
+        destLower.contains("samui")) {
+      return [
+        {
+          "name": "Phi Phi Islands & Maya Bay Boat Tour",
+          "category": "Adventure",
+          "description":
+              "Speedboat trip to stunning turquoise lagoons, limestone cliffs, and snorkeling spots.",
+          "estimatedCost": 45,
+          "duration": "6h",
+          "tips": "Bring reef-safe sunscreen and waterproof bag for camera.",
+        },
+        {
+          "name": "Big Buddha & Chalong Temple",
+          "category": "Culture",
+          "description":
+              "45-meter white marble Buddha with 360-degree panoramic views over Phuket island.",
+          "estimatedCost": 0,
+          "duration": "2h",
+          "tips": "Modest attire required (shoulders and knees covered).",
+        },
+        {
+          "name": "Old Phuket Town Heritage Walk",
+          "category": "Culture",
+          "description":
+              "Explore colorful Sino-Portuguese shophouses, street art, cafes, and local night markets.",
+          "estimatedCost": 0,
+          "duration": "2h",
+          "tips": "Sunday Walking Street Market is a must-visit for street food.",
+        },
+        {
+          "name": "Patong Beach & Promthep Cape Sunset",
+          "category": "Relaxation",
+          "description":
+              "Relax on golden sands and catch iconic Andaman Sea sunset views.",
+          "estimatedCost": 0,
+          "duration": "2h",
+          "tips": "Visit Promthep Cape for the most famous sunset panorama in Phuket.",
+        },
+      ];
+    }
+
+    // 6. London / UK
     if (destLower.contains("london") ||
-        destLower.contains("uk") ||
-        destLower.contains("england")) {
+        destLower.contains("england") ||
+        destLower.contains("united kingdom") ||
+        RegExp(r'\b' + RegExp.escape("uk") + r'\b').hasMatch(destLower)) {
       return [
         {
           "name": "British Museum & Rosetta Stone",
@@ -2269,12 +2328,33 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             CachedNetworkImage(
               imageUrl: TripImageHelper.getDisplayImageUrl(_tripState),
               fit: BoxFit.cover,
-              errorWidget: (_, __, ___) => Container(
+              width: double.infinity,
+              height: double.infinity,
+              placeholder: (context, url) => Container(
                 color: context.shimmerBase,
-                child: Icon(
-                  Icons.image_rounded,
-                  size: 64.sp,
-                  color: context.onSurfaceVariant.withAlpha(60),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: context.primary.withAlpha(100),
+                  ),
+                ),
+              ),
+              errorWidget: (_, __, ___) => Image.network(
+                TripData.getTripImage(
+                  _tripState.mainDestination.isNotEmpty
+                      ? _tripState.mainDestination
+                      : _tripState.name,
+                ),
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (_, __, ___) => Container(
+                  color: context.shimmerBase,
+                  child: Icon(
+                    Icons.image_rounded,
+                    size: 64.sp,
+                    color: context.onSurfaceVariant.withAlpha(60),
+                  ),
                 ),
               ),
             ),
@@ -2821,14 +2901,40 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           child: CachedNetworkImage(
                             imageUrl: activity.displayImageUrl,
                             height: 150.h,
+                            width: double.infinity,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => Container(
+                            placeholder: (context, url) => Container(
                               height: 150.h,
+                              width: double.infinity,
                               color: context.shimmerBase,
-                              child: Icon(
-                                Icons.image_rounded,
-                                size: 48.sp,
-                                color: context.onSurfaceVariant.withAlpha(60),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 24.w,
+                                  height: 24.w,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: context.primary.withAlpha(100),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (_, __, ___) => Image.network(
+                              TripActivityModel.getFallbackImage(
+                                activity.category,
+                                activity.name,
+                              ),
+                              height: 150.h,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                height: 150.h,
+                                width: double.infinity,
+                                color: context.shimmerBase,
+                                child: Icon(
+                                  Icons.image_rounded,
+                                  size: 48.sp,
+                                  color: context.onSurfaceVariant.withAlpha(60),
+                                ),
                               ),
                             ),
                           ),

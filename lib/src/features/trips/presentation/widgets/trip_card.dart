@@ -115,12 +115,21 @@ class _TripCardState extends State<TripCard> {
                           ),
                         ),
                       ),
-                      errorWidget: (_, __, ___) => Container(
-                        color: context.shimmerBase,
-                        child: Icon(
-                          Icons.image_rounded,
-                          size: 40,
-                          color: context.onSurfaceVariant.withAlpha(60),
+                      errorWidget: (_, __, ___) => Image.network(
+                        TripData.getTripImage(
+                          widget.trip.mainDestination.isNotEmpty
+                              ? widget.trip.mainDestination
+                              : widget.trip.name,
+                        ),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: context.shimmerBase,
+                          child: Icon(
+                            Icons.image_rounded,
+                            size: 40,
+                            color: context.onSurfaceVariant.withAlpha(60),
+                          ),
                         ),
                       ),
                     ),

@@ -7,7 +7,7 @@
 
     <application
     android:usesCleartextTraffic="true"
-        android:label="wonder_souls_app"
+        android:label="Wandersouls"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

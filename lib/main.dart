@@ -76,6 +76,7 @@ class _MyAppState extends State<MyApp> {
           child: BlocBuilder<ThemeCubit, ThemeMode>(
             builder: (context, themeMode) {
               return MaterialApp.router(
+                title: 'Wandersouls',
                 debugShowCheckedModeBanner: false,
                 routerConfig: _router,
                 theme: AppTheme.light,
