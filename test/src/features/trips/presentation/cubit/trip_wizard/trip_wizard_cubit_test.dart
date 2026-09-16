@@ -5,13 +5,17 @@ import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/core/services/api_services.dart';
 import 'package:wonder_souls/src/config/model/failure.dart';
 import 'package:wonder_souls/src/config/model/success.dart';
+import 'package:wonder_souls/src/config/model/user_model.dart';
+import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/trip_wizard/trip_wizard_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/trip_wizard/trip_wizard_state.dart';
 
 class MockApiService extends Mock implements ApiService {}
+class MockAuthLocalDataSource extends Mock implements AuthLocalDataSource {}
 
 void main() {
   late MockApiService mockApiService;
+  late MockAuthLocalDataSource mockAuthLocalDataSource;
   late TripWizardCubit cubit;
 
   final testPlace = PlaceModel(
@@ -28,18 +32,39 @@ void main() {
 
   setUp(() {
     mockApiService = MockApiService();
+    mockAuthLocalDataSource = MockAuthLocalDataSource();
+
+    when(() => mockAuthLocalDataSource.getUser()).thenReturn(
+      const UserModel(
+        id: 'user-123',
+        userName: 'testuser',
+        name: 'Test User',
+        email: 'test@example.com',
+      ),
+    );
     
-    // Set up locator override
+    // Set up locator overrides
     if (sl.isRegistered<ApiService>()) {
       sl.unregister<ApiService>();
     }
     sl.registerSingleton<ApiService>(mockApiService);
+
+    if (sl.isRegistered<AuthLocalDataSource>()) {
+      sl.unregister<AuthLocalDataSource>();
+    }
+    sl.registerSingleton<AuthLocalDataSource>(mockAuthLocalDataSource);
     
     cubit = TripWizardCubit();
   });
 
   tearDown(() {
     cubit.close();
+    if (sl.isRegistered<ApiService>()) {
+      sl.unregister<ApiService>();
+    }
+    if (sl.isRegistered<AuthLocalDataSource>()) {
+      sl.unregister<AuthLocalDataSource>();
+    }
   });
 
   group('TripWizardCubit Initialization & Steps', () {

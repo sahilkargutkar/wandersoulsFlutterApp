@@ -120,8 +120,9 @@ class _UpgradePlanScreenState extends State<UpgradePlanScreen> {
                 useGradient: true,
                 onPressed: () {
                   if (nameController.text.isEmpty ||
-                      numberController.text.isEmpty)
+                      numberController.text.isEmpty) {
                     return;
+                  }
                   Navigator.pop(context);
                   AppToast.success("Card added successfully!");
                 },

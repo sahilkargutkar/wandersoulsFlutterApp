@@ -366,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       onRefresh: () async {
         await fetchPopularDestinations();
-        if (mounted) {
+        if (mounted && context.mounted) {
           context.read<BlogsCubit>().fetchBlogs();
         }
       },

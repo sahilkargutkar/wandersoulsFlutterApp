@@ -149,22 +149,24 @@ class TripWizardCubit extends Cubit<TripWizardState> {
 
       // Legacy Google Maps Api fallback
       if (imageUrl.isEmpty && placeId != null && placeId.isNotEmpty) {
-        final googleMapsApiService = sl<GoogleMapsApiService>();
-        final detailsRes = await googleMapsApiService.getRequest(
-          "maps/api/place/details/json",
-          {
-            "place_id": placeId,
-            "fields": "photos",
-            "key": googleMapsApiService.apiKey,
-          },
-        );
-        if (detailsRes["status"] == "OK" && detailsRes["result"] != null) {
-          final photos = detailsRes["result"]["photos"] as List?;
-          if (photos != null && photos.isNotEmpty) {
-            final photoRef = photos.first["photo_reference"];
-            if (photoRef != null) {
-              imageUrl =
-                  "https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=$photoRef&key=${googleMapsApiService.apiKey}";
+        if (sl.isRegistered<GoogleMapsApiService>()) {
+          final googleMapsApiService = sl<GoogleMapsApiService>();
+          final detailsRes = await googleMapsApiService.getRequest(
+            "maps/api/place/details/json",
+            {
+              "place_id": placeId,
+              "fields": "photos",
+              "key": googleMapsApiService.apiKey,
+            },
+          );
+          if (detailsRes["status"] == "OK" && detailsRes["result"] != null) {
+            final photos = detailsRes["result"]["photos"] as List?;
+            if (photos != null && photos.isNotEmpty) {
+              final photoRef = photos.first["photo_reference"];
+              if (photoRef != null) {
+                imageUrl =
+                    "https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=$photoRef&key=${googleMapsApiService.apiKey}";
+              }
             }
           }
         }
@@ -173,7 +175,9 @@ class TripWizardCubit extends Cubit<TripWizardState> {
       debugPrint("Failed to fetch Google Place image: $e");
     }
 
-    final user = sl<AuthLocalDataSource>().getUser();
+    final user = sl.isRegistered<AuthLocalDataSource>()
+        ? sl<AuthLocalDataSource>().getUser()
+        : null;
     final ownerId = user?.id ?? "";
     final ownerName = user?.name ?? user?.userName ?? "";
 
