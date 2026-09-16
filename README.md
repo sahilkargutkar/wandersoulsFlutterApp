@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <strong>📣 NEW: AI-generated day-by-day itineraries, now with collaborative editing — <a href="#-features">see it below</a></strong>
+  <strong>NEW: AI-generated day-by-day itineraries, now with collaborative editing — <a href="#features--screenshots">see it below</a></strong>
 </p>
 
 <h1 align="center">Your ultimate AI travel planning app</h1>
@@ -31,9 +31,7 @@
 </p>
 
 <p align="center">
-  <a href="#-getting-started"><strong>Explore the docs »</strong></a>
-  &nbsp;·&nbsp;
-  <a href="#-demo"><strong>Watch the demo »</strong></a>
+  <a href="#getting-started"><strong>Explore the docs »</strong></a>
 </p>
 
 <p align="center">
@@ -46,26 +44,21 @@
 
 ---
 
-## 🔌 See it in action
+## Features & Screenshots
 
-<p align="center">
-  <img src="assets/gifs/app_demo.gif" alt="WanderSouls demo — AI itinerary generation and the timeline editor" width="720" />
-</p>
+| AI Itinerary & Smart Suggestions | Destination Explorer & Map | Activity & Transit Breakdown |
+| :---: | :---: | :---: |
+| <img src="assets/screenshots/trip_ai_suggestions.png" width="240" alt="AI Smart Suggestions" /><br/><sub>Smart suggestions tailored to destination & days</sub> | <img src="assets/screenshots/trip_overview_map.png" width="240" alt="Trip Overview & Map" /><br/><sub>Interactive Google Maps & day-by-day plan</sub> | <img src="assets/screenshots/itinerary_activity_details.png" width="240" alt="Activity Details & Travel Times" /><br/><sub>Activity booking, pricing & transit estimates</sub> |
 
-> Drop a 15–25s screen recording at `assets/gifs/app_demo.gif` — onboarding → AI itinerary generated → drag-and-drop timeline edit reads best end to end.
+<br/>
 
-## ✨ Features
-
-|                                                                                            |                                                                                             |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| <img src="assets/gifs/features/ai_itinerary.gif" alt="AI itinerary generator" width="360" /><br/><sub>🤖 AI itinerary generator</sub> | <img src="assets/gifs/features/places_explorer.gif" alt="Google Places destination explorer" width="360" /><br/><sub>🗺️ Destination explorer (Google Places API)</sub> |
-| <img src="assets/gifs/features/timeline_editor.gif" alt="Drag and drop timeline editor" width="360" /><br/><sub>📅 Drag-and-drop timeline editor</sub> | <img src="assets/gifs/features/collab_planning.gif" alt="Collaborative trip planning" width="360" /><br/><sub>👥 Collaborative planning</sub> |
-
-> Same idea as above — a short capture per feature at each `assets/gifs/features/*.gif` path. Keep each under ~5MB so the grid loads fast on GitHub.
+| Active Trip Management | Past Trips & Travel Archive |
+| :---: | :---: |
+| <img src="assets/screenshots/my_trips_active.png" width="240" alt="Active Trips" /><br/><sub>Manage active & upcoming itineraries</sub> | <img src="assets/screenshots/my_trips_passed.png" width="240" alt="Past Trips Archive" /><br/><sub>Browse past completed trips and memories</sub> |
 
 ---
 
-## 📋 Intro
+## Overview
 
 - AI-generated, cost-optimized day-by-day itineraries — transport, lodging, food, and sightseeing in one plan
 - Rich destination data pulled live from the Google Places API (New): ratings, reviews, hours, photos
@@ -73,7 +66,7 @@
 - Invite friends or family to co-edit an itinerary in real time
 - Keep tickets, bookings, and confirmation PDFs attached to the trip they belong to
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - Flutter (v3.22+) · Dart · BLoC pattern · Dio HTTP client · ScreenUtil
 - .NET Core Web API on Azure App Services — auth, trip metadata, collaborators, files
@@ -81,7 +74,7 @@
 - MongoDB Atlas
 - Google Places API (New) & Google Maps SDK
 
-## 🗺️ System Architecture
+## System Architecture
 
 ```mermaid
 graph TD
@@ -95,7 +88,7 @@ graph TD
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 **Prerequisites:** Flutter SDK (v3.22+) · Python (3.10+) · Google Places API credentials
 
@@ -116,18 +109,18 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ---
 
-## 💛 Support the Project
+## Support the Project
 
 If WanderSouls saved you some trip-planning headaches:
 
-- ⭐ Star the repo — it's the easiest way to help others find it
-- ☕ [Buy me a coffee](https://www.buymeacoffee.com/<your-handle>)
-- 🐛 [Open an issue](https://github.com/<your-org>/wander-souls/issues) for bugs or ideas
+- Star the repo — it's the easiest way to help others find it
+- [Buy me a coffee](https://www.buymeacoffee.com/<your-handle>)
+- [Open an issue](https://github.com/<your-org>/wander-souls/issues) for bugs or ideas
 
-## ⭐ Star History
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=<your-org>/wander-souls&type=Date)](https://star-history.com/#<your-org>/wander-souls&Date)
 
-## 📄 License
+## License
 
 This repository's source code is available under the [MIT License](LICENSE).
