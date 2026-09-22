@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -266,7 +267,39 @@ class ApiService {
         queryParameters: {"blobPath": blobPath},
       );
 
-      return Success<String>(response.data?.toString() ?? "");
+      if (response.data == null) {
+        return const Success<String>("");
+      }
+
+      if (response.data is Map) {
+        final map = response.data as Map;
+        final downloadUrl = map["downloadUrl"] ??
+            map["url"] ??
+            map["download_url"] ??
+            map["fileUrl"] ??
+            (map["data"] is String ? map["data"] : map["data"]?["downloadUrl"]) ??
+            "";
+        return Success<String>(downloadUrl.toString());
+      } else if (response.data is String) {
+        final str = (response.data as String).trim();
+        if (str.startsWith("{") && str.endsWith("}")) {
+          try {
+            final decoded = jsonDecode(str);
+            if (decoded is Map) {
+              final downloadUrl = decoded["downloadUrl"] ??
+                  decoded["url"] ??
+                  decoded["download_url"] ??
+                  decoded["fileUrl"] ??
+                  (decoded["data"] is String ? decoded["data"] : decoded["data"]?["downloadUrl"]) ??
+                  str;
+              return Success<String>(downloadUrl.toString());
+            }
+          } catch (_) {}
+        }
+        return Success<String>(str);
+      }
+
+      return Success<String>(response.data.toString());
     } on DioException catch (e) {
       return _handleError<String>(e);
     }

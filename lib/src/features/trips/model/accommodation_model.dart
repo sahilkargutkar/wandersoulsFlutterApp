@@ -156,13 +156,13 @@ class AccommodationModel {
             json['bookingRef'] ??
             json['BookingRef'])
         ?.toString();
-    final address = (json['address'] ??
-            json['Address'] ??
-            json['location'] ??
-            json['Location'] ??
-            json['place'] ??
-            json['Place'])
-        ?.toString();
+    final addressRaw = json['address'] ??
+        json['Address'] ??
+        json['location'] ??
+        json['Location'] ??
+        json['place'] ??
+        json['Place'];
+    final address = _cleanAddress(addressRaw);
     final currency =
         (json['currency'] ?? json['Currency'] ?? 'USD').toString();
     final bookingUrl = (json['bookingUrl'] ??
@@ -204,6 +204,55 @@ class AccommodationModel {
       phone: phone,
       notes: notes,
     );
+  }
+
+  static String? _cleanAddress(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is Map) {
+      final address = (raw['address'] ?? raw['Address'] ?? raw['street'] ?? raw['name'])?.toString().trim();
+      final city = (raw['city'] ?? raw['City'] ?? raw['location'] ?? raw['Location'])?.toString().trim();
+      if (address != null && address.isNotEmpty && city != null && city.isNotEmpty) {
+        if (address.toLowerCase().contains(city.toLowerCase())) {
+          return address;
+        }
+        return "$address, $city";
+      } else if (address != null && address.isNotEmpty) {
+        return address;
+      } else if (city != null && city.isNotEmpty) {
+        return city;
+      }
+    }
+
+    final str = raw.toString().trim();
+    if (str.isEmpty) return null;
+
+    if (str.contains("address:") || str.contains("location:") || str.startsWith("{")) {
+      String? extractedAddress;
+      String? extractedCity;
+
+      final addrMatch = RegExp(r'(?:address|street|name)\s*[:=]\s*([^,}\n]+)', caseSensitive: false).firstMatch(str);
+      if (addrMatch != null) {
+        extractedAddress = addrMatch.group(1)?.trim();
+      }
+
+      final cityMatch = RegExp(r'(?:city|location)\s*[:=]\s*([^,}\n]+)', caseSensitive: false).firstMatch(str);
+      if (cityMatch != null) {
+        extractedCity = cityMatch.group(1)?.trim();
+      }
+
+      if (extractedAddress != null && extractedAddress.isNotEmpty && extractedCity != null && extractedCity.isNotEmpty) {
+        if (extractedAddress.toLowerCase().contains(extractedCity.toLowerCase())) {
+          return extractedAddress;
+        }
+        return "$extractedAddress, $extractedCity";
+      } else if (extractedAddress != null && extractedAddress.isNotEmpty) {
+        return extractedAddress;
+      } else if (extractedCity != null && extractedCity.isNotEmpty) {
+        return extractedCity;
+      }
+    }
+
+    return str;
   }
 
   AccommodationModel copyWith({

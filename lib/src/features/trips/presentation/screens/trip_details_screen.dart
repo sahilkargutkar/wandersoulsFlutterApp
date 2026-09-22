@@ -317,18 +317,32 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   Future<void> _downloadAndOpenAttachment(String blobPath) async {
     AppToast.success("Opening document...");
     try {
-      final apiService = sl<ApiService>();
-      final result = await apiService.downloadFile(blobPath);
+      String rawUrl = blobPath.trim();
+      if (!rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+        final apiService = sl<ApiService>();
+        final result = await apiService.downloadFile(blobPath);
 
-      if (result is Success<String> && result.data.isNotEmpty) {
-        final url = Uri.parse(result.data);
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
+        if (result is Success<String> && result.data.isNotEmpty) {
+          rawUrl = result.data.trim();
         } else {
-          AppToast.error("Could not launch file reader");
+          AppToast.error("Failed to download file");
+          return;
         }
+      }
+
+      // If the string contains a map format or JSON wrapper, extract the URL substring
+      if (rawUrl.startsWith("{") && rawUrl.contains("http")) {
+        final match = RegExp(r'https?://[^\s",}]+').firstMatch(rawUrl);
+        if (match != null) {
+          rawUrl = match.group(0)!;
+        }
+      }
+
+      final url = Uri.parse(rawUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        AppToast.error("Failed to download file");
+        AppToast.error("Could not launch file reader");
       }
     } catch (e) {
       AppToast.error("Error opening document: $e");

@@ -57,6 +57,38 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
     super.dispose();
   }
 
+  Future<void> _openDocument(String docPath) async {
+    AppToast.success("Opening document...");
+    try {
+      String rawUrl = docPath.trim();
+      if (!rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+        final result = await _apiService.downloadFile(docPath);
+        if (result is Success<String> && result.data.isNotEmpty) {
+          rawUrl = result.data.trim();
+        } else {
+          AppToast.error("Failed to download file");
+          return;
+        }
+      }
+
+      if (rawUrl.startsWith("{") && rawUrl.contains("http")) {
+        final match = RegExp(r'https?://[^\s",}]+').firstMatch(rawUrl);
+        if (match != null) {
+          rawUrl = match.group(0)!;
+        }
+      }
+
+      final uri = Uri.parse(rawUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        AppToast.error("Could not launch file reader");
+      }
+    } catch (e) {
+      AppToast.error("Error opening document: $e");
+    }
+  }
+
   List<dynamic> _extractList(dynamic rawData, List<String> candidateKeys) {
     if (rawData == null) return [];
     if (rawData is String) {
@@ -767,15 +799,9 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                                     size: 20.sp,
                                     color: context.onSurfaceVariant,
                                   ),
-                                  onPressed: () async {
-                                    final uri = Uri.tryParse(
-                                      model.confirmationDocumentUrl!,
-                                    );
-                                    if (uri != null &&
-                                        await canLaunchUrl(uri)) {
-                                      await launchUrl(uri);
-                                    }
-                                  },
+                                  onPressed: () => _openDocument(
+                                    model.confirmationDocumentUrl!,
+                                  ),
                                 ),
                             ],
                           ),
@@ -984,13 +1010,9 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                             size: 20.sp,
                             color: context.onSurfaceVariant,
                           ),
-                          onPressed: () async {
-                            final uri =
-                                Uri.tryParse(acc.confirmationDocumentUrl!);
-                            if (uri != null && await canLaunchUrl(uri)) {
-                              await launchUrl(uri);
-                            }
-                          },
+                          onPressed: () => _openDocument(
+                            acc.confirmationDocumentUrl!,
+                          ),
                         ),
                       IconButton(
                         visualDensity: VisualDensity.compact,
