@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_places_cubit.dart';
-import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
 import 'package:wonder_souls/src/features/trips/model/blog_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/widgets/empty_saved_card.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
@@ -22,7 +22,7 @@ class SavedTripsScreen extends StatefulWidget {
 }
 
 class _SavedTripsScreenState extends State<SavedTripsScreen> {
-  int _selectedTab = 0; // 0: Blogs, 1: Places
+  int _selectedTab = 0; // 0: Saved Articles, 1: Saved Places
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
                 Expanded(
                   child: _buildTabButton(
                     index: 0,
-                    title: "Travel Blogs",
+                    title: "Saved Articles",
                     icon: Icons.article_rounded,
                   ),
                 ),
@@ -68,12 +68,12 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
                     valueListenable: widget.searchNotifier!,
                     builder: (context, query, child) {
                       return _selectedTab == 0
-                          ? _buildBlogsSection(context, query)
+                          ? _buildSavedArticlesSection(context, query)
                           : _buildSavedPlacesSection(context, query);
                     },
                   )
                 : (_selectedTab == 0
-                    ? _buildBlogsSection(context, "")
+                    ? _buildSavedArticlesSection(context, "")
                     : _buildSavedPlacesSection(context, "")),
           ),
         ),
@@ -164,98 +164,83 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
     );
   }
 
-  Widget _buildBlogsSection(BuildContext context, String query) {
-    return BlocBuilder<BlogsCubit, BlogsState>(
-      builder: (context, state) {
-        if (state is BlogsLoading) {
+  Widget _buildSavedArticlesSection(BuildContext context, String query) {
+    return BlocBuilder<SavedArticlesCubit, List<BlogModel>>(
+      builder: (context, savedArticles) {
+        if (savedArticles.isEmpty) {
           return Center(
-            child: CircularProgressIndicator(color: context.primary),
-          );
-        }
-
-        if (state is BlogsError) {
-          return Center(
-            child: Padding(
-              padding: EdgeInsets.all(24.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.redAccent,
-                    size: 48.sp,
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    state.message,
-                    textAlign: TextAlign.center,
-                    style: context.text.bodyMedium,
-                  ),
-                  SizedBox(height: 16.h),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<BlogsCubit>().fetchBlogs();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.primary,
-                      foregroundColor: context.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 40.h),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80.w,
+                      height: 80.w,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: context.primaryTint,
+                      ),
+                      child: Icon(
+                        Icons.article_outlined,
+                        size: 36.sp,
+                        color: context.primary.withAlpha(150),
                       ),
                     ),
-                    child: const Text("Retry"),
-                  ),
-                ],
+                    SizedBox(height: 20.h),
+                    Text(
+                      'No saved articles yet',
+                      style: context.text.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: context.onSurface,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Tap the bookmark icon on any travel article to read it later or save for offline inspiration.',
+                      textAlign: TextAlign.center,
+                      style: context.text.bodyMedium?.copyWith(
+                        color: context.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         }
 
-        if (state is BlogsLoaded) {
-          final blogs = state.blogs;
-          if (blogs.isEmpty) {
-            return Center(
-              child: Text(
-                "No blogs available",
-                style: context.text.bodyMedium?.copyWith(
-                  color: context.onSurfaceVariant,
-                ),
+        final filteredArticles = query.isEmpty
+            ? savedArticles
+            : savedArticles.where((blog) {
+                final titleMatch =
+                    blog.title.toLowerCase().contains(query.toLowerCase());
+                final descMatch =
+                    blog.desc.toLowerCase().contains(query.toLowerCase());
+                final categoryMatch =
+                    blog.category.toLowerCase().contains(query.toLowerCase());
+                final authorMatch =
+                    blog.author.toLowerCase().contains(query.toLowerCase());
+                return titleMatch ||
+                    descMatch ||
+                    categoryMatch ||
+                    authorMatch;
+              }).toList();
+
+        if (filteredArticles.isEmpty) {
+          return Center(
+            child: Text(
+              "No matching saved articles",
+              style: context.text.bodyMedium?.copyWith(
+                color: context.onSurfaceVariant,
               ),
-            );
-          }
-
-          final filteredBlogs = query.isEmpty
-              ? blogs
-              : blogs.where((blog) {
-                  final titleMatch =
-                      blog.title.toLowerCase().contains(query.toLowerCase());
-                  final descMatch =
-                      blog.desc.toLowerCase().contains(query.toLowerCase());
-                  final categoryMatch =
-                      blog.category.toLowerCase().contains(query.toLowerCase());
-                  final authorMatch =
-                      blog.author.toLowerCase().contains(query.toLowerCase());
-                  return titleMatch ||
-                      descMatch ||
-                      categoryMatch ||
-                      authorMatch;
-                }).toList();
-
-          if (filteredBlogs.isEmpty) {
-            return Center(
-              child: Text(
-                "No matching blogs",
-                style: context.text.bodyMedium?.copyWith(
-                  color: context.onSurfaceVariant,
-                ),
-              ),
-            );
-          }
-
-          return _buildBlogsList(context, filteredBlogs);
+            ),
+          );
         }
 
-        return const SizedBox.shrink();
+        return _buildArticlesList(context, filteredArticles);
       },
     );
   }
@@ -287,7 +272,7 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
     );
   }
 
-  Widget _buildBlogsList(BuildContext context, List<BlogModel> blogs) {
+  Widget _buildArticlesList(BuildContext context, List<BlogModel> blogs) {
     return ListView.builder(
       padding: EdgeInsets.only(
         left: 16.w,
@@ -312,6 +297,7 @@ class _SavedTripsScreenState extends State<SavedTripsScreen> {
               ratio: 16 / 9,
               cardWidth: MediaQuery.of(context).size.width - 32.w,
               readTime: blog.readTime,
+              blog: blog,
             ),
           ),
         );

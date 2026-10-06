@@ -153,6 +153,7 @@ class _ListArticleState extends State<ListArticle> {
                       ratio: 16 / 9,
                       cardWidth: MediaQuery.of(context).size.width - 40.w,
                       readTime: blog.readTime,
+                      blog: blog,
                     ),
                   ),
                 );

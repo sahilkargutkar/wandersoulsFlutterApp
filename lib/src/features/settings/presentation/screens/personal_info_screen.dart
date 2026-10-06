@@ -509,9 +509,27 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
     setState(() => _saving = true);
 
-    final String finalProfilePicture = _pickedProfileImage != null
-        ? _pickedProfileImage!.path
-        : (_existingProfilePicUrl ?? "");
+    String finalProfilePicture = _existingProfilePicUrl ?? "";
+    if (_pickedProfileImage != null) {
+      try {
+        final filename = _pickedProfileImage!.path.split(Platform.pathSeparator).last;
+        final ext = filename.contains(".") ? filename.split(".").last : "jpg";
+        final blobPath = "avatars/${userId}_${DateTime.now().millisecondsSinceEpoch}.$ext";
+        final uploadRes = await _apiService.uploadFile(_pickedProfileImage!.path, blobPath);
+        if (uploadRes is Success<String>) {
+          final downloadRes = await _apiService.downloadFile(blobPath);
+          if (downloadRes is Success<String> && downloadRes.data.isNotEmpty) {
+            finalProfilePicture = downloadRes.data;
+          } else {
+            finalProfilePicture = _pickedProfileImage!.path;
+          }
+        } else {
+          finalProfilePicture = _pickedProfileImage!.path;
+        }
+      } catch (_) {
+        finalProfilePicture = _pickedProfileImage!.path;
+      }
+    }
 
     final updatedPreferences =
         (_user?.preferences ?? const UserPreferencesModel()).copyWith(
@@ -589,6 +607,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               radius: 48.r,
               backgroundColor: context.mutedBackground,
               backgroundImage: imageProvider,
+              onBackgroundImageError: imageProvider != null ? (_, __) {} : null,
               child: imageProvider == null
                   ? Icon(
                       Icons.person_rounded,

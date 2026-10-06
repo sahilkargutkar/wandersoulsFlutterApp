@@ -15,6 +15,7 @@ import 'package:wonder_souls/src/features/home/presentation/screens/search_scree
 import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/list_public_trips.dart';
 import 'package:wonder_souls/src/features/trips/model/blog_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/blog_detail_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_details_screen.dart';
@@ -40,6 +41,15 @@ List<String> _publicRoutes = [
   SignupScreen.routeName,
   BoardingScreens.routeName,
   TermsAndConditionsScreen.routeName,
+  HomeBottomBar.routeName,
+  SearchScreen.routeName,
+  ListDestination.routeName,
+  DestinationDetailsScreen.routeName,
+  ListPublicTripsScreen.routeName,
+  ListArticle.routeName,
+  BlogDetailScreen.routeName,
+  TripDetailsScreen.routeName,
+  TripWizardScreen.routeName,
 ];
 
 GoRouter buildRouter({
@@ -58,9 +68,10 @@ GoRouter buildRouter({
       debugPrint("GoRouter Redirect: location=$location, authState=${authState.runtimeType}, isPublic=$isPublic");
 
       if (authState is Authenticated &&
-          isPublic &&
-          location != SplashScreen.routeName) {
-        debugPrint("GoRouter Redirect: Redirecting to HomeBottomBar");
+          (location == LoginScreen.routeName ||
+           location == SignupScreen.routeName ||
+           location == BoardingScreens.routeName)) {
+        debugPrint("GoRouter Redirect: Authenticated user on auth screen, redirecting to HomeBottomBar");
         return HomeBottomBar.routeName;
       }
 
@@ -129,6 +140,10 @@ GoRouter buildRouter({
       GoRoute(
         path: ListDestination.routeName,
         builder: (context, state) => const ListDestination(),
+      ),
+      GoRoute(
+        path: ListPublicTripsScreen.routeName,
+        builder: (context, state) => const ListPublicTripsScreen(),
       ),
       GoRoute(
         path: ListArticle.routeName,

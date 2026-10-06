@@ -2176,29 +2176,45 @@ class _TripBookingsSheetState extends State<TripBookingsSheet>
                 style: context.text.bodyMedium,
               ),
               16.h.verticalSpace,
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: context.primary.withAlpha(15),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.copy_rounded,
-                      color: context.primary,
-                      size: 16.sp,
+              InkWell(
+                onTap: () {
+                  Clipboard.setData(
+                    const ClipboardData(
+                      text: "wandersoulstechnologies05@gmail.com",
                     ),
-                    8.w.horizontalSpace,
-                    Text(
-                      "wandersoulstechnologies05@gmail.com",
-                      style: context.text.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  );
+                  AppToast.success("Email copied to clipboard");
+                },
+                borderRadius: BorderRadius.circular(12.r),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: context.primary.withAlpha(15),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.copy_rounded,
                         color: context.primary,
+                        size: 16.sp,
                       ),
-                    ),
-                  ],
+                      8.w.horizontalSpace,
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "wandersoulstechnologies05@gmail.com",
+                            style: context.text.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: context.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               16.h.verticalSpace,

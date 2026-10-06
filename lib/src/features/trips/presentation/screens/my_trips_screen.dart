@@ -13,6 +13,7 @@ import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 import 'package:wonder_souls/src/config/utils/trip_image_helper.dart';
 import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
+import 'package:wonder_souls/src/features/trips/presentation/widgets/create_trip_modal_bottom_sheet.dart';
 
 class MyTripsScreen extends StatefulWidget {
   final ValueNotifier<String>? searchNotifier;
@@ -327,6 +328,20 @@ class _MyTripsScreenState extends State<MyTripsScreen>
               'Start planning your next adventure',
               style: context.text.bodyMedium?.copyWith(
                 color: context.onSurfaceVariant,
+              ),
+            ),
+            SizedBox(height: 20.h),
+            ElevatedButton.icon(
+              onPressed: () => showCreateTripModal(context),
+              icon: Icon(Icons.add_rounded, size: 18.sp),
+              label: const Text("Create a Trip"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
               ),
             ),
           ],

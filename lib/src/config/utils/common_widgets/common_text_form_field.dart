@@ -15,6 +15,7 @@ class CommonTextFormField extends StatelessWidget {
   final int maxLines;
   final VoidCallback? onTap;
   final bool readOnly;
+  final ValueChanged<String>? onChanged;
 
   const CommonTextFormField({
     super.key,
@@ -29,6 +30,7 @@ class CommonTextFormField extends StatelessWidget {
     this.maxLines = 1,
     this.onTap,
     this.readOnly = false,
+    this.onChanged,
   });
 
   @override
@@ -41,6 +43,7 @@ class CommonTextFormField extends StatelessWidget {
       maxLines: maxLines,
       onTap: onTap,
       readOnly: readOnly,
+      onChanged: onChanged,
       style: context.text.bodyMedium?.copyWith(
         color: context.onSurface,
         fontWeight: FontWeight.w500,

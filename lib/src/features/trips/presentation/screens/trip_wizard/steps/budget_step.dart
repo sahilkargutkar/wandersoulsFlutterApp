@@ -17,27 +17,31 @@ class BudgetStep extends StatefulWidget {
 
 class _BudgetStepState extends State<BudgetStep> {
   late final TextEditingController _totalController;
+  late final TextEditingController _transController;
+  late final TextEditingController _accController;
+  late final TextEditingController _foodController;
+  late final TextEditingController _actController;
   String _selectedCurrency = "USD";
 
   final List<Map<String, String>> _options = const [
     {
       "title": "Cheap 💰",
-      "subtitle": "Budget-friendly, economical travel.",
+      "subtitle": "Budget-friendly, hostels, street food & transit.",
       "value": "cheap",
     },
     {
       "title": "Balanced ⚖️",
-      "subtitle": "Moderate spending for a balanced trip.",
+      "subtitle": "Comfortable 3-star stays & balanced activities.",
       "value": "balanced",
     },
     {
       "title": "Luxury 💎",
-      "subtitle": "High-end, indulgent experiences.",
+      "subtitle": "Top-tier hotels, fine dining & private tours.",
       "value": "luxury",
     },
     {
       "title": "Flexible 🔀",
-      "subtitle": "No budget restrictions.",
+      "subtitle": "No hard limits, spend as you go.",
       "value": "flexible",
     },
   ];
@@ -53,26 +57,68 @@ class _BudgetStepState extends State<BudgetStep> {
           ? state.totalEstimated.toStringAsFixed(0)
           : '',
     );
-    _selectedCurrency = state.currency.isNotEmpty ? state.currency : "USD";
+    _transController = TextEditingController(
+      text: state.transportationBudget > 0
+          ? state.transportationBudget.toStringAsFixed(0)
+          : '',
+    );
+    _accController = TextEditingController(
+      text: state.accommodationBudget > 0
+          ? state.accommodationBudget.toStringAsFixed(0)
+          : '',
+    );
+    _foodController = TextEditingController(
+      text: state.foodBudget > 0
+          ? state.foodBudget.toStringAsFixed(0)
+          : '',
+    );
+    _actController = TextEditingController(
+      text: state.activitiesBudget > 0
+          ? state.activitiesBudget.toStringAsFixed(0)
+          : '',
+    );
 
-    _totalController.addListener(_onTotalChanged);
+    _selectedCurrency = state.currency.isNotEmpty ? state.currency : "USD";
   }
 
-  void _onTotalChanged() {
-    final total = double.tryParse(_totalController.text) ?? 0.0;
+  void _onTotalChanged(String val) {
+    final total = double.tryParse(val.trim()) ?? 0.0;
     final cubit = context.read<TripWizardCubit>();
     final state = cubit.state;
 
-    if (total != state.totalEstimated) {
-      cubit.setBudgetDetails(
-        currency: _selectedCurrency,
-        totalEstimated: total,
-        transportation: state.transportationBudget,
-        accommodation: state.accommodationBudget,
-        food: state.foodBudget,
-        activities: state.activitiesBudget,
-      );
-    }
+    cubit.setBudgetDetails(
+      currency: _selectedCurrency,
+      totalEstimated: total,
+      transportation: state.transportationBudget,
+      accommodation: state.accommodationBudget,
+      food: state.foodBudget,
+      activities: state.activitiesBudget,
+    );
+  }
+
+  void _autoDistributeBudget(double total) {
+    if (total <= 0) return;
+    // Standard recommended distribution:
+    // Accommodation: 35%, Transport: 25%, Food: 25%, Activities: 15%
+    final acc = (total * 0.35).roundToDouble();
+    final trans = (total * 0.25).roundToDouble();
+    final food = (total * 0.25).roundToDouble();
+    final act = (total * 0.15).roundToDouble();
+
+    _accController.text = acc.toStringAsFixed(0);
+    _transController.text = trans.toStringAsFixed(0);
+    _foodController.text = food.toStringAsFixed(0);
+    _actController.text = act.toStringAsFixed(0);
+
+    final cubit = context.read<TripWizardCubit>();
+    cubit.setBudgetDetails(
+      currency: _selectedCurrency,
+      totalEstimated: total,
+      transportation: trans,
+      accommodation: acc,
+      food: food,
+      activities: act,
+    );
   }
 
   void _onSliderChanged({
@@ -88,6 +134,11 @@ class _BudgetStepState extends State<BudgetStep> {
     double newAcc = acc ?? state.accommodationBudget;
     double newFood = food ?? state.foodBudget;
     double newAct = act ?? state.activitiesBudget;
+
+    if (trans != null) _transController.text = newTrans > 0 ? newTrans.toStringAsFixed(0) : '';
+    if (acc != null) _accController.text = newAcc > 0 ? newAcc.toStringAsFixed(0) : '';
+    if (food != null) _foodController.text = newFood > 0 ? newFood.toStringAsFixed(0) : '';
+    if (act != null) _actController.text = newAct > 0 ? newAct.toStringAsFixed(0) : '';
 
     double newTotal = state.totalEstimated;
     if (state.totalEstimated == 0) {
@@ -108,6 +159,10 @@ class _BudgetStepState extends State<BudgetStep> {
   @override
   void dispose() {
     _totalController.dispose();
+    _transController.dispose();
+    _accController.dispose();
+    _foodController.dispose();
+    _actController.dispose();
     super.dispose();
   }
 
@@ -124,7 +179,7 @@ class _BudgetStepState extends State<BudgetStep> {
             totalAllocated > state.totalEstimated && state.totalEstimated > 0;
         final double scale = exceeds
             ? totalAllocated
-            : (state.totalEstimated > 0 ? state.totalEstimated : 1.0);
+            : (state.totalEstimated > 0 ? state.totalEstimated : (totalAllocated > 0 ? totalAllocated : 1.0));
 
         final double transRatio = state.transportationBudget / scale;
         final double accRatio = state.accommodationBudget / scale;
@@ -132,7 +187,9 @@ class _BudgetStepState extends State<BudgetStep> {
         final double actRatio = state.activitiesBudget / scale;
         final double unallocatedRatio = exceeds
             ? 0.0
-            : ((state.totalEstimated - totalAllocated) / scale);
+            : (state.totalEstimated > totalAllocated
+                ? ((state.totalEstimated - totalAllocated) / scale)
+                : 0.0);
 
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -144,28 +201,330 @@ class _BudgetStepState extends State<BudgetStep> {
                 child: ListView(
                   physics: const BouncingScrollPhysics(),
                   children: [
-                    Text(
-                      "Set your trip budget 💰",
-                      style: context.text.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: context.colors.onSurface,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "Trip Budget & Currency 💰",
+                            style: context.text.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: context.colors.onSurface,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: context.primaryTint,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Text(
+                            "Optional",
+                            style: context.text.labelSmall?.copyWith(
+                              color: context.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     8.h.verticalSpace,
                     Text(
-                      "Let us know your budget preference, and we'll craft an itinerary that suits your financial comfort.",
+                      "Set your expected total budget, currency, and category estimates. You can always change this later.",
                       style: context.text.bodyMedium?.copyWith(
                         color: context.colors.onSurfaceVariant,
-                        height: 1.5,
+                        height: 1.4,
                       ),
                     ),
-                    32.h.verticalSpace,
+                    24.h.verticalSpace,
 
-                    // Options List
+                    // 1. Currency & Total Expected Budget
+                    Text(
+                      "1. Expected Total Budget",
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: context.colors.onSurface,
+                      ),
+                    ),
+                    12.h.verticalSpace,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _selectedCurrency,
+                            dropdownColor: context.colors.surface,
+                            style: context.text.bodyMedium?.copyWith(
+                              color: context.colors.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: "Currency",
+                              filled: true,
+                              fillColor: context.mutedBackground,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12.w,
+                                vertical: 16.h,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14.r),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14.r),
+                                borderSide: BorderSide(
+                                  color: context.borderColor.withAlpha(50),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14.r),
+                                borderSide: BorderSide(
+                                  color: context.colors.primary,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            items: [
+                              "USD", "EUR", "INR", "GBP", "JPY",
+                              "AUD", "CAD", "AED", "SGD", "CHF", "THB"
+                            ]
+                                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  _selectedCurrency = val;
+                                });
+                                final cubit = context.read<TripWizardCubit>();
+                                cubit.setBudgetDetails(
+                                  currency: _selectedCurrency,
+                                  totalEstimated: state.totalEstimated,
+                                  transportation: state.transportationBudget,
+                                  accommodation: state.accommodationBudget,
+                                  food: state.foodBudget,
+                                  activities: state.activitiesBudget,
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                        12.w.horizontalSpace,
+                        Expanded(
+                          flex: 3,
+                          child: CommonTextFormField(
+                            controller: _totalController,
+                            hintText: "e.g. 2500",
+                            labelText: "Total Budget",
+                            keyboardType: TextInputType.number,
+                            prefixIcon: Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: context.colors.onSurfaceVariant,
+                            ),
+                            onChanged: _onTotalChanged,
+                          ),
+                        ),
+                      ],
+                    ),
+                    12.h.verticalSpace,
+
+                    // Quick Budget Chips
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [500, 1500, 3000, 5000].map((amt) {
+                          return Padding(
+                            padding: EdgeInsets.only(right: 8.w),
+                            child: ActionChip(
+                              label: Text("$_selectedCurrency $amt"),
+                              backgroundColor: context.mutedBackground,
+                              labelStyle: context.text.labelSmall?.copyWith(
+                                color: context.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.r),
+                                side: BorderSide(
+                                  color: context.primary.withAlpha(40),
+                                ),
+                              ),
+                              onPressed: () {
+                                _totalController.text = amt.toString();
+                                _onTotalChanged(amt.toString());
+                                _autoDistributeBudget(amt.toDouble());
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    24.h.verticalSpace,
+
+                    // 2. Category-Wise Estimation Breakdown
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "2. Category-wise Breakdown",
+                          style: context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: context.colors.onSurface,
+                          ),
+                        ),
+                        if (state.totalEstimated > 0)
+                          InkWell(
+                            onTap: () => _autoDistributeBudget(state.totalEstimated),
+                            borderRadius: BorderRadius.circular(8.r),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.auto_fix_high_rounded, size: 14.sp, color: context.primary),
+                                  4.w.horizontalSpace,
+                                  Text(
+                                    "Auto Distribute",
+                                    style: context.text.labelSmall?.copyWith(
+                                      color: context.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    10.h.verticalSpace,
+
+                    // Segmented Allocation Bar
+                    Container(
+                      height: 12.h,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6.r),
+                        color: context.colors.onSurface.withValues(alpha: 0.08),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6.r),
+                        child: Row(
+                          children: [
+                            if (transRatio > 0)
+                              Expanded(
+                                flex: (transRatio * 1000).round().clamp(1, 1000),
+                                child: Container(color: Colors.orange),
+                              ),
+                            if (accRatio > 0)
+                              Expanded(
+                                flex: (accRatio * 1000).round().clamp(1, 1000),
+                                child: Container(color: Colors.blue),
+                              ),
+                            if (foodRatio > 0)
+                              Expanded(
+                                flex: (foodRatio * 1000).round().clamp(1, 1000),
+                                child: Container(color: Colors.green),
+                              ),
+                            if (actRatio > 0)
+                              Expanded(
+                                flex: (actRatio * 1000).round().clamp(1, 1000),
+                                child: Container(color: Colors.purple),
+                              ),
+                            if (unallocatedRatio > 0)
+                              Expanded(
+                                flex: (unallocatedRatio * 1000).round().clamp(1, 1000),
+                                child: Container(
+                                  color: context.colors.onSurface.withValues(alpha: 0.08),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    10.h.verticalSpace,
+
+                    // Legends
+                    Wrap(
+                      spacing: 12.w,
+                      runSpacing: 8.h,
+                      children: [
+                        _buildLegendDot(Colors.orange, "Trans: $_selectedCurrency ${state.transportationBudget.toStringAsFixed(0)}"),
+                        _buildLegendDot(Colors.blue, "Stay: $_selectedCurrency ${state.accommodationBudget.toStringAsFixed(0)}"),
+                        _buildLegendDot(Colors.green, "Food: $_selectedCurrency ${state.foodBudget.toStringAsFixed(0)}"),
+                        _buildLegendDot(Colors.purple, "Activities: $_selectedCurrency ${state.activitiesBudget.toStringAsFixed(0)}"),
+                        if (state.totalEstimated > totalAllocated)
+                          _buildLegendDot(
+                            context.colors.onSurface.withValues(alpha: 0.3),
+                            "Remaining: $_selectedCurrency ${(state.totalEstimated - totalAllocated).toStringAsFixed(0)}",
+                          ),
+                      ],
+                    ),
+                    if (exceeds) ...[
+                      8.h.verticalSpace,
+                      Text(
+                        "⚠️ Total category estimates exceed total budget ($_selectedCurrency ${totalAllocated.toStringAsFixed(0)} / $_selectedCurrency ${state.totalEstimated.toStringAsFixed(0)})",
+                        style: context.text.bodySmall?.copyWith(
+                          color: context.colors.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                    16.h.verticalSpace,
+
+                    // Sliders
+                    _buildCategorySliderCard(
+                      context,
+                      label: "Transportation 🚗",
+                      value: state.transportationBudget,
+                      maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                      icon: Icons.directions_car_outlined,
+                      color: Colors.orange,
+                      onChanged: (val) => _onSliderChanged(trans: val),
+                    ),
+                    10.h.verticalSpace,
+                    _buildCategorySliderCard(
+                      context,
+                      label: "Accommodation / Hotel 🏨",
+                      value: state.accommodationBudget,
+                      maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                      icon: Icons.hotel_outlined,
+                      color: Colors.blue,
+                      onChanged: (val) => _onSliderChanged(acc: val),
+                    ),
+                    10.h.verticalSpace,
+                    _buildCategorySliderCard(
+                      context,
+                      label: "Food & Dining 🍕",
+                      value: state.foodBudget,
+                      maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                      icon: Icons.restaurant_outlined,
+                      color: Colors.green,
+                      onChanged: (val) => _onSliderChanged(food: val),
+                    ),
+                    10.h.verticalSpace,
+                    _buildCategorySliderCard(
+                      context,
+                      label: "Activities & Sightseeing 🎢",
+                      value: state.activitiesBudget,
+                      maxVal: state.totalEstimated > 0 ? state.totalEstimated : 1000.0,
+                      icon: Icons.explore_outlined,
+                      color: Colors.purple,
+                      onChanged: (val) => _onSliderChanged(act: val),
+                    ),
+                    24.h.verticalSpace,
+
+                    // 3. Travel Budget Style
+                    Text(
+                      "3. Budget Style (Optional)",
+                      style: context.text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: context.colors.onSurface,
+                      ),
+                    ),
+                    12.h.verticalSpace,
+
                     ..._options.map((option) {
                       final isSelected = state.budgetLevel == option["value"];
                       return Padding(
-                        padding: EdgeInsets.only(bottom: 12.h),
+                        padding: EdgeInsets.only(bottom: 10.h),
                         child: InkWell(
                           onTap: () {
                             context.read<TripWizardCubit>().setBudgetLevel(
@@ -176,7 +535,7 @@ class _BudgetStepState extends State<BudgetStep> {
                           child: Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: 16.w,
-                              vertical: 16.h,
+                              vertical: 14.h,
                             ),
                             decoration: BoxDecoration(
                               border: Border.all(
@@ -194,297 +553,87 @@ class _BudgetStepState extends State<BudgetStep> {
                                     )
                                   : Colors.transparent,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text(
-                                  option["title"]!,
-                                  style: context.text.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: context.colors.onSurface,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        option["title"]!,
+                                        style: context.text.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: context.colors.onSurface,
+                                        ),
+                                      ),
+                                      4.h.verticalSpace,
+                                      Text(
+                                        option["subtitle"]!,
+                                        style: context.text.bodySmall?.copyWith(
+                                          color: context.colors.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                4.h.verticalSpace,
-                                Text(
-                                  option["subtitle"]!,
-                                  style: context.text.bodySmall?.copyWith(
-                                    color: context.colors.onSurfaceVariant,
-                                  ),
-                                ),
+                                if (isSelected)
+                                  Icon(Icons.check_circle_rounded, color: context.primary),
                               ],
                             ),
                           ),
                         ),
                       );
                     }),
-
-                    if (state.budgetLevel != null) ...[
-                      24.h.verticalSpace,
-                      Divider(
-                        color: context.colors.onSurface.withValues(alpha: 0.1),
-                      ),
-                      16.h.verticalSpace,
-                      Text(
-                        "Estimated Budget Details 💳",
-                        style: context.text.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: context.colors.onSurface,
-                        ),
-                      ),
-                      12.h.verticalSpace,
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _selectedCurrency,
-                              dropdownColor: context.colors.surface,
-                              style: context.text.bodyMedium?.copyWith(
-                                color: context.colors.onSurface,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: InputDecoration(
-                                labelText: "Currency",
-                                filled: true,
-                                fillColor: context.mutedBackground,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12.w,
-                                  vertical: 16.h,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14.r),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14.r),
-                                  borderSide: BorderSide(
-                                    color: context.borderColor.withAlpha(50),
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14.r),
-                                  borderSide: BorderSide(
-                                    color: context.colors.primary,
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                              items:
-                                  [
-                                        "USD",
-                                        "EUR",
-                                        "INR",
-                                        "GBP",
-                                        "JPY",
-                                        "AUD",
-                                        "CAD",
-                                      ]
-                                      .map(
-                                        (c) => DropdownMenuItem(
-                                          value: c,
-                                          child: Text(c),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setState(() {
-                                    _selectedCurrency = val;
-                                  });
-                                  final cubit = context.read<TripWizardCubit>();
-                                  cubit.setBudgetDetails(
-                                    currency: _selectedCurrency,
-                                    totalEstimated: state.totalEstimated,
-                                    transportation: state.transportationBudget,
-                                    accommodation: state.accommodationBudget,
-                                    food: state.foodBudget,
-                                    activities: state.activitiesBudget,
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                          12.w.horizontalSpace,
-                          Expanded(
-                            flex: 3,
-                            child: CommonTextFormField(
-                              controller: _totalController,
-                              hintText: "e.g., 2000",
-                              labelText: "Total Budget",
-                              keyboardType: TextInputType.number,
-                              prefixIcon: Icon(
-                                Icons.account_balance_wallet_outlined,
-                                color: context.colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      24.h.verticalSpace,
-
-                      // visual stacked allocator
-                      Text(
-                        "Budget Allocation Breakdown",
-                        style: context.text.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: context.colors.onSurface,
-                        ),
-                      ),
-                      8.h.verticalSpace,
-
-                      // Segment Progress Bar
-                      Container(
-                        height: 14.h,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(7.r),
-                          color: context.colors.onSurface.withValues(
-                            alpha: 0.05,
-                          ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(7.r),
-                          child: Row(
-                            children: [
-                              if (transRatio > 0)
-                                Expanded(
-                                  flex: (transRatio * 1000).round(),
-                                  child: Container(color: Colors.orange),
-                                ),
-                              if (accRatio > 0)
-                                Expanded(
-                                  flex: (accRatio * 1000).round(),
-                                  child: Container(color: Colors.blue),
-                                ),
-                              if (foodRatio > 0)
-                                Expanded(
-                                  flex: (foodRatio * 1000).round(),
-                                  child: Container(color: Colors.green),
-                                ),
-                              if (actRatio > 0)
-                                Expanded(
-                                  flex: (actRatio * 1000).round(),
-                                  child: Container(color: Colors.purple),
-                                ),
-                              if (unallocatedRatio > 0 &&
-                                  state.totalEstimated > 0)
-                                Expanded(
-                                  flex: (unallocatedRatio * 1000).round(),
-                                  child: Container(
-                                    color: context.colors.onSurface.withValues(
-                                      alpha: 0.08,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      12.h.verticalSpace,
-
-                      // Legends and allocation totals
-                      Wrap(
-                        spacing: 12.w,
-                        runSpacing: 8.h,
-                        children: [
-                          _buildLegendDot(
-                            Colors.orange,
-                            "Trans: ${state.currency} ${state.transportationBudget.toStringAsFixed(0)}",
-                          ),
-                          _buildLegendDot(
-                            Colors.blue,
-                            "Acc: ${state.currency} ${state.accommodationBudget.toStringAsFixed(0)}",
-                          ),
-                          _buildLegendDot(
-                            Colors.green,
-                            "Food: ${state.currency} ${state.foodBudget.toStringAsFixed(0)}",
-                          ),
-                          _buildLegendDot(
-                            Colors.purple,
-                            "Act: ${state.currency} ${state.activitiesBudget.toStringAsFixed(0)}",
-                          ),
-                          if (state.totalEstimated > totalAllocated)
-                            _buildLegendDot(
-                              context.colors.onSurface.withValues(alpha: 0.3),
-                              "Unallocated: ${state.currency} ${(state.totalEstimated - totalAllocated).toStringAsFixed(0)}",
-                            ),
-                        ],
-                      ),
-                      if (exceeds) ...[
-                        12.h.verticalSpace,
-                        Text(
-                          "⚠️ Warning: Total allocated (${state.currency} ${totalAllocated.toStringAsFixed(0)}) exceeds your total budget (${state.currency} ${state.totalEstimated.toStringAsFixed(0)}).",
-                          style: context.text.bodySmall?.copyWith(
-                            color: context.colors.error,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                      24.h.verticalSpace,
-
-                      // Slider inputs
-                      _buildCategorySliderCard(
-                        context,
-                        label: "Transportation 🚗",
-                        value: state.transportationBudget,
-                        maxVal: state.totalEstimated > 0
-                            ? state.totalEstimated
-                            : 1000.0,
-                        icon: Icons.directions_car_outlined,
-                        color: Colors.orange,
-                        onChanged: (val) => _onSliderChanged(trans: val),
-                      ),
-                      12.h.verticalSpace,
-                      _buildCategorySliderCard(
-                        context,
-                        label: "Accommodation 🏨",
-                        value: state.accommodationBudget,
-                        maxVal: state.totalEstimated > 0
-                            ? state.totalEstimated
-                            : 1000.0,
-                        icon: Icons.hotel_outlined,
-                        color: Colors.blue,
-                        onChanged: (val) => _onSliderChanged(acc: val),
-                      ),
-                      12.h.verticalSpace,
-                      _buildCategorySliderCard(
-                        context,
-                        label: "Food & Dining 🍕",
-                        value: state.foodBudget,
-                        maxVal: state.totalEstimated > 0
-                            ? state.totalEstimated
-                            : 1000.0,
-                        icon: Icons.restaurant_outlined,
-                        color: Colors.green,
-                        onChanged: (val) => _onSliderChanged(food: val),
-                      ),
-                      12.h.verticalSpace,
-                      _buildCategorySliderCard(
-                        context,
-                        label: "Activities 🎢",
-                        value: state.activitiesBudget,
-                        maxVal: state.totalEstimated > 0
-                            ? state.totalEstimated
-                            : 1000.0,
-                        icon: Icons.explore_outlined,
-                        color: Colors.purple,
-                        onChanged: (val) => _onSliderChanged(act: val),
-                      ),
-                      16.h.verticalSpace,
-                    ],
+                    20.h.verticalSpace,
                   ],
                 ),
               ),
+
+              // Bottom Actions (Skip & Continue)
               Padding(
-                padding: EdgeInsets.only(bottom: 24.h, top: 16.h),
-                child: CommonButton(
-                  title: "Continue",
-                  onPressed: state.budgetLevel == null
-                      ? null
-                      : () {
+                padding: EdgeInsets.only(bottom: 24.h, top: 12.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          // Default to flexible if not set
+                          if (state.budgetLevel == null) {
+                            context.read<TripWizardCubit>().setBudgetLevel("flexible");
+                          }
                           context.read<TripWizardCubit>().nextStep();
                         },
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          side: BorderSide(color: context.borderColor),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14.r),
+                          ),
+                        ),
+                        child: Text(
+                          "Skip",
+                          style: context.text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: context.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                    12.w.horizontalSpace,
+                    Expanded(
+                      flex: 2,
+                      child: CommonButton(
+                        title: "Continue",
+                        onPressed: () {
+                          if (state.budgetLevel == null) {
+                            context.read<TripWizardCubit>().setBudgetLevel("flexible");
+                          }
+                          context.read<TripWizardCubit>().nextStep();
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -525,9 +674,9 @@ class _BudgetStepState extends State<BudgetStep> {
     required ValueChanged<double> onChanged,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
           color: context.colors.onSurface.withValues(alpha: 0.08),
         ),
@@ -539,41 +688,41 @@ class _BudgetStepState extends State<BudgetStep> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(8.w),
+                padding: EdgeInsets.all(6.r),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 20.sp),
+                child: Icon(icon, color: color, size: 18.sp),
               ),
-              12.w.horizontalSpace,
+              10.w.horizontalSpace,
               Expanded(
                 child: Text(
                   label,
-                  style: context.text.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: context.text.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: context.colors.onSurface,
                   ),
                 ),
               ),
               Text(
                 "$_selectedCurrency ${value.toStringAsFixed(0)}",
-                style: context.text.bodyLarge?.copyWith(
+                style: context.text.bodyMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
               ),
             ],
           ),
-          12.h.verticalSpace,
+          6.h.verticalSpace,
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: color,
-              inactiveTrackColor: color.withValues(alpha: 0.1),
+              inactiveTrackColor: color.withValues(alpha: 0.12),
               thumbColor: color,
               overlayColor: color.withValues(alpha: 0.2),
-              trackHeight: 4.h,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              trackHeight: 3.5.h,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
             ),
             child: Slider(
               value: value.clamp(0.0, maxVal),

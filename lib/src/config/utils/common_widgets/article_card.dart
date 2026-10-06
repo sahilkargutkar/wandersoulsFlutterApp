@@ -1,9 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:wonder_souls/src/config/utils/app_toast.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:wonder_souls/src/features/trips/model/blog_model.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
 
 class ArticleCard extends StatefulWidget {
   final String imageUrl;
@@ -12,6 +17,7 @@ class ArticleCard extends StatefulWidget {
   final double ratio;
   final double? cardWidth;
   final String readTime;
+  final BlogModel? blog;
 
   const ArticleCard({
     super.key,
@@ -21,6 +27,7 @@ class ArticleCard extends StatefulWidget {
     this.ratio = 16 / 12,
     this.cardWidth,
     this.readTime = "5 min read",
+    this.blog,
   });
 
   @override
@@ -51,8 +58,26 @@ class _ArticleCardState extends State<ArticleCard>
     super.dispose();
   }
 
+  BlogModel get _effectiveBlog {
+    if (widget.blog != null) return widget.blog!;
+    return BlogModel(
+      id: widget.title.hashCode.toString(),
+      title: widget.title,
+      desc: '',
+      image: widget.imageUrl,
+      category: 'Travel',
+      readTime: widget.readTime,
+      author: 'WanderSouls',
+      featured: false,
+      createdAt: widget.date,
+      updatedAt: widget.date,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final blogItem = _effectiveBlog;
+
     return Listener(
       onPointerDown: (_) => _controller.forward(),
       onPointerUp: (_) => _controller.reverse(),
@@ -126,6 +151,50 @@ class _ArticleCardState extends State<ArticleCard>
                           ),
                         ),
                       ),
+
+                      /// Bookmark button
+                      Positioned(
+                        top: 10.h,
+                        right: 10.w,
+                        child: BlocBuilder<SavedArticlesCubit, List<BlogModel>>(
+                          builder: (context, savedArticles) {
+                            final isSaved = savedArticles.any((a) =>
+                                (a.id.isNotEmpty && a.id == blogItem.id) ||
+                                (a.title == blogItem.title));
+
+                            return GestureDetector(
+                              onTap: () {
+                                context
+                                    .read<SavedArticlesCubit>()
+                                    .toggleSave(blogItem);
+                                if (!isSaved) {
+                                  AppToast.success("Article saved to bookmarks! 🔖");
+                                } else {
+                                  AppToast.info("Article removed from bookmarks");
+                                }
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(6.r),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  isSaved
+                                      ? Icons.bookmark_rounded
+                                      : Icons.bookmark_border_rounded,
+                                  color: isSaved ? context.primary : Colors.white,
+                                  size: 16.sp,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -150,10 +219,54 @@ class _ArticleCardState extends State<ArticleCard>
                     ),
                   ),
                   4.w.width,
-                  Icon(
-                    Icons.more_vert_rounded,
-                    color: context.onSurfaceVariant,
-                    size: 18.sp,
+                  PopupMenuButton<String>(
+                    icon: Icon(
+                      Icons.more_vert_rounded,
+                      color: context.onSurfaceVariant,
+                      size: 18.sp,
+                    ),
+                    padding: EdgeInsets.zero,
+                    color: context.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'save') {
+                        context
+                            .read<SavedArticlesCubit>()
+                            .toggleSave(blogItem);
+                        AppToast.success("Bookmark updated! 🔖");
+                      } else if (value == 'share') {
+                        Share.share(
+                          "Check out this travel article on WanderSouls: ${widget.title}\nhttps://www.wandersouls.in",
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'save',
+                        child: Row(
+                          children: [
+                            Icon(Icons.bookmark_border_rounded,
+                                size: 18.sp, color: context.onSurface),
+                            8.w.width,
+                            Text("Save Article",
+                                style: context.text.bodyMedium),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'share',
+                        child: Row(
+                          children: [
+                            Icon(Icons.share_outlined,
+                                size: 18.sp, color: context.onSurface),
+                            8.w.width,
+                            Text("Share", style: context.text.bodyMedium),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

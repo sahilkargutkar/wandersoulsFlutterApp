@@ -1,9 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:wonder_souls/src/config/utils/app_toast.dart';
 import 'package:wonder_souls/src/features/trips/model/blog_model.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
 
 class BlogDetailScreen extends StatelessWidget {
   static const String routeName = "/BlogDetail";
@@ -35,10 +39,10 @@ class BlogDetailScreen extends StatelessWidget {
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 0.8,
                     ),
                   ),
@@ -50,6 +54,77 @@ class BlogDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
+            actions: [
+              // Bookmark / Save Action
+              BlocBuilder<SavedArticlesCubit, List<BlogModel>>(
+                builder: (context, savedArticles) {
+                  final isSaved = savedArticles.any((a) =>
+                      (a.id.isNotEmpty && a.id == blog.id) ||
+                      (a.title == blog.title));
+
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.w, top: 7.h, bottom: 7.h),
+                    child: GestureDetector(
+                      onTap: () {
+                        context.read<SavedArticlesCubit>().toggleSave(blog);
+                        if (!isSaved) {
+                          AppToast.success("Article saved to bookmarks! 🔖");
+                        } else {
+                          AppToast.info("Article removed from bookmarks");
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Icon(
+                          isSaved
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          color: isSaved ? context.primary : Colors.white,
+                          size: 18.sp,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              // Share Action
+              Padding(
+                padding: EdgeInsets.only(right: 16.w, top: 7.h, bottom: 7.h),
+                child: GestureDetector(
+                  onTap: () {
+                    Share.share(
+                      "Check out this article on WanderSouls: ${blog.title}\nhttps://www.wandersouls.in",
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.share_outlined,
+                      color: Colors.white,
+                      size: 18.sp,
+                    ),
+                  ),
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -79,8 +154,8 @@ class BlogDetailScreen extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.1),
-                          Colors.black.withValues(alpha: 0.5),
+                          Colors.black.withValues(alpha: 0.2),
+                          Colors.black.withValues(alpha: 0.6),
                         ],
                       ),
                     ),
@@ -99,7 +174,8 @@ class BlogDetailScreen extends StatelessWidget {
                 children: [
                   // Category Pill
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                     decoration: BoxDecoration(
                       color: context.primaryTint,
                       borderRadius: BorderRadius.circular(20.r),
@@ -134,7 +210,9 @@ class BlogDetailScreen extends StatelessWidget {
                         radius: 18.r,
                         backgroundColor: context.primary.withAlpha(20),
                         child: Text(
-                          blog.author.isNotEmpty ? blog.author[0].toUpperCase() : 'W',
+                          blog.author.isNotEmpty
+                              ? blog.author[0].toUpperCase()
+                              : 'W',
                           style: TextStyle(
                             color: context.primary,
                             fontWeight: FontWeight.bold,
@@ -165,7 +243,8 @@ class BlogDetailScreen extends StatelessWidget {
                       ),
                       // Read Time Badge
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 4.h),
                         decoration: BoxDecoration(
                           color: context.mutedBackground,
                           borderRadius: BorderRadius.circular(8.r),

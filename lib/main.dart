@@ -12,6 +12,7 @@ import 'package:wonder_souls/src/features/auth/presentation/cubit/isLoginCubit/i
 import 'package:wonder_souls/src/features/auth/presentation/cubit/login/auth_cubit.dart';
 import 'package:wonder_souls/src/config/theme/theme_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_places_cubit.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
 import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
 
@@ -68,6 +69,9 @@ class _MyAppState extends State<MyApp> {
             BlocProvider<ThemeCubit>(create: (_) => sl<ThemeCubit>()),
             BlocProvider<SavedPlacesCubit>(
               create: (_) => sl<SavedPlacesCubit>(),
+            ),
+            BlocProvider<SavedArticlesCubit>(
+              create: (_) => sl<SavedArticlesCubit>(),
             ),
             BlocProvider<BlogsCubit>(
               create: (_) => sl<BlogsCubit>()..fetchBlogs(),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/features/auth/domain/enitiy/boarding_static_data.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
+import 'package:wonder_souls/src/features/home/presentation/screens/home_bottom_bar.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
@@ -46,7 +46,7 @@ class _BoardingScreensState extends State<BoardingScreens> {
         curve: Curves.easeOutCubic,
       );
     } else {
-      context.go(LoginScreen.routeName);
+      context.go(HomeBottomBar.routeName);
     }
   }
 

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/theme/app_colors.dart';
 import 'package:wonder_souls/src/config/theme/theme_cubit.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:wonder_souls/src/config/utils/profile_image_helper.dart';
+import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_source.dart';
+import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
 
 import '../widgets/logout_bottom_sheet.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +32,11 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
+    final user = sl.isRegistered<AuthLocalDataSource>()
+        ? sl<AuthLocalDataSource>().getUser()
+        : null;
+    final isLoggedIn = user != null && (user.id?.isNotEmpty ?? false);
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Padding(
@@ -35,6 +44,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // User Header Profile Card
+            Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: context.borderColor.withAlpha(40),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.softShadow,
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  ProfileImageHelper.buildAvatar(
+                    context,
+                    user: user,
+                    radius: 28.r,
+                    borderWidth: 2,
+                    borderColor: context.primary,
+                  ),
+                  14.w.width,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isLoggedIn
+                              ? (user.name?.isNotEmpty == true
+                                  ? user.name!
+                                  : (user.userName ?? "Traveler"))
+                              : "Guest Explorer 👋",
+                          style: context.text.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16.sp,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        4.h.height,
+                        Text(
+                          isLoggedIn
+                              ? (user.email ?? "Member")
+                              : "Sign in to sync your trips & saved items",
+                          style: context.text.bodySmall?.copyWith(
+                            color: context.onSurfaceVariant,
+                            fontSize: 12.sp,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isLoggedIn)
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        color: context.primary,
+                        size: 20.sp,
+                      ),
+                      onPressed: () {
+                        context.push(PersonalInfoScreen.routeName).then((_) {
+                          setState(() {});
+                        });
+                      },
+                    )
+                  else
+                    ElevatedButton(
+                      onPressed: () => context.push(LoginScreen.routeName),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.primary,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.r),
+                        ),
+                      ),
+                      child: const Text("Sign In"),
+                    ),
+                ],
+              ),
+            ),
+            16.h.height,
+
             // Upgrade Plan Card
             InkWell(
               onTap: () => context.push(UpgradePlanScreen.routeName),
@@ -55,15 +155,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Row(
                   children: [
                     Container(
-                      width: 52.w,
-                      height: 52.w,
+                      width: 50.w,
+                      height: 50.w,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.star_rounded,
-                        color: Color(0xFFF59E0B), // Warm amber star
+                        color: Color(0xFFF59E0B),
                         size: 30,
                       ),
                     ),
@@ -116,14 +216,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.person_outline_rounded,
                 title: 'Personal Info',
                 onTap: () {
-                  context.push(PersonalInfoScreen.routeName);
+                  if (!isLoggedIn) {
+                    context.push(LoginScreen.routeName);
+                  } else {
+                    context.push(PersonalInfoScreen.routeName).then((_) {
+                      setState(() {});
+                    });
+                  }
                 },
               ),
               SettingsMenuItem(
                 icon: Icons.shield_outlined,
                 title: 'Account & Security',
                 onTap: () {
-                  context.push(AccountSecurityScreen.routeName);
+                  if (!isLoggedIn) {
+                    context.push(LoginScreen.routeName);
+                  } else {
+                    context.push(AccountSecurityScreen.routeName);
+                  }
                 },
               ),
             ]),
@@ -153,8 +263,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             8.h.height,
             _buildGroupedCard([
               SettingsMenuItem(
-                icon: Icons.remove_red_eye_outlined,
-                title: 'App Preferences',
+                icon: Icons.dark_mode_outlined,
+                title: 'Dark Mode Theme',
                 showArrow: false,
                 trailingWidget: BlocBuilder<ThemeCubit, ThemeMode>(
                   builder: (context, themeMode) {
@@ -172,11 +282,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
                 ),
-                onTap: () {},
-              ),
-              SettingsMenuItem(
-                icon: Icons.show_chart_rounded,
-                title: 'Data & Analytics',
                 onTap: () {},
               ),
               SettingsMenuItem(
@@ -199,19 +304,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             24.h.height,
 
-            // Logout Section
-            _buildGroupedCard([
-              SettingsMenuItem(
-                icon: Icons.logout_rounded,
-                title: 'Logout',
-                titleColor: context.colors.error,
-                iconColor: context.colors.error,
-                showArrow: false,
-                onTap: () {
-                  showLogoutBottomSheet(context);
-                },
-              ),
-            ]),
+            // Login / Logout Section
+            if (isLoggedIn)
+              _buildGroupedCard([
+                SettingsMenuItem(
+                  icon: Icons.logout_rounded,
+                  title: 'Logout',
+                  titleColor: context.colors.error,
+                  iconColor: context.colors.error,
+                  showArrow: false,
+                  onTap: () {
+                    showLogoutBottomSheet(context);
+                  },
+                ),
+              ])
+            else
+              _buildGroupedCard([
+                SettingsMenuItem(
+                  icon: Icons.login_rounded,
+                  title: 'Sign In / Register',
+                  titleColor: context.primary,
+                  iconColor: context.primary,
+                  showArrow: true,
+                  onTap: () {
+                    context.push(LoginScreen.routeName);
+                  },
+                ),
+              ]),
             100.h.height,
           ],
         ),
