@@ -152,10 +152,16 @@ class TripData {
     DateTime? start;
     DateTime? end;
     if (jsonMap["startDate"] != null) {
-      start = DateTime.tryParse(jsonMap["startDate"].toString());
+      final parsed = DateTime.tryParse(jsonMap["startDate"].toString());
+      if (parsed != null) {
+        start = parsed.isUtc ? parsed.toLocal() : parsed;
+      }
     }
     if (jsonMap["endDate"] != null) {
-      end = DateTime.tryParse(jsonMap["endDate"].toString());
+      final parsed = DateTime.tryParse(jsonMap["endDate"].toString());
+      if (parsed != null) {
+        end = parsed.isUtc ? parsed.toLocal() : parsed;
+      }
     }
 
     final dateRange = _formatDateRange(start, end);

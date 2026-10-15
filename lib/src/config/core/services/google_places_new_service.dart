@@ -89,4 +89,81 @@ class GooglePlacesNewService {
     }
     return null;
   }
+
+  /// Build direct photo URL using photo resource name
+  String buildDirectPhotoUrl(String photoName, {int maxWidthPx = 800, int maxHeightPx = 600}) {
+    final cleanName = photoName.startsWith('/') ? photoName.substring(1) : photoName;
+    return "https://places.googleapis.com/v1/$cleanName/media?maxWidthPx=$maxWidthPx&maxHeightPx=$maxHeightPx&key=$apiKey";
+  }
+
+  /// Search places using text query with country/region code filter and return rich spot suggestions
+  Future<List<Map<String, dynamic>>> searchPlacesByText(
+    String query, {
+    String? regionCode,
+    int pageSize = 12,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {
+        "textQuery": query,
+        "pageSize": pageSize,
+      };
+
+      if (regionCode != null && regionCode.trim().isNotEmpty) {
+        body["regionCode"] = regionCode.trim().toUpperCase();
+      }
+
+      final response = await _dio.post(
+        "https://places.googleapis.com/v1/places:searchText",
+        data: jsonEncode(body),
+        options: Options(
+          headers: {
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask":
+                "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.photos,places.types,places.location",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final placesList = response.data["places"] as List?;
+        if (placesList != null && placesList.isNotEmpty) {
+          return placesList.map((p) {
+            final map = p as Map<String, dynamic>;
+            final displayName = (map["displayName"] is Map)
+                ? (map["displayName"]["text"] ?? "").toString()
+                : "";
+            final photos = map["photos"] as List?;
+            String? photoUrl;
+            if (photos != null && photos.isNotEmpty) {
+              final firstPhotoName = photos[0]["name"] as String?;
+              if (firstPhotoName != null) {
+                photoUrl = buildDirectPhotoUrl(firstPhotoName);
+              }
+            }
+
+            final location = map["location"] as Map<String, dynamic>?;
+            final double? lat = (location?["latitude"] as num?)?.toDouble();
+            final double? lng = (location?["longitude"] as num?)?.toDouble();
+
+            final types = (map["types"] as List?)?.cast<String>() ?? [];
+
+            return {
+              "id": map["id"] ?? "",
+              "name": displayName,
+              "address": map["formattedAddress"] ?? "",
+              "rating": (map["rating"] as num?)?.toDouble() ?? 4.5,
+              "userRatingCount": (map["userRatingCount"] as num?)?.toInt() ?? 100,
+              "types": types,
+              "photoUrl": photoUrl,
+              "lat": lat,
+              "lng": lng,
+            };
+          }).where((p) => (p["name"] as String).isNotEmpty).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint("Error searching places by text: $e");
+    }
+    return [];
+  }
 }

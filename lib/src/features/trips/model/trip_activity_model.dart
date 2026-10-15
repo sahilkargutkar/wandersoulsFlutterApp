@@ -74,23 +74,62 @@ class TripActivityModel {
     }
 
     return TripActivityModel(
-      id: _parseId(json['id']),
-      tripId: _parseId(json['tripId']),
-      placeId: _parseId(json['placeId']),
-      dayId: json['dayId'] ?? '',
-      name: json['name'] ?? '',
-      bookingReference: json['bookingReference'],
-      startDatetime:
-          DateTime.tryParse(json['startDatetime'] ?? '') ?? DateTime.now(),
-      endDatetime:
-          DateTime.tryParse(json['endDatetime'] ?? '') ?? DateTime.now(),
-      currency: json['currency'],
-      bookingUrl: json['bookingUrl'],
-      confirmationDocumentUrl: json['confirmationDocumentUrl'],
-      notes: json['notes'],
+      id: _parseId(
+        json['id'] ??
+            json['Id'] ??
+            json['_id'] ??
+            json['activityId'] ??
+            json['ActivityId'] ??
+            json['tripActivityId'] ??
+            json['TripActivityId'],
+      ),
+      tripId: _parseId(
+        json['tripId'] ??
+            json['TripId'] ??
+            json['_tripId'] ??
+            json['trip_id'],
+      ),
+      placeId: _parseId(
+        json['placeId'] ??
+            json['PlaceId'] ??
+            json['place_id'] ??
+            json['Place_Id'],
+      ),
+      dayId: (json['dayId'] ?? json['DayId'] ?? json['day_id'] ?? '').toString(),
+      name: (json['name'] ?? json['Name'] ?? json['title'] ?? json['Title'] ?? '').toString(),
+      bookingReference: json['bookingReference'] ?? json['BookingReference'],
+      startDatetime: DateTime.tryParse(
+            (json['startDatetime'] ??
+                    json['StartDatetime'] ??
+                    json['startDateTime'] ??
+                    json['StartDateTime'] ??
+                    json['startDate'] ??
+                    json['StartDate'] ??
+                    '')
+                .toString(),
+          ) ??
+          DateTime.now(),
+      endDatetime: DateTime.tryParse(
+            (json['endDatetime'] ??
+                    json['EndDatetime'] ??
+                    json['endDateTime'] ??
+                    json['EndDateTime'] ??
+                    json['endDate'] ??
+                    json['EndDate'] ??
+                    '')
+                .toString(),
+          ) ??
+          DateTime.now().add(const Duration(hours: 1)),
+      currency: json['currency'] ?? json['Currency'],
+      bookingUrl: json['bookingUrl'] ?? json['BookingUrl'],
+      confirmationDocumentUrl:
+          json['confirmationDocumentUrl'] ?? json['ConfirmationDocumentUrl'],
+      notes: json['notes'] ?? json['Notes'],
       category: categoryVal,
-      cost: (details?['cost'] as num?)?.toDouble() ?? 0.0,
-      tips: details?['tips'],
+      cost: (details?['cost'] as num?)?.toDouble() ??
+          (json['cost'] as num?)?.toDouble() ??
+          0.0,
+      tips: details?['tips'] ?? json['tips'],
       imageUrl: parsedImageUrl,
     );
   }

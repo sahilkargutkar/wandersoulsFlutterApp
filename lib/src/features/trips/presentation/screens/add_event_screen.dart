@@ -5,15 +5,22 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wonder_souls/src/config/core/injector/injector.dart';
 import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/config/core/services/google_map_services.dart';
+import 'package:wonder_souls/src/config/core/services/google_places_new_service.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/circular_icon.dart';
+import 'package:wonder_souls/src/config/utils/country_helper.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
 import 'package:wonder_souls/src/features/trips/model/trip_activity_model.dart';
 
 class AddEventScreen extends StatefulWidget {
   final String dayTitle;
+  final String? destination;
 
-  const AddEventScreen({super.key, required this.dayTitle});
+  const AddEventScreen({
+    super.key,
+    required this.dayTitle,
+    this.destination,
+  });
 
   @override
   State<AddEventScreen> createState() => _AddEventScreenState();
@@ -26,62 +33,79 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final Set<PlaceModel> _selectedPlaces = {};
   bool _isLoading = false;
 
+  String? get _countryCode =>
+      CountryHelper.getCountryCode(widget.destination ?? widget.dayTitle);
+
   // Default suggested events when search is empty
-  final List<PlaceModel> _defaultSuggestions = [
-    PlaceModel(
-      name: "Afuri Harajuku",
-      placeId: "afuri_harajuku",
-      description: "Ramen Restaurant",
-      address: "1-1-7 Sendagaya, Shibuya-ku, Tokyo",
-      rating: 4.5,
-      types: ["restaurant", "food"],
-    ),
-    PlaceModel(
-      name: "Akiba Ichi",
-      placeId: "akiba_ichi",
-      description: "Food Court",
-      address: "Akihabara, Chiyoda-ku, Tokyo",
-      rating: 4.3,
-      types: ["food", "restaurant"],
-    ),
-    PlaceModel(
-      name: "Akihabara Electric Town",
-      placeId: "akihabara_town",
-      description: "Business Park & Shopping",
-      address: "Chiyoda-ku, Tokyo",
-      rating: 4.7,
-      types: ["store", "attraction"],
-    ),
-    PlaceModel(
-      name: "Asakusa Hanayashiki",
-      placeId: "asakusa_hanayashiki",
-      description: "Amusement Park",
-      address: "Asakusa, Taito-ku, Tokyo",
-      rating: 4.4,
-      types: ["attraction", "park"],
-    ),
-    PlaceModel(
-      name: "Asakusa Shrine",
-      placeId: "asakusa_shrine",
-      description: "Shinto Shrine",
-      address: "Asakusa, Taito-ku, Tokyo",
-      rating: 4.6,
-      types: ["attraction", "landmark"],
-    ),
-    PlaceModel(
-      name: "Batejyu Shibuya Store",
-      placeId: "batejyu_shibuya",
-      description: "Okonomiyaki Restaurant",
-      address: "Shibuya, Tokyo",
-      rating: 4.2,
-      types: ["restaurant"],
-    ),
-  ];
+  List<PlaceModel> _defaultSuggestions = [];
 
   @override
   void initState() {
     super.initState();
-    _searchResults = List.from(_defaultSuggestions);
+    _loadInitialSuggestions();
+  }
+
+  Future<void> _loadInitialSuggestions() async {
+    final dest = widget.destination?.trim().isNotEmpty == true
+        ? widget.destination!
+        : (CountryHelper.isIndia(widget.dayTitle) ? "Shillong, India" : widget.dayTitle);
+
+    // 1. Load curated country suggestions
+    final curated = CountryHelper.getCuratedPlaces(dest);
+    final places = curated.map((p) {
+      return PlaceModel(
+        name: p['name'] as String,
+        placeId: p['placeId'] as String,
+        description: p['category'] as String,
+        address: p['address'] as String,
+        rating: (p['rating'] as num).toDouble(),
+        types: [p['category'] as String],
+        googleMapsUrl: p['photoUrl'] as String?,
+      );
+    }).toList();
+
+    _defaultSuggestions = places;
+    if (mounted) {
+      setState(() {
+        _searchResults = List.from(_defaultSuggestions);
+      });
+    }
+
+    // 2. Fetch live Google Places suggestions restricted by destination & country
+    try {
+      final googlePlacesService = GooglePlacesNewService();
+      final live = await googlePlacesService.searchPlacesByText(
+        "top tourist attractions in $dest",
+        regionCode: _countryCode,
+        pageSize: 10,
+      );
+      if (live.isNotEmpty && mounted) {
+        final livePlaces = live.map((p) {
+          final types = (p['types'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              ['attraction'];
+          return PlaceModel(
+            name: p['displayName']?['text'] ?? p['name'] ?? 'Attraction',
+            placeId: p['id'] ?? '',
+            description: p['formattedAddress'] ?? dest,
+            address: p['formattedAddress'] ?? dest,
+            rating: (p['rating'] as num?)?.toDouble() ?? 4.5,
+            types: types,
+            googleMapsUrl: p['photoUrl'],
+          );
+        }).toList();
+
+        if (mounted && _searchController.text.trim().isEmpty) {
+          setState(() {
+            _defaultSuggestions = livePlaces;
+            _searchResults = livePlaces;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching Google Places suggestions for $dest: $e");
+    }
   }
 
   @override
@@ -109,7 +133,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
 
       try {
         final googleMapsService = sl<GoogleMapsApiService>();
-        final gResult = await googleMapsService.searchPlaces(query);
+        // Restrict search by destination country code to avoid worldwide results
+        final gResult = await googleMapsService.searchPlaces(
+          query,
+          countryCode: _countryCode,
+        );
         if (!mounted) return;
 
         gResult.fold(

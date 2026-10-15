@@ -200,12 +200,12 @@ class TripWizardCubit extends Cubit<TripWizardState> {
       "name":
           state.name ?? "Trip to ${state.destination?.name ?? 'Destination'}",
       "description": state.description ?? "",
-      "startDate":
-          state.startDate?.toUtc().toIso8601String() ??
-          DateTime.now().toUtc().toIso8601String(),
-      "endDate":
-          state.endDate?.toUtc().toIso8601String() ??
-          DateTime.now().add(const Duration(days: 3)).toUtc().toIso8601String(),
+      "startDate": state.startDate != null
+          ? DateTime.utc(state.startDate!.year, state.startDate!.month, state.startDate!.day).toIso8601String()
+          : DateTime.now().toUtc().toIso8601String(),
+      "endDate": state.endDate != null
+          ? DateTime.utc(state.endDate!.year, state.endDate!.month, state.endDate!.day).toIso8601String()
+          : DateTime.now().add(const Duration(days: 3)).toUtc().toIso8601String(),
       "mainDestination": state.destination?.name ?? "",
       "isPublic": state.isPublic,
       "whoIsGoing": state.partyType ?? "solo",

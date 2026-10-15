@@ -268,7 +268,10 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
     final result = await Navigator.push<List<PlaceModel>>(
       context,
       MaterialPageRoute(
-        builder: (context) => AddEventScreen(dayTitle: dayTitle),
+        builder: (context) => AddEventScreen(
+          dayTitle: dayTitle,
+          destination: widget.trip.mainDestination,
+        ),
       ),
     );
 
@@ -340,12 +343,21 @@ class _EditItineraryScreenState extends State<EditItineraryScreen> {
       // 1. Delete removed activities from API
       for (var id in _deletedActivityIds) {
         if (id.isNotEmpty) {
-          final res = await apiService.delete<dynamic>(
+          var res = await apiService.delete<dynamic>(
             "/TripActivity/$id",
             fromJson: (data) => data,
           );
           if (res is Failure) {
-            throw Exception(res.message);
+            res = await apiService.delete<dynamic>(
+              "/TripActivity?id=$id",
+              fromJson: (data) => data,
+            );
+          }
+          if (res is Failure) {
+            res = await apiService.delete<dynamic>(
+              "/TripActivity?activityId=$id",
+              fromJson: (data) => data,
+            );
           }
         }
       }

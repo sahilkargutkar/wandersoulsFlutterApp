@@ -35,11 +35,30 @@ class GoogleMapsApiService {
     }
   }
 
-  Future<Either<Failure, List<PlaceModel>>> searchPlaces(String query) async {
+  Future<Either<Failure, List<PlaceModel>>> searchPlaces(
+    String query, {
+    String? countryCode,
+    double? lat,
+    double? lng,
+  }) async {
     try {
+      final Map<String, dynamic> params = {
+        "input": query,
+        "key": apiKey,
+      };
+
+      if (countryCode != null && countryCode.trim().isNotEmpty) {
+        params["components"] = "country:${countryCode.toLowerCase().trim()}";
+      }
+
+      if (lat != null && lng != null) {
+        params["location"] = "$lat,$lng";
+        params["radius"] = "50000";
+      }
+
       final response = await dio.get(
         "maps/api/place/autocomplete/json",
-        queryParameters: {"input": query, "key": apiKey},
+        queryParameters: params,
       );
 
       final data = response.data;
