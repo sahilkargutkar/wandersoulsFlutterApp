@@ -143,7 +143,10 @@ GoRouter buildRouter({
       ),
       GoRoute(
         path: ListPublicTripsScreen.routeName,
-        builder: (context, state) => const ListPublicTripsScreen(),
+        builder: (context, state) {
+          final category = state.extra as String?;
+          return ListPublicTripsScreen(initialCategory: category);
+        },
       ),
       GoRoute(
         path: ListArticle.routeName,

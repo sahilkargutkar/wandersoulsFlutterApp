@@ -17,6 +17,13 @@ import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/destination_details.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_public_trips.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wonder_souls/src/config/utils/app_toast.dart';
+import 'package:wonder_souls/src/features/trips/model/blog_model.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
+import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/blog_detail_screen.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -167,38 +174,158 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Map<String, dynamic>> _themes = [
     {
-      "title": "Family\nTrips",
-      "icon": Icons.people_alt_rounded,
-      "bgColor": Color(0xFFF3E8FF),
-      "iconColor": Color(0xFF9333EA),
-      "textColor": Color(0xFF6B21A8),
+      "title": "Family Trips",
+      "icon": Icons.family_restroom_rounded,
+      "lightBg": Color(0xFFF5F3FF),
+      "lightBorder": Color(0xFFDDD6FE),
+      "iconColor": Color(0xFF8B5CF6),
+      "textColor": Color(0xFF6D28D9),
+      "subtitle": "18+ Trips",
       "filter": "Family",
     },
     {
-      "title": "Budget\nTrips",
-      "icon": Icons.currency_rupee_rounded,
-      "bgColor": Color(0xFFCCFBF1),
+      "title": "Budget Trips",
+      "icon": Icons.savings_rounded,
+      "lightBg": Color(0xFFF0FDFA),
+      "lightBorder": Color(0xFF99F6E4),
       "iconColor": Color(0xFF0D9488),
-      "textColor": Color(0xFF115E59),
-      "filter": "Budget",
+      "textColor": Color(0xFF0F766E),
+      "subtitle": "24+ Trips",
+      "filter": "Cheap",
     },
     {
-      "title": "Beach\nEscapes",
-      "icon": Icons.wb_sunny_rounded,
-      "bgColor": Color(0xFFFEF3C7),
+      "title": "Beach Escapes",
+      "icon": Icons.beach_access_rounded,
+      "lightBg": Color(0xFFFFFBEB),
+      "lightBorder": Color(0xFFFDE68A),
       "iconColor": Color(0xFFD97706),
-      "textColor": Color(0xFF92400E),
+      "textColor": Color(0xFFB45309),
+      "subtitle": "15+ Trips",
       "filter": "Beach",
     },
     {
-      "title": "Nature\n& Hills",
+      "title": "Nature & Hills",
       "icon": Icons.landscape_rounded,
-      "bgColor": Color(0xFFDCFCE7),
+      "lightBg": Color(0xFFF0FDF4),
+      "lightBorder": Color(0xFFA7F3D0),
       "iconColor": Color(0xFF16A34A),
-      "textColor": Color(0xFF166534),
-      "filter": "Nature",
+      "textColor": Color(0xFF15803D),
+      "subtitle": "20+ Trips",
+      "filter": "Adventure",
+    },
+    {
+      "title": "Adventure",
+      "icon": Icons.explore_rounded,
+      "lightBg": Color(0xFFEFF6FF),
+      "lightBorder": Color(0xFFBFDBFE),
+      "iconColor": Color(0xFF2563EB),
+      "textColor": Color(0xFF1D4ED8),
+      "subtitle": "16+ Trips",
+      "filter": "Adventure",
+    },
+    {
+      "title": "Romantic",
+      "icon": Icons.favorite_rounded,
+      "lightBg": Color(0xFFFFF1F2),
+      "lightBorder": Color(0xFFFECDD3),
+      "iconColor": Color(0xFFE11D48),
+      "textColor": Color(0xFFBE123C),
+      "subtitle": "12+ Trips",
+      "filter": "Romantic",
+    },
+    {
+      "title": "Culture",
+      "icon": Icons.account_balance_rounded,
+      "lightBg": Color(0xFFFFF7ED),
+      "lightBorder": Color(0xFFFED7AA),
+      "iconColor": Color(0xFFEA580C),
+      "textColor": Color(0xFFC2410C),
+      "subtitle": "10+ Trips",
+      "filter": "Culture",
     },
   ];
+
+  final List<BlogModel> _curatedBlogs = [
+    BlogModel(
+      id: "curated_1",
+      title: "10 Hidden Gems in Bali You Must Visit in 2026",
+      desc:
+          "Escape the tourist crowds and discover secret waterfalls, untouched beaches, and tranquil hillside retreats across the Island of the Gods.\n\nFrom the misty hills of Munduk to the hidden coves of Nusa Penida, Bali offers endless surprises for mindful travelers seeking serenity and cultural authenticity.\n\nMake sure to wake up early for the sunrise over Mount Batur and explore the emerald rice terraces of Jatiluwih, a UNESCO World Heritage site that retains its timeless agricultural traditions.",
+      image:
+          "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
+      category: "Destinations",
+      readTime: "4 min read",
+      author: "Aria Traveler",
+      featured: true,
+      createdAt: "2026-10-10T10:00:00Z",
+      updatedAt: "2026-10-10T10:00:00Z",
+    ),
+    BlogModel(
+      id: "curated_2",
+      title: "The Ultimate Guide to Budget Traveling Across Southeast Asia",
+      desc:
+          "How to explore stunning temples, vibrant night markets, and tropical islands without breaking the bank.\n\nSoutheast Asia remains the gold standard for budget travelers. From \$3 street food meals in Bangkok to affordable sleeper trains in Vietnam, your money stretches further than anywhere else on earth.\n\nLearn our top secrets for booking local transport, finding verified guesthouses, and navigating currency exchange rates with zero unnecessary fees.",
+      image:
+          "https://images.unsplash.com/photo-1528181304800-259b08848526?w=800&q=80",
+      category: "Budget Travel",
+      readTime: "6 min read",
+      author: "Karan Mehta",
+      featured: true,
+      createdAt: "2026-10-08T12:30:00Z",
+      updatedAt: "2026-10-08T12:30:00Z",
+    ),
+    BlogModel(
+      id: "curated_3",
+      title: "Pack Like a Pro: 15 Must-Have Essentials for Solo Trips",
+      desc:
+          "Smart packing hacks, lightweight gear, and travel essentials every solo backpacker should carry.\n\nPacking light isn't just about avoiding baggage fees; it's about freedom of movement. When your entire life fits in a 40L carry-on, hopping onto ferries and exploring cobblestone streets becomes effortless.\n\nWe break down universal power adapters, quick-dry merino wool layers, portable water filters, and emergency tech backups.",
+      image:
+          "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80",
+      category: "Travel Tips",
+      readTime: "5 min read",
+      author: "Elena Rostova",
+      featured: true,
+      createdAt: "2026-10-05T09:15:00Z",
+      updatedAt: "2026-10-05T09:15:00Z",
+    ),
+    BlogModel(
+      id: "curated_4",
+      title: "A Culinary Journey Through the Street Foods of Singapore",
+      desc:
+          "From Michelin-starred hawker stalls to secret alleyway laksa, taste the incredible flavors of the Lion City.\n\nSingaporean cuisine is a magnificent melting pot of Malay, Chinese, Indian, and Peranakan traditions. We take you through Maxwell Food Centre, Chinatown Complex, and Old Airport Road.\n\nDon't miss Hainanese Chicken Rice, chili crab with fried mantou, and steaming bowls of aromatic curry laksa.",
+      image:
+          "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800&q=80",
+      category: "Food & Culture",
+      readTime: "5 min read",
+      author: "Chef Marcus",
+      featured: false,
+      createdAt: "2026-10-01T14:20:00Z",
+      updatedAt: "2026-10-01T14:20:00Z",
+    ),
+  ];
+
+  String _formatDate(String isoString) {
+    try {
+      final dateTime = DateTime.parse(isoString);
+      final months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ];
+      return "${dateTime.day} ${months[dateTime.month - 1]}";
+    } catch (e) {
+      return isoString;
+    }
+  }
 
   Widget _buildSectionHeader({
     required String title,
@@ -675,54 +802,630 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildExploreByTheme() {
-    return Row(
-      children: _themes.map((theme) {
-        final title = theme["title"] as String;
-        final icon = theme["icon"] as IconData;
-        final bgColor = theme["bgColor"] as Color;
-        final iconColor = theme["iconColor"] as Color;
-        final textColor = theme["textColor"] as Color;
+    return SizedBox(
+      height: 104.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        clipBehavior: Clip.none,
+        itemCount: _themes.length,
+        separatorBuilder: (_, __) => SizedBox(width: 12.w),
+        itemBuilder: (context, index) {
+          final theme = _themes[index];
+          final title = theme["title"] as String;
+          final icon = theme["icon"] as IconData;
+          final lightBg = theme["lightBg"] as Color;
+          final lightBorder = theme["lightBorder"] as Color;
+          final iconColor = theme["iconColor"] as Color;
+          final textColor = theme["textColor"] as Color;
+          final subtitle = theme["subtitle"] as String;
+          final filter = theme["filter"] as String;
 
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: GestureDetector(
-              onTap: () {
-                context.push(ListPublicTripsScreen.routeName);
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 6.w),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      icon,
-                      color: iconColor,
-                      size: 20.sp,
-                    ),
-                    SizedBox(width: 5.w),
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 10.5.sp,
-                          fontWeight: FontWeight.w800,
-                          color: textColor,
-                          height: 1.15,
+          final isDark = context.isDark;
+          final bgColor = isDark ? const Color(0xFF1E293B) : lightBg;
+          final borderColor =
+              isDark ? iconColor.withValues(alpha: 0.25) : lightBorder;
+          final effectiveTextColor = isDark ? Colors.white : textColor;
+
+          return GestureDetector(
+            onTap: () {
+              context.push(ListPublicTripsScreen.routeName, extra: filter);
+            },
+            child: Container(
+              width: 124.w,
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 11.h),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: borderColor, width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.25)
+                        : iconColor.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 34.w,
+                        height: 34.w,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? iconColor.withValues(alpha: 0.15)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(10.r),
+                          boxShadow: isDark
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: iconColor.withValues(alpha: 0.12),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                         ),
+                        child: Center(
+                          child: Icon(
+                            icon,
+                            color: iconColor,
+                            size: 19.sp,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 11.sp,
+                        color: isDark
+                            ? iconColor.withValues(alpha: 0.7)
+                            : iconColor.withValues(alpha: 0.6),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w800,
+                          color: effectiveTextColor,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : iconColor.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBlogsSection() {
+    return BlocBuilder<BlogsCubit, BlogsState>(
+      builder: (context, state) {
+        List<BlogModel> blogs = [];
+        bool isLoading = false;
+
+        if (state is BlogsLoading) {
+          isLoading = true;
+        } else if (state is BlogsLoaded && state.blogs.isNotEmpty) {
+          blogs = state.blogs;
+        } else {
+          blogs = _curatedBlogs;
+        }
+
+        if (isLoading) {
+          return _buildBlogsSkeleton();
+        }
+
+        return SizedBox(
+          height: 252.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            clipBehavior: Clip.none,
+            itemCount: blogs.length,
+            separatorBuilder: (_, __) => SizedBox(width: 14.w),
+            itemBuilder: (context, index) {
+              final blog = blogs[index];
+              return _buildBlogCard(blog);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBlogCard(BlogModel blog) {
+    final isDark = context.isDark;
+    final authorInitial =
+        blog.author.isNotEmpty ? blog.author[0].toUpperCase() : 'W';
+
+    return GestureDetector(
+      onTap: () {
+        context.push(BlogDetailScreen.routeName, extra: blog);
+      },
+      child: Container(
+        width: 242.w,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Cover Image
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
+              child: SizedBox(
+                height: 122.h,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: blog.image,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFF1F5F9),
+                        child: Center(
+                          child: SizedBox(
+                            width: 20.w,
+                            height: 20.w,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.primary.withAlpha(120),
+                            ),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFF1F5F9),
+                        child: Icon(
+                          Icons.article_rounded,
+                          color: context.primary.withAlpha(120),
+                          size: 32.sp,
+                        ),
+                      ),
+                    ),
+
+                    // Gradient overlay at bottom of image
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: const [0.45, 1.0],
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.65),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Category Badge top-left
+                    Positioned(
+                      top: 8.h,
+                      left: 8.w,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 3.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(6.r),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Text(
+                          blog.category.isNotEmpty
+                              ? blog.category.toUpperCase()
+                              : 'TRAVEL',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.sp,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Bookmark Button top-right
+                    Positioned(
+                      top: 8.h,
+                      right: 8.w,
+                      child: BlocBuilder<SavedArticlesCubit, List<BlogModel>>(
+                        builder: (context, savedArticles) {
+                          final isSaved = savedArticles.any((a) =>
+                              (a.id.isNotEmpty && a.id == blog.id) ||
+                              (a.title == blog.title));
+
+                          return GestureDetector(
+                            onTap: () {
+                              context
+                                  .read<SavedArticlesCubit>()
+                                  .toggleSave(blog);
+                              if (!isSaved) {
+                                AppToast.success("Article bookmarked! 🔖");
+                              } else {
+                                AppToast.info("Removed from bookmarks");
+                              }
+                            },
+                            child: Container(
+                              width: 28.w,
+                              height: 28.w,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.45),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Icon(
+                                isSaved
+                                    ? Icons.bookmark_rounded
+                                    : Icons.bookmark_border_rounded,
+                                color: isSaved ? context.primary : Colors.white,
+                                size: 16.sp,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    // Read Time bottom-left
+                    Positioned(
+                      bottom: 8.h,
+                      left: 8.w,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.schedule_rounded,
+                            color: Colors.white,
+                            size: 11.sp,
+                          ),
+                          SizedBox(width: 3.w),
+                          Text(
+                            blog.readTime.isNotEmpty
+                                ? blog.readTime
+                                : '4 min read',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-        );
-      }).toList(),
+
+            // Bottom Content
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 10.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          blog.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.5.sp,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            height: 1.25,
+                          ),
+                        ),
+                        SizedBox(height: 5.h),
+                        Text(
+                          blog.desc.trim().isNotEmpty
+                              ? blog.desc.trim().replaceAll('\n', ' ')
+                              : "Discover travel tips, hidden gems, and inspiring itineraries...",
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
+                            height: 1.32,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 20.w,
+                                height: 20.w,
+                                decoration: BoxDecoration(
+                                  color: context.primary.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    authorInitial,
+                                    style: TextStyle(
+                                      fontSize: 9.5.sp,
+                                      fontWeight: FontWeight.w800,
+                                      color: context.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 6.w),
+                              Flexible(
+                                child: Text(
+                                  blog.author.isNotEmpty
+                                      ? blog.author
+                                      : 'WanderSouls',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 10.5.sp,
+                                    color: isDark
+                                        ? const Color(0xFFCBD5E1)
+                                        : const Color(0xFF475569),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                child: Text(
+                                  "•",
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: isDark
+                                        ? const Color(0xFF64748B)
+                                        : const Color(0xFF94A3B8),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _formatDate(blog.createdAt),
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  color: isDark
+                                      ? const Color(0xFF64748B)
+                                      : const Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 3.5.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                "Read",
+                                style: TextStyle(
+                                  fontSize: 10.5.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: context.primary,
+                                ),
+                              ),
+                              SizedBox(width: 2.w),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 11.sp,
+                                color: context.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlogsSkeleton() {
+    final isDark = context.isDark;
+    return SizedBox(
+      height: 252.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        itemCount: 3,
+        separatorBuilder: (_, __) => SizedBox(width: 14.w),
+        itemBuilder: (context, index) {
+          return Container(
+            width: 242.w,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 122.h,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(15.r),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(12.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 14.h,
+                        width: 190.w,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      ),
+                      SizedBox(height: 6.h),
+                      Container(
+                        height: 12.h,
+                        width: 140.w,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Container(
+                        height: 10.h,
+                        width: 210.w,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                      ),
+                      SizedBox(height: 14.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 20.w,
+                                height: 20.w,
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              SizedBox(width: 6.w),
+                              Container(
+                                height: 10.h,
+                                width: 70.w,
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0),
+                                  borderRadius: BorderRadius.circular(4.r),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            height: 20.h,
+                            width: 50.w,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -802,7 +1505,19 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: 10.h),
               _buildExploreByTheme(),
 
-              SizedBox(height: 80.h), // Spacing for bottom bar
+              SizedBox(height: 22.h),
+
+              /// TRAVEL BLOGS & STORIES
+              _buildSectionHeader(
+                title: 'Travel Stories & Blogs',
+                onViewAll: () {
+                  context.push(ListArticle.routeName);
+                },
+              ),
+              SizedBox(height: 10.h),
+              _buildBlogsSection(),
+
+              SizedBox(height: 110.h), // Generous spacing to clear the floating bottom navigation bar (extendBody: true)
             ],
           ),
         ),

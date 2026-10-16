@@ -8,7 +8,8 @@ import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/features/trips/presentation/widgets/public_trip_card.dart';
 
 class ListPublicTripsScreen extends StatefulWidget {
-  const ListPublicTripsScreen({super.key});
+  final String? initialCategory;
+  const ListPublicTripsScreen({super.key, this.initialCategory});
 
   static const String routeName = "/ListPublicTrips";
 
@@ -37,6 +38,15 @@ class _ListPublicTripsScreenState extends State<ListPublicTripsScreen> {
   void initState() {
     super.initState();
     _allTrips = PublicTripsData.getCuratedPublicTrips();
+    if (widget.initialCategory != null && widget.initialCategory!.isNotEmpty) {
+      final matching = _categories.firstWhere(
+        (c) => c.toLowerCase() == widget.initialCategory!.toLowerCase(),
+        orElse: () => "All",
+      );
+      if (matching != "All") {
+        _selectedCategory = matching;
+      }
+    }
   }
 
   @override

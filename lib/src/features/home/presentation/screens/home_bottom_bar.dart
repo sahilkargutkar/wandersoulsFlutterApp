@@ -91,30 +91,29 @@ class _HomeBottomBarState extends State<HomeBottomBar>
         },
       ),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         centerTitle: false,
         toolbarHeight: 56.h,
         titleSpacing: 0,
         backgroundColor: context.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: _tabController.index == 0
+        leading: _isSearching
             ? null
-            : (_isSearching
-                ? null
-                : Padding(
-                    padding: EdgeInsets.only(left: 12.w),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.menu_rounded,
-                        color: context.onSurface,
-                        size: 24.sp,
-                      ),
-                      onPressed: () {
-                        _scaffoldKey.currentState?.openDrawer();
-                      },
-                    ),
-                  )),
-        leadingWidth: _tabController.index == 0 ? 0 : null,
+            : Padding(
+                padding: EdgeInsets.only(left: 12.w),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.menu_rounded,
+                    color: context.onSurface,
+                    size: 24.sp,
+                  ),
+                  onPressed: () {
+                    _scaffoldKey.currentState?.openDrawer();
+                  },
+                ),
+              ),
+        leadingWidth: _isSearching ? 0 : 48.w,
         title: _isSearching
             ? Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -136,10 +135,10 @@ class _HomeBottomBarState extends State<HomeBottomBar>
                 builder: (context, _) {
                   if (_tabController.index == 0) {
                     return Padding(
-                      padding: EdgeInsets.only(left: 16.w),
+                      padding: EdgeInsets.only(left: 4.w),
                       child: Image.asset(
                         Assets.logo,
-                        height: 38.h,
+                        height: 24.h,
                         fit: BoxFit.contain,
                         alignment: Alignment.centerLeft,
                         errorBuilder: (_, __, ___) => Row(

@@ -2519,7 +2519,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               color: const Color(0xFF334155),
             ),
           ),
-          12.w.horizontalSpace,
+          6.w.horizontalSpace,
 
           // Horizontal Progress Bar Pill: Flexible to eliminate any right overflow
           Expanded(
@@ -2541,7 +2541,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               ),
             ),
           ),
-          12.w.horizontalSpace,
+          7.w.horizontalSpace,
 
           // Date Range: 14 Oct - 17 Oct 2026
           Text(
@@ -2561,8 +2561,8 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return GestureDetector(
       onTap: () => _openAddSpotSheet(context),
       child: Container(
-        margin: EdgeInsets.fromLTRB(20.w, 6.h, 20.w, 16.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
+        margin: EdgeInsets.fromLTRB(18.w, 4.h, 18.w, 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(16.r),
@@ -3229,10 +3229,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
   Widget _buildDaySelector(BuildContext context) {
     return Container(
-      height: 52.h,
+      height: 45.h,
       margin: EdgeInsets.only(top: 4.h, bottom: 10.h),
       child: ListView.separated(
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        padding: EdgeInsets.symmetric(horizontal: 15.w),
         scrollDirection: Axis.horizontal,
         itemCount: _totalDays + 1,
         separatorBuilder: (context, index) => 8.w.horizontalSpace,
@@ -3278,7 +3278,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 66.w,
+              width: 58.w,
               padding: EdgeInsets.symmetric(
                 horizontal: 6.w,
                 vertical: 6.h,
