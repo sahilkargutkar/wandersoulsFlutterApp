@@ -39,7 +39,11 @@ class _HomeBottomBarState extends State<HomeBottomBar>
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_handleTabChange);
     _pages = [
-      const HomeScreen(),
+      HomeScreen(
+        onNavigateToTrips: () {
+          _tabController.animateTo(2);
+        },
+      ),
       const ListDestination(),
       MyTripsScreen(searchNotifier: _searchNotifier),
       const SettingsScreen(),
@@ -189,57 +193,19 @@ class _HomeBottomBarState extends State<HomeBottomBar>
                   animation: _tabController,
                   builder: (context, _) {
                     if (_tabController.index == 0) {
-                      // On Home Tab: Notification Bell + Avatar
+                      // On Home Tab: User Profile Avatar
                       return Padding(
                         padding: EdgeInsets.only(right: 16.w),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Notification bell with red badge dot
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Container(
-                                  width: 36.w,
-                                  height: 36.w,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.notifications_none_rounded,
-                                    color: const Color(0xFF64748B),
-                                    size: 26.sp,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 3.h,
-                                  right: 5.w,
-                                  child: Container(
-                                    width: 8.w,
-                                    height: 8.w,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFEF4444),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(width: 10.w),
-
-                            // User Profile Avatar
-                            ProfileImageHelper.buildAvatar(
-                              context,
-                              user: user,
-                              radius: 18.w,
-                              borderWidth: 1.5,
-                              borderColor:
-                                  context.primary.withValues(alpha: 0.5),
-                              onTap: () {
-                                _tabController.animateTo(3); // Go to Profile
-                              },
-                            ),
-                          ],
+                        child: ProfileImageHelper.buildAvatar(
+                          context,
+                          user: user,
+                          radius: 18.w,
+                          borderWidth: 1.5,
+                          borderColor:
+                              context.primary.withValues(alpha: 0.5),
+                          onTap: () {
+                            _tabController.animateTo(3); // Go to Profile
+                          },
                         ),
                       );
                     }

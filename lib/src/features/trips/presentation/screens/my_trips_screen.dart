@@ -16,6 +16,7 @@ import 'package:wonder_souls/src/features/auth/data/datasource/auth_local_data_s
 import 'package:wonder_souls/src/features/trips/presentation/widgets/create_trip_modal_bottom_sheet.dart';
 
 class MyTripsScreen extends StatefulWidget {
+  static const String routeName = "/MyTripsScreen";
   final ValueNotifier<String>? searchNotifier;
 
   const MyTripsScreen({super.key, this.searchNotifier});
@@ -140,7 +141,28 @@ class _MyTripsScreenState extends State<MyTripsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final canPop = ModalRoute.of(context)?.canPop ?? false;
     return Scaffold(
+      appBar: canPop
+          ? AppBar(
+              title: Text(
+                "My Trips",
+                style: context.text.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18.sp,
+                ),
+              ),
+              centerTitle: false,
+              backgroundColor: context.surface,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: context.onSurface, size: 20.sp),
+                onPressed: () => context.pop(),
+              ),
+            )
+          : null,
       body: Column(
         children: [
           // Tab Bar

@@ -75,8 +75,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   int _selectedDayIndex = 0;
   List<TripActivityModel> _activities = [];
   bool _loadingActivities = false;
-  OverlayEntry? _notificationOverlay;
-  bool _hasTriggeredScheduledNotification = false;
 
   double? _destinationLat;
   double? _destinationLng;
@@ -167,7 +165,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   Future<void> _fetchDestinationCoordinates() async {
     final city = _tripState.mainDestination.trim().toLowerCase();
     if (city.isEmpty) {
-      AppToast.error("Destination name is empty!");
+      debugPrint("Destination name is empty");
       return;
     }
 
@@ -181,7 +179,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         matches = city.contains(key);
       }
       if (matches) {
-        AppToast.success("Location matched fallback: ${entry.key}");
+        debugPrint("Location matched fallback: ${entry.key}");
         if (mounted) {
           setState(() {
             _destinationLat = entry.value['lat'];
@@ -204,7 +202,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           if (places.isNotEmpty) {
             for (final p in places) {
               if (p.latitude != null && p.longitude != null) {
-                AppToast.success("Resolved from backend: ${p.name}");
+                debugPrint("Resolved from backend: ${p.name}");
                 if (mounted) {
                   setState(() {
                     _destinationLat = p.latitude;
@@ -229,9 +227,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       final mapsService = sl<GoogleMapsApiService>();
       final result = await mapsService.getLatLngFromAddress(_tripState.mainDestination);
       result.fold(
-        (failure) => AppToast.error("Resolve failed: ${failure.message}"),
+        (failure) => debugPrint("Resolve failed: ${failure.message}"),
         (coords) {
-          AppToast.success("Resolved via Google: ${coords['lat']}, ${coords['lng']}");
+          debugPrint("Resolved via Google: ${coords['lat']}, ${coords['lng']}");
           if (mounted) {
             setState(() {
               _destinationLat = coords['lat'];
@@ -242,7 +240,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         },
       );
     } catch (e) {
-      AppToast.error("Error geocoding: $e");
+      debugPrint("Error geocoding: $e");
     }
   }
 
@@ -751,7 +749,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
   @override
   void dispose() {
-    _dismissNotification();
     _searchController.dispose();
     _searchFocusNode.dispose();
     _sheetSearchController.dispose();
@@ -1317,26 +1314,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           });
         }
         _resolveDayActivityCoordinates();
- 
-        // Trigger scheduled morning reminder notification automatically on load
-        if (!_hasTriggeredScheduledNotification && _activities.isNotEmpty) {
-          _hasTriggeredScheduledNotification = true;
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) {
-              _showInAppNotification(
-                title: "Ready for today?",
-                message:
-                    "Your first experience starts in 30 minutes. Check your itinerary and get ready for an amazing day.",
-                cta: "View Today's Plan",
-                icon: Icons.wb_sunny_outlined,
-                iconColor: Colors.amber,
-                onAccept: () {
-                  AppToast.success("Enjoy your day!");
-                },
-              );
-            }
-          });
-        }
       } else {
         if (mounted) {
           setState(() => _loadingActivities = false);
@@ -1782,128 +1759,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     }
   }
 
-  void _showInAppNotification({
-    required String title,
-    required String message,
-    required String cta,
-    required IconData icon,
-    required Color iconColor,
-    required VoidCallback onAccept,
-  }) {
-    _dismissNotification();
-
-    _notificationOverlay = OverlayEntry(
-      builder: (context) {
-        return Positioned(
-          top: 50.h,
-          left: 16.w,
-          right: 16.w,
-          child: Material(
-            color: Colors.transparent,
-            child: TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 300),
-              tween: Tween(begin: -100.0, end: 0.0),
-              builder: (context, slideY, child) {
-                return Transform.translate(
-                  offset: Offset(0, slideY),
-                  child: child,
-                );
-              },
-              child: Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(220),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: Colors.white.withAlpha(30)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(80),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: iconColor.withAlpha(40),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        icon,
-                        color: iconColor,
-                        size: 24.sp,
-                      ),
-                    ),
-                    12.w.horizontalSpace,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            title,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                          4.h.verticalSpace,
-                          Text(
-                            message,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    12.w.horizontalSpace,
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                      ),
-                      onPressed: () {
-                        _dismissNotification();
-                        onAccept();
-                      },
-                      child: Text(
-                        cta,
-                        style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    Overlay.of(context).insert(_notificationOverlay!);
-
-    // Automatically dismiss after 7 seconds
-    Future.delayed(const Duration(seconds: 7), () {
-      _dismissNotification();
-    });
-  }
-
-  void _dismissNotification() {
-    _notificationOverlay?.remove();
-    _notificationOverlay = null;
-  }
 
   /*
   void _showRecommendationDialog({

@@ -126,6 +126,26 @@ class PublicTripsData {
         foodBudget: 500.0,
         activitiesBudget: 300.0,
       ),
+      TripData(
+        id: "public_trip_thailand_07",
+        name: "Thailand Island Hopping & Temples",
+        description: "6 days exploring Bangkok's Grand Palace, vibrant floating markets, Chiang Mai ancient temples, and crystal blue waters of Phuket and Phi Phi islands.",
+        flag: "🇹🇭",
+        dateRange: "6 Days · Nov - Mar",
+        tripType: "Friends",
+        category: "Balanced",
+        imageUrl: "https://images.unsplash.com/photo-1528181304800-259b08848526?w=1200",
+        startDate: now.add(const Duration(days: 35)),
+        endDate: now.add(const Duration(days: 41)),
+        mainDestination: "Thailand",
+        travelTastes: ["Beaches", "Culture", "Street Food", "Islands", "Adventure"],
+        totalBudget: 1350.0,
+        currency: "USD",
+        transportBudget: 250.0,
+        accommodationBudget: 500.0,
+        foodBudget: 350.0,
+        activitiesBudget: 250.0,
+      ),
     ];
   }
 }

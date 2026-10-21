@@ -24,10 +24,13 @@ import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.d
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/blog_detail_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
+import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/trip_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onNavigateToTrips;
+
+  const HomeScreen({super.key, this.onNavigateToTrips});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -547,8 +550,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTripsFromTravellers() {
     final curatedTrips = PublicTripsData.getCuratedPublicTrips();
-    final baliTrip = curatedTrips.length > 2 ? curatedTrips[2] : curatedTrips.first;
-    final thailandTrip = curatedTrips.length > 5 ? curatedTrips[5] : curatedTrips.last;
+    final baliTrip = curatedTrips.firstWhere(
+      (t) =>
+          t.mainDestination.toLowerCase().contains("bali") ||
+          t.name.toLowerCase().contains("bali"),
+      orElse: () => curatedTrips.first,
+    );
+    final thailandTrip = curatedTrips.firstWhere(
+      (t) =>
+          t.mainDestination.toLowerCase().contains("thailand") ||
+          t.name.toLowerCase().contains("thailand"),
+      orElse: () => curatedTrips.last,
+    );
 
     final cards = [
       {
@@ -1459,10 +1472,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildSectionHeader(
                   title: 'Continue Planning',
                   onViewAll: () {
-                    final tripToPass = _activeTrip!.copyWith(
-                      imageUrl: TripImageHelper.getDisplayImageUrl(_activeTrip!),
-                    );
-                    context.push(TripDetailsScreen.routeName, extra: tripToPass);
+                    if (widget.onNavigateToTrips != null) {
+                      widget.onNavigateToTrips!();
+                    } else {
+                      context.push(MyTripsScreen.routeName);
+                    }
                   },
                 ),
                 SizedBox(height: 10.h),
