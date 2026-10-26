@@ -20,6 +20,9 @@ import 'package:wonder_souls/src/features/settings/presentation/screens/upgrade_
 import 'package:wonder_souls/src/features/settings/presentation/screens/payment_methods_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/account_security_screen.dart';
 import 'package:wonder_souls/src/features/settings/presentation/screens/terms_and_conditions_screen.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_cubit.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_state.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -234,6 +237,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   } else {
                     context.push(AccountSecurityScreen.routeName);
                   }
+                },
+              ),
+              BlocBuilder<NotificationsCubit, NotificationsState>(
+                builder: (context, notifState) {
+                  final unreadCount = notifState is NotificationsLoaded
+                      ? notifState.unreadCount
+                      : 0;
+
+                  return SettingsMenuItem(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'Notifications',
+                    trailingWidget: unreadCount > 0
+                        ? Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 2.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.primary,
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: Text(
+                              unreadCount > 9 ? "9+" : "$unreadCount",
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          )
+                        : null,
+                    onTap: () {
+                      if (!isLoggedIn) {
+                        context.push(LoginScreen.routeName);
+                      } else {
+                        context.push(NotificationsScreen.routeName);
+                      }
+                    },
+                  );
                 },
               ),
             ]),

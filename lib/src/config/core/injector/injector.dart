@@ -21,6 +21,16 @@ import 'package:wonder_souls/src/features/auth/presentation/cubit/signup/signup_
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_places_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
+import 'package:wonder_souls/src/features/notifications/data/datasources/notifications_remote_data_source.dart';
+import 'package:wonder_souls/src/features/notifications/data/repositories/notifications_repository_impl.dart';
+import 'package:wonder_souls/src/features/notifications/domain/repositories/notifications_repository.dart';
+import 'package:wonder_souls/src/features/notifications/domain/usecase/get_my_notifications_usecase.dart';
+import 'package:wonder_souls/src/features/notifications/domain/usecase/mark_notification_read_usecase.dart';
+import 'package:wonder_souls/src/features/notifications/domain/usecase/register_device_usecase.dart';
+import 'package:wonder_souls/src/features/notifications/domain/usecase/unregister_device_usecase.dart';
+import 'package:wonder_souls/src/features/notifications/data/services/device_registration_service.dart';
+import 'package:wonder_souls/src/features/notifications/data/services/fcm_notification_service.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -49,6 +59,47 @@ Future<void> setupLocator() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
   initAuth();
+  initNotifications();
+}
+
+Future<void> initNotifications() async {
+  /// ---------------- DATA SOURCE ----------------
+  sl.registerLazySingleton<NotificationsRemoteDataSource>(
+    () => NotificationsRemoteDataSourceImpl(apiService: sl()),
+  );
+
+  /// ---------------- REPOSITORY ----------------
+  sl.registerLazySingleton<NotificationsRepository>(
+    () => NotificationsRepositoryImpl(sl()),
+  );
+
+  /// ---------------- USECASES ----------------
+  sl.registerLazySingleton(() => GetMyNotificationsUseCase(sl()));
+  sl.registerLazySingleton(() => MarkNotificationReadUseCase(sl()));
+  sl.registerLazySingleton(() => RegisterDeviceUseCase(sl()));
+  sl.registerLazySingleton(() => UnregisterDeviceUseCase(sl()));
+
+  /// ---------------- SERVICES ----------------
+  sl.registerLazySingleton(
+    () => DeviceRegistrationService(
+      registerDeviceUseCase: sl(),
+      unregisterDeviceUseCase: sl(),
+      sharedPreferences: sl(),
+    ),
+  );
+  sl.registerLazySingleton(
+    () => FcmNotificationService(
+      deviceRegistrationService: sl(),
+    ),
+  );
+
+  /// ---------------- CUBIT ----------------
+  sl.registerFactory<NotificationsCubit>(
+    () => NotificationsCubit(
+      getMyNotificationsUseCase: sl(),
+      markNotificationReadUseCase: sl(),
+    ),
+  );
 }
 
 Future<void> initAuth() async {

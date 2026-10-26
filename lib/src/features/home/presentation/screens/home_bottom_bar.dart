@@ -12,6 +12,13 @@ import 'package:wonder_souls/src/features/home/presentation/widgets/app_navigati
 import 'package:wonder_souls/src/features/settings/presentation/screens/settings_screens.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_cubit.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_state.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:wonder_souls/src/features/notifications/data/services/fcm_notification_service.dart';
 import 'package:wonder_souls/src/features/trips/presentation/widgets/create_trip_modal_bottom_sheet.dart';
 
 class HomeBottomBar extends StatefulWidget {
@@ -48,6 +55,29 @@ class _HomeBottomBarState extends State<HomeBottomBar>
       MyTripsScreen(searchNotifier: _searchNotifier),
       const SettingsScreen(),
     ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = sl.isRegistered<AuthLocalDataSource>()
+          ? sl<AuthLocalDataSource>().getUser()
+          : null;
+      if (user != null && (user.id?.isNotEmpty ?? false)) {
+        if (mounted) {
+          context.read<NotificationsCubit>().fetchNotifications();
+        }
+        if (sl.isRegistered<FcmNotificationService>()) {
+          final fcmService = sl<FcmNotificationService>();
+          fcmService.initialize();
+          fcmService.onNotificationReceived = () {
+            if (mounted) {
+              context
+                  .read<NotificationsCubit>()
+                  .fetchNotifications(showLoading: false);
+            }
+          };
+          fcmService.registerDeviceAfterLogin();
+        }
+      }
+    });
   }
 
   void _handleTabChange() {
@@ -193,20 +223,64 @@ class _HomeBottomBarState extends State<HomeBottomBar>
                   animation: _tabController,
                   builder: (context, _) {
                     if (_tabController.index == 0) {
-                      // On Home Tab: User Profile Avatar
-                      return Padding(
-                        padding: EdgeInsets.only(right: 16.w),
-                        child: ProfileImageHelper.buildAvatar(
-                          context,
-                          user: user,
-                          radius: 18.w,
-                          borderWidth: 1.5,
-                          borderColor:
-                              context.primary.withValues(alpha: 0.5),
-                          onTap: () {
-                            _tabController.animateTo(3); // Go to Profile
-                          },
-                        ),
+                      // On Home Tab: Notification Bell + User Profile Avatar
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          BlocBuilder<NotificationsCubit, NotificationsState>(
+                            builder: (context, notifState) {
+                              final unreadCount = notifState is NotificationsLoaded
+                                  ? notifState.unreadCount
+                                  : 0;
+
+                              return IconButton(
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.all(8.w),
+                                icon: Badge(
+                                  isLabelVisible: unreadCount > 0,
+                                  label: Text(
+                                    unreadCount > 9 ? "9+" : "$unreadCount",
+                                    style: TextStyle(
+                                      fontSize: 9.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  backgroundColor: context.primary,
+                                  child: Icon(
+                                    Icons.notifications_outlined,
+                                    color: context.onSurface,
+                                    size: 22.sp,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  final isLoggedIn = user != null &&
+                                      (user.id?.isNotEmpty ?? false);
+                                  if (isLoggedIn) {
+                                    context.push(NotificationsScreen.routeName);
+                                  } else {
+                                    context.push(LoginScreen.routeName);
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                          SizedBox(width: 4.w),
+                          Padding(
+                            padding: EdgeInsets.only(right: 16.w),
+                            child: ProfileImageHelper.buildAvatar(
+                              context,
+                              user: user,
+                              radius: 18.w,
+                              borderWidth: 1.5,
+                              borderColor:
+                                  context.primary.withValues(alpha: 0.5),
+                              onTap: () {
+                                _tabController.animateTo(3); // Go to Profile
+                              },
+                            ),
+                          ),
+                        ],
                       );
                     }
 

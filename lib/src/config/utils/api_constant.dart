@@ -66,4 +66,12 @@ class ApiConstants {
 
   // Other / Legal
   static const String otherService = "/OtherService";
+
+  // Notifications
+  static const String myNotifications = "/notifications/my";
+  static String markNotificationAsRead(String id) => "/notifications/$id/read";
+
+  // Devices (FCM)
+  static const String registerDevice = "/devices/register";
+  static String deleteDevice(String id) => "/devices/$id";
 }

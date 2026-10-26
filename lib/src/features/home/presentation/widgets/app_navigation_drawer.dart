@@ -15,6 +15,9 @@ import 'package:wonder_souls/src/features/settings/presentation/widgets/logout_b
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_article.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/list_destination.dart';
 import 'package:wonder_souls/src/features/trips/presentation/widgets/create_trip_modal_bottom_sheet.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_cubit.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_state.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/screens/notifications_screen.dart';
 
 class AppNavigationDrawer extends StatelessWidget {
   final Function(int tabIndex)? onSelectTab;
@@ -194,6 +197,47 @@ class AppNavigationDrawer extends StatelessWidget {
                       onSelectTab?.call(2);
                     },
                   ),
+                  BlocBuilder<NotificationsCubit, NotificationsState>(
+                    builder: (context, notifState) {
+                      final unreadCount = notifState is NotificationsLoaded
+                          ? notifState.unreadCount
+                          : 0;
+
+                      return _buildDrawerItem(
+                        context,
+                        icon: Icons.notifications_outlined,
+                        title: "Notifications",
+                        trailing: unreadCount > 0
+                            ? Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 2.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.primary,
+                                  borderRadius: BorderRadius.circular(10.r),
+                                ),
+                                child: Text(
+                                  unreadCount > 9 ? "9+" : "$unreadCount",
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (isLoggedIn) {
+                            context.push(NotificationsScreen.routeName);
+                          } else {
+                            context.push(LoginScreen.routeName);
+                          }
+                        },
+                      );
+                    },
+                  ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.settings_outlined,
@@ -326,6 +370,7 @@ class AppNavigationDrawer extends StatelessWidget {
     required IconData icon,
     required String title,
     Color? iconColor,
+    Widget? trailing,
     required VoidCallback onTap,
   }) {
     return ListTile(
@@ -347,11 +392,12 @@ class AppNavigationDrawer extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      trailing: Icon(
-        Icons.chevron_right_rounded,
-        size: 18.sp,
-        color: context.onSurfaceVariant.withAlpha(100),
-      ),
+      trailing: trailing ??
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 18.sp,
+            color: context.onSurfaceVariant.withAlpha(100),
+          ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
       ),

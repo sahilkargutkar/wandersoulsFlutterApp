@@ -10,6 +10,8 @@ import 'package:wonder_souls/src/features/auth/data/model1/travel_preference_mod
 import '../../../../config/core/services/api_services.dart';
 import '../../../../config/model/api_result.dart';
 import '../../../../config/model/success.dart';
+import 'package:wonder_souls/src/config/core/injector/injector.dart';
+import 'package:wonder_souls/src/features/notifications/data/services/device_registration_service.dart';
 
 /// AuthRemoteDataSource Responsibilities:
 ///
@@ -223,6 +225,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> logout() async {
+    try {
+      if (sl.isRegistered<DeviceRegistrationService>()) {
+        await sl<DeviceRegistrationService>().unregisterCurrentDevice();
+      }
+    } catch (_) {}
     try {
       await tokenStorage.clearToken();
       await localDataSource.clearUser();

@@ -14,6 +14,7 @@ import 'package:wonder_souls/src/config/theme/theme_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_places_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/saved_articles_cubit.dart';
 import 'package:wonder_souls/src/features/trips/presentation/cubit/blogs_cubit.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'package:wonder_souls/src/features/auth/presentation/screens/login_screen.dart';
 
 void main() async {
@@ -75,6 +76,9 @@ class _MyAppState extends State<MyApp> {
             ),
             BlocProvider<BlogsCubit>(
               create: (_) => sl<BlogsCubit>()..fetchBlogs(),
+            ),
+            BlocProvider<NotificationsCubit>(
+              create: (_) => sl<NotificationsCubit>(),
             ),
           ],
           child: BlocBuilder<ThemeCubit, ThemeMode>(

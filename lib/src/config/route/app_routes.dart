@@ -33,6 +33,7 @@ import 'package:wonder_souls/src/config/core/model/place_model.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/add_booking_form_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/budget_expenses_screen.dart';
 import 'package:wonder_souls/src/features/trips/presentation/screens/my_trips_screen.dart';
+import 'package:wonder_souls/src/features/notifications/presentation/screens/notifications_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -279,6 +280,10 @@ GoRouter buildRouter({
           final trip = state.extra as TripData;
           return BudgetExpensesScreen(trip: trip);
         },
+      ),
+      GoRoute(
+        path: NotificationsScreen.routeName,
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
