@@ -6,7 +6,6 @@ import 'package:wonder_souls/src/config/utils/app_toast.dart';
 import 'package:wonder_souls/src/config/utils/validator.dart';
 import 'package:wonder_souls/src/features/auth/presentation/cubit/login/auth_cubit.dart';
 import 'package:wonder_souls/src/features/auth/presentation/cubit/login/auth_state.dart';
-import 'package:wonder_souls/src/features/auth/presentation/widget/social_login_button_icon.dart';
 import 'package:wonder_souls/src/features/home/presentation/screens/home_bottom_bar.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_button.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/common_text_form_field.dart';
@@ -240,71 +239,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                        28.h.height,
-
-                        // OR divider
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                color: context.borderColor.withAlpha(60),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16.w),
-                              child: Text(
-                                "or continue with",
-                                style: context.text.bodySmall?.copyWith(
-                                  color: context.onSurfaceVariant.withAlpha(
-                                    150,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                color: context.borderColor.withAlpha(60),
-                              ),
-                            ),
-                          ],
-                        ),
-
                         24.h.height,
 
-                        // Social login buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SocialLoginButtonIcon(
-                              onPressed: () {},
-                              icon: Image.asset(Assets.google, scale: 28),
-                            ),
-                            14.w.width,
-                            SocialLoginButtonIcon(
-                              onPressed: () {},
-                              icon: Image.asset(
-                                Assets.apple,
-                                scale: 28,
-                                color: context.onSurface,
-                                colorBlendMode: BlendMode.srcIn,
-                              ),
-                            ),
-                            14.w.width,
-                            SocialLoginButtonIcon(
-                              onPressed: () {},
-                              icon: Image.asset(Assets.facebook, scale: 28),
-                            ),
-                            14.w.width,
-                            SocialLoginButtonIcon(
-                              onPressed: () {},
-                              icon: Image.asset(Assets.twitter, scale: 28),
-                            ),
-                          ],
-                        ),
-
-                        24.h.height,
 
                         // Privacy & Terms
                         Row(

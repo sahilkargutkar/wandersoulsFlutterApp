@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "926607459467",
+    "project_id": "wandersouls-9d4fd",
+    "storage_bucket": "wandersouls-9d4fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:926607459467:android:457406f1d01f094ebbc08e",
+        "android_client_info": {
+          "package_name": "com.wandersouls.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAN_fHfDagyDQetGDtkZs036vIht3XtZsM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
