@@ -57,5 +57,15 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to take photos for your profile and trip attachments</string>
 
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>tel</string>
+		<string>mailto</string>
+		<string>comgooglemaps</string>
+		<string>maps</string>
+	</array>
+
 </dict>
 </plist>

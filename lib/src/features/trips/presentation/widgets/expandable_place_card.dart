@@ -5,6 +5,7 @@ import 'package:wonder_souls/src/features/trips/model/trip.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/size.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_colors.dart';
 import 'package:wonder_souls/src/config/utils/extensions/context_text.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wonder_souls/src/config/utils/common_widgets/animated_press.dart';
 
 class ExpandablePlaceCard extends StatefulWidget {
@@ -220,7 +221,24 @@ class _ExpandedContent extends StatelessWidget {
 
               /// MAP LINK
               AnimatedPress(
-                onTap: () {},
+                onTap: () async {
+                  final currentPlace = place;
+                  if (currentPlace != null && currentPlace.name.isNotEmpty) {
+                    final query = Uri.encodeComponent(currentPlace.name);
+                    final url = Uri.parse(
+                        "https://www.google.com/maps/search/?api=1&query=$query");
+                    bool launched = false;
+                    try {
+                      launched = await launchUrl(url,
+                          mode: LaunchMode.externalApplication);
+                    } catch (_) {}
+                    if (!launched) {
+                      try {
+                        await launchUrl(url, mode: LaunchMode.platformDefault);
+                      } catch (_) {}
+                    }
+                  }
+                },
                 scaleFactor: 0.94,
                 child: Container(
                   padding: EdgeInsets.symmetric(

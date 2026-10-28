@@ -2048,7 +2048,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Trip Cover Image, Back/Action buttons, Trip Title & Dates
               _buildTripHeroHeader(context),
               _buildDayProgressHeader(),
               _buildDaySelector(context),
@@ -3073,6 +3072,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         builder: (context) => EditItineraryScreen(
           trip: _tripState,
           initialActivities: _activities,
+          initialDayIndex: _selectedDayIndex,
         ),
       ),
     );
@@ -3206,14 +3206,45 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return "$formattedHour:$formattedMinute $period";
   }
 
-  Future<void> _launchMaps(String query) async {
-    final url = Uri.parse(
-        "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}");
+  Future<void> _launchMaps(String query, [String? activityId]) async {
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
+      final destination = _tripState.mainDestination;
+      final fullQuery = destination.isNotEmpty &&
+              !query.toLowerCase().contains(destination.toLowerCase())
+          ? "$query, $destination"
+          : query;
+
+      Uri url;
+      if (activityId != null &&
+          _resolvedActivityCoords.containsKey(activityId) &&
+          _resolvedActivityCoords[activityId]?['lat'] != null &&
+          _resolvedActivityCoords[activityId]?['lng'] != null) {
+        final lat = _resolvedActivityCoords[activityId]!['lat'];
+        final lng = _resolvedActivityCoords[activityId]!['lng'];
+        url = Uri.parse(
+            "https://www.google.com/maps/search/?api=1&query=$lat,$lng");
       } else {
-        AppToast.error("Could not launch Maps");
+        url = Uri.parse(
+            "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(fullQuery)}");
+      }
+
+      bool launched = false;
+      try {
+        launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        debugPrint("Failed to launch externalApplication: $e");
+      }
+
+      if (!launched) {
+        try {
+          launched = await launchUrl(url, mode: LaunchMode.platformDefault);
+        } catch (e) {
+          debugPrint("Failed to launch platformDefault: $e");
+        }
+      }
+
+      if (!launched) {
+        AppToast.error("Could not launch Google Maps");
       }
     } catch (e) {
       AppToast.error("Failed to launch maps: $e");
@@ -3320,32 +3351,65 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                   letterSpacing: -0.4,
                 ),
               ),
-              InkWell(
-                onTap: () => _openAddSpotSheet(context),
-                borderRadius: BorderRadius.circular(20.r),
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.add_rounded,
-                        color: const Color(0xFF0D9488),
-                        size: 20.sp,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: _openEditItinerary,
+                    borderRadius: BorderRadius.circular(20.r),
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.edit_outlined,
+                            color: const Color(0xFF0D9488),
+                            size: 17.sp,
+                          ),
+                          4.w.horizontalSpace,
+                          Text(
+                            "Edit",
+                            style: TextStyle(
+                              color: const Color(0xFF0D9488),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                        ],
                       ),
-                      4.w.horizontalSpace,
-                      Text(
-                        "Add a spot",
-                        style: TextStyle(
-                          color: const Color(0xFF0D9488),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14.5.sp,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  4.w.horizontalSpace,
+                  InkWell(
+                    onTap: () => _openAddSpotSheet(context),
+                    borderRadius: BorderRadius.circular(20.r),
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_rounded,
+                            color: const Color(0xFF0D9488),
+                            size: 20.sp,
+                          ),
+                          4.w.horizontalSpace,
+                          Text(
+                            "Add a spot",
+                            style: TextStyle(
+                              color: const Color(0xFF0D9488),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.5.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -3656,7 +3720,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                             if (value == 'delete') {
                               _confirmDelete(context, activity);
                             } else if (value == 'maps') {
-                              _launchMaps(activity.name);
+                              _launchMaps(activity.name, activity.id);
                             } else if (value == 'details') {
                               _showActivityDetails(activity);
                             }
@@ -3816,7 +3880,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
 
                   // View on Google Maps Link with direct underline
                   InkWell(
-                    onTap: () => _launchMaps(activity.name),
+                    onTap: () => _launchMaps(activity.name, activity.id),
                     borderRadius: BorderRadius.circular(4.r),
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 1.h),
@@ -3860,6 +3924,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       centerLat: _destinationLat,
       centerLng: _destinationLng,
       resolvedCoords: _resolvedActivityCoords,
+      fullWidth: false,
     );
   }
 
