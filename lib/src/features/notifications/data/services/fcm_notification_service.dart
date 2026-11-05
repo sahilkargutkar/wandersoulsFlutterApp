@@ -49,7 +49,7 @@ class FcmNotificationService {
       // Listen for token updates from Firebase
       // ignore: deprecated_member_use
       messaging.onTokenRefresh.listen((String newToken) {
-        debugPrint("FCM Token refreshed: $newToken");
+        debugPrint("FCM Token refreshed");
         deviceRegistrationService.registerToken(newToken);
       });
 
@@ -71,7 +71,7 @@ class FcmNotificationService {
       final token = await messaging.getToken();
 
       if (token != null && token.isNotEmpty) {
-        debugPrint("FCM Token acquired for logged in user: $token");
+        debugPrint("FCM Token acquired for logged in user");
         return await deviceRegistrationService.registerToken(token);
       } else {
         debugPrint("FCM Token was null or empty");

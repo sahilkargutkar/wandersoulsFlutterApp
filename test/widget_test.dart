@@ -32,7 +32,6 @@ void main() {
       'email': 'test@example.com',
       'phoneNumber': '1234567890',
       'password': 'secret123',
-      'passwordHash': 'secret123',
       'name': 'Test User',
       'profilePicture': '',
       'defaultCurrency': 'USD',

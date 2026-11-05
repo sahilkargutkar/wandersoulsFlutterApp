@@ -67,16 +67,6 @@ class ApiService {
       ),
     );
 
-    if (kDebugMode) {
-      _dio.interceptors.add(
-        LogInterceptor(
-          requestHeader: false,
-          requestBody: true,
-          responseHeader: false,
-          responseBody: true,
-        ),
-      );
-    }
   }
 
   // ===============================
@@ -323,15 +313,10 @@ class ApiService {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json",
+            "X-Api-Key": ApiConstants.aiServiceApiKey,
           },
         ),
       );
-
-      if (kDebugMode) {
-        aiDio.interceptors.add(
-          LogInterceptor(requestBody: true, responseBody: true),
-        );
-      }
 
       final response = await aiDio.post(path, data: data);
       if (response.statusCode == 200) {

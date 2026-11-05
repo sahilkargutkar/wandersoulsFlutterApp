@@ -16,6 +16,8 @@ class ApiConstants {
     return "http://10.0.2.2:8000"; // Android emulator
   }
 
+  static String get aiServiceApiKey => dotenv.env["AI_SERVICE_API_KEY"] ?? "";
+
   static const String generateItinerary = "/generate-itinerary";
 
   // Auth & User

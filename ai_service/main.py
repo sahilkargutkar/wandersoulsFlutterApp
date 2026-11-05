@@ -1,9 +1,11 @@
 import json
+import logging
 import os
+import secrets
 from datetime import datetime
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from mistralai.client import Mistral
 
@@ -16,20 +18,29 @@ from models import (
 
 load_dotenv()
 
+logger = logging.getLogger("wander_souls_ai")
+
 app = FastAPI(
     title="WanderSouls AI Itinerary Generator",
     description="Generates personalized day-by-day travel itineraries using Mistral AI",
     version="1.0.0",
 )
 
-# CORS – allow Flutter app from any origin during development
+# CORS – allow only explicitly configured origins; never wildcard + credentials.
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=False,
+    allow_methods=["POST", "GET"],
+    allow_headers=["Content-Type", "X-Api-Key"],
 )
+
+AI_SERVICE_API_KEY = os.getenv("AI_SERVICE_API_KEY", "")
 
 client = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
 
@@ -110,9 +121,16 @@ Generate a complete day-by-day itinerary."""
 
 
 @app.post("/generate-itinerary", response_model=ItineraryResponse)
-async def generate_itinerary(request: ItineraryRequest):
+async def generate_itinerary(
+    request: ItineraryRequest,
+    x_api_key: str = Header(default=""),
+):
     """Generate an AI-powered travel itinerary."""
 
+    if not AI_SERVICE_API_KEY:
+        raise HTTPException(status_code=503, detail="AI service API key not configured")
+    if not secrets.compare_digest(x_api_key, AI_SERVICE_API_KEY):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     if not os.getenv("MISTRAL_API_KEY"):
         raise HTTPException(status_code=500, detail="Mistral API key not configured")
 
@@ -167,8 +185,9 @@ async def generate_itinerary(request: ItineraryRequest):
 
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="AI returned invalid JSON. Please try again.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI generation failed: {str(e)}")
+    except Exception:
+        logger.exception("AI generation failed")
+        raise HTTPException(status_code=500, detail="AI generation failed")
 
 
 @app.get("/health")

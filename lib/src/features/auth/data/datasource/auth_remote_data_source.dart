@@ -140,8 +140,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) {
     return apiService.putWithParams<void>(
       ApiConstants.updatePassword,
-      queryParameters: {
-        "userId": userId,
+      queryParameters: {"userId": userId},
+      data: {
         "existingPassword": existingPassword,
         "newPassword": newPassword,
         "confirmPassword": confirmPassword,

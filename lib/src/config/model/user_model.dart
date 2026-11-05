@@ -97,7 +97,6 @@ class UserModel {
       'id': id,
       'userName': userName,
       'email': email,
-      'passwordHash': passwordHash,
       'name': name,
       'profilePicture': profilePicture,
       'defaultCurrency': defaultCurrency,
